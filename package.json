@@ -1,0 +1,21 @@
+{
+  "name": "coffeehouse",
+  "version": "1.0.0",
+  "description": "CoffeeHouse - a warm little digital shop where students brew ideas, chat across classes, and pour out project groups.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node server.js --seed"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "firebase-admin": "^14.2.0"
+  }
+}

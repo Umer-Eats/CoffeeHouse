@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoffeeHouse</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #201208;
+    --bgB:      #26150a;
+    --panel:    #3b2314;
+    --panel2:   #5a3a22;
+    --line:     #221308;
+    --ink:      #f4e5c3;
+    --soft:     #b98a58;
+    --accent:   #6b8f49;
+    --accentD:  #3f5c2a;
+    --accent2:  #e0a94f;
+    --head:     #c99a63;
+    --head-ink: #221308;
+    --btnB:     #3b2314;
+    --btn-ink:  #f4e5c3;
+    --card:     #3b2314;
+    --shad:     rgba(0,0,0,0.5);
+  }
+  body[data-theme="dark"]{
+    --bg:       #060a18;
+    --bgB:      #0d1126;
+    --panel:    #12162c;
+    --panel2:   #1f2442;
+    --line:     #05070f;
+    --ink:      #f7e9f2;
+    --soft:     #a9a3c4;
+    --accent:   #f093b5;
+    --accentD:  #552a44;
+    --accent2:  #ffd98a;
+    --head:     #262d50;
+    --head-ink: #f7e9f2;
+    --btnB:     #262d50;
+    --btn-ink:  #ffd0e0;
+    --card:     #161b34;
+    --shad:     rgba(0,0,0,0.6);
+  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(45deg, var(--bg) 25%, transparent 25%, transparent 75%, var(--bg) 75%),
+      linear-gradient(45deg, var(--bgB) 25%, transparent 25%, transparent 75%, var(--bgB) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+    color: var(--ink);
+    font-family: "VT323", monospace;
+    font-size: 20px;
+    line-height: 1.45;
+    min-height: 100vh;
+    transition: background-color .2s, color .2s;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 32px 16px; }
+
+  .pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2), 6px 6px 0 rgba(0,0,0,0.45); }
+
+  /* NAV */
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 14px; flex-wrap: wrap;
+    background: var(--head);
+    color: var(--head-ink);
+    padding: 12px 16px;
+  }
+  nav .logo{ font-family:"Press Start 2P"; font-size: 14px; letter-spacing: 1px; color: var(--head-ink); }
+  nav .pixel-cup{ width: 36px; height: 36px; vertical-align: middle; margin-right: 8px; image-rendering: pixelated; }
+  .nav-right{ display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
+  .btn{
+    display:inline-block;
+    font-family:"Press Start 2P";
+    font-size: 10px;
+    padding: 12px 13px;
+    color: var(--btn-ink);
+    background: var(--btnB);
+    border: 3px solid var(--line);
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+    transition: transform 0.06s steps(2), box-shadow 0.06s steps(2);
+  }
+  .btn:hover{ transform: translate(2px,2px); box-shadow: 0 0 0 rgba(0,0,0,0.5); }
+  .btn.matcha{ background: var(--accent); color: #fff; box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
+  .btn:disabled{ opacity:.5; cursor:default; transform:none; }
+
+  .theme-toggle{
+    font-family:"Press Start 2P"; font-size: 9px; cursor: pointer;
+    background: var(--btnB); color: var(--btn-ink);
+    border: 3px solid var(--line); padding: 12px 12px;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+  }
+  .theme-toggle:hover{ filter: brightness(1.2); }
+
+  /* HERO */
+  .hero{ text-align:center; margin: 44px 0 10px; display:flex; flex-direction:column; align-items:center; gap: 20px; }
+  .hero .big-cup{ width: 216px; height: 216px; image-rendering: pixelated; filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.5)); }
+  .hero h1{ font-family:"Press Start 2P"; font-size: 26px; color: var(--ink); text-shadow: 3px 3px 0 var(--line); }
+  .hero h1 .amp{ color: var(--accent); }
+  .hero p.tagline{ font-size: 22px; color: var(--soft); max-width: 580px; }
+  .hero-actions{ display:flex; gap: 14px; flex-wrap: wrap; justify-content:center; }
+
+  /* SIGN-IN */
+  .login-box{
+    margin: 10px 0 4px; padding: 24px 22px;
+    background: var(--panel2);
+    display:flex; flex-direction:column; align-items:center; gap: 14px;
+    max-width: 460px; margin-left:auto; margin-right:auto;
+  }
+  .login-box .lb-title{ font-family:"Press Start 2P"; font-size: 11px; color: var(--ink); }
+  .login-box .lb-sub{ color: var(--soft); font-size: 18px; text-align:center; }
+  #googleBtn{ min-height: 40px; display:flex; align-items:center; justify-content:center; }
+  .notice{
+    font-size: 17px; color: var(--accent2); background: var(--line);
+    border: 2px dashed var(--accent2); padding: 10px 12px; max-width: 560px;
+    text-align:left; line-height: 1.5;
+  }
+  .notice code{ background:#000; padding: 0 4px; color: var(--accent2); }
+
+  /* DEV LOGIN */
+  .dev-login{ max-width:460px; margin: 14px auto; padding: 14px; background: var(--panel); border: 3px solid var(--line); }
+  .dev-login h4{ font-family:"Press Start 2P"; font-size: 9px; color: var(--soft); margin-bottom: 8px; }
+  .dev-login form{ display:flex; gap:8px; flex-wrap:wrap; }
+  .dev-login input{
+    flex:1; min-width: 170px; background: var(--line); color: var(--ink);
+    border: 3px solid var(--panel2); padding: 8px 10px; font-family:"VT323", monospace; font-size: 18px;
+  }
+  .dev-login .btn{ padding: 8px 10px; }
+
+  /* SCHOOL PICKER MODAL */
+  .modal-overlay{
+    position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+    display:none; align-items:center; justify-content:center; z-index: 50;
+  }
+  .modal-overlay.on{ display:flex; }
+  .modal{
+    max-width: 440px; width: calc(100% - 32px);
+    background: var(--panel2); border: 3px solid var(--line);
+    box-shadow: 0 0 0 4px var(--panel), 8px 8px 0 rgba(0,0,0,0.5);
+    padding: 22px; text-align:center;
+  }
+  .modal h2{ font-family:"Press Start 2P"; font-size: 13px; color: var(--accent2); margin-bottom: 12px; line-height: 1.6; }
+  .modal p{ color: var(--ink); margin-bottom: 14px; }
+  .modal select{
+    width:100%; background: var(--line); color: var(--ink);
+    border: 3px solid var(--panel); padding: 12px; margin-bottom: 14px;
+    font-family:"VT323", monospace; font-size: 19px; cursor:pointer;
+  }
+  .modal .btn{ width: 100%; }
+
+  /* ART GALLERY STRIP */
+  .art-strip{
+    display:flex; gap: 18px; justify-content:center; align-items:flex-end; flex-wrap: wrap;
+    padding: 26px 14px; margin: 18px 0 4px;
+    background: var(--panel2);
+    background: color-mix(in srgb, var(--panel2) 55%, transparent);
+    border: 3px solid var(--line);
+  }
+  .art-tile{ display:flex; flex-direction:column; align-items:center; gap: 6px; }
+  .art-tile canvas{ image-rendering: pixelated; filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.4)); }
+  .art-tile .cap{ font-family:"Press Start 2P"; font-size: 8px; color: var(--soft); }
+  .a-tree{ width: 66px; height: 66px; }
+  .a-stu{ width: 56px; height: 56px; }
+  .a-cup{ width: 64px; height: 64px; }
+  .a-book{ width: 56px; height: 42px; }
+  .a-lappy{ width: 58px; height: 41px; }
+  .a-lan{ width: 50px; height: 64px; }
+  .a-moon{ width: 84px; height: 56px; }
+
+  .feature-head{ text-align:center; font-family:"Press Start 2P"; font-size: 13px; color: var(--accent); margin: 42px 0 8px; text-shadow: 2px 2px 0 var(--line); }
+
+  /* FEATURES */
+  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 18px; margin: 26px 0; }
+  .card{ background: var(--card); padding: 20px 18px; image-rendering: pixelated; }
+  .card .icon{ font-size: 30px; display:block; margin-bottom: 10px; }
+  .card h3{ font-family:"Press Start 2P"; font-size: 11px; color: var(--accent); margin-bottom: 10px; line-height:1.6; }
+  .card p{ color: var(--ink); }
+
+  .banner{
+    display:flex; gap: 18px; align-items:center; justify-content: space-between;
+    background: var(--accentD);
+    padding: 18px 22px;
+    margin: 44px 0 8px;
+    flex-wrap: wrap;
+  }
+  .banner .b-label{ font-family:"Press Start 2P"; font-size: 11px; color: var(--ink); line-height:1.7; margin-bottom:8px; }
+  .banner p{ color: var(--ink); }
+  .banner .mono{ font-family:"Press Start 2P"; font-size: 10px; color: var(--accent2); background: var(--line); padding: 5px 7px; display:inline-block; }
+
+  footer{ text-align:center; color: var(--soft); padding: 24px 0 12px; font-size: 18px; }
+  footer .pixel-strip{
+    height: 8px; margin: 0 auto 14px; width: 260px;
+    background:
+      linear-gradient(90deg,
+        var(--panel2) 0 25%, var(--accent) 25% 50%, var(--accent2) 50% 75%, var(--panel) 75% 100%);
+    border: 2px solid var(--line);
+  }
+  .foot-art{ display:flex; gap: 12px; justify-content:center; margin-bottom: 12px; }
+  .foot-art canvas{ image-rendering: pixelated; width: 42px; height: 42px; }
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <nav class="pixel-border">
+      <span class="logo"><canvas class="pixel-cup" id="navCup" data-art="Cup"></canvas>COFFEEHOUSE</span>
+      <div class="nav-right">
+        <span id="navUser" style="display:none;"></span>
+        <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
+        <a class="btn" href="student.html" id="navHall" style="display:none;">STUDENT HALL</a>
+        <a class="btn" href="settings.html" id="navSettings" style="display:none;">SETTINGS</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <canvas class="big-cup" id="bigCup" data-art="Cup"></canvas>
+      <h1>COFFEE<span class="amp">&amp;</span>HOUSE</h1>
+      <p class="tagline">Where students brew ideas, chat across classes, and pour out project groups — all in one warm little shop.</p>
+    </section>
+
+    <section class="login-box pixel-border">
+      <div class="lb-title">SIGN IN WITH YOUR GOOGLE ACCOUNT</div>
+      <div class="lb-sub">Only students at a member school can enter. After signing in you'll pick your school community.</div>
+      <div id="googleBtn"></div>
+      <div id="loginStatus"></div>
+    </section>
+
+    <div class="dev-login" id="devLogin" style="display:__DEV_LOGIN__;">
+      <h4>DEV LOGIN (only for testing — creates a real account)</h4>
+      <form id="devForm">
+        <input id="devEmail" placeholder="you@school.edu" autocomplete="off">
+        <input id="devName" placeholder="Full name" autocomplete="off">
+        <button class="btn matcha" type="submit">LOG IN</button>
+      </form>
+    </div>
+
+    <script>
+      document.getElementById('devForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const email = document.getElementById('devEmail').value.trim();
+        const name = document.getElementById('devName').value.trim();
+        if (!email) return;
+        document.querySelector('#devLogin .btn').disabled = true;
+        try {
+          const data = await api('/api/auth/dev', { method: 'POST', body: { email, name } });
+          afterLogin(data);
+        } catch (err) {
+          document.getElementById('loginStatus').innerHTML = `<div class="notice">Dev login failed: ${esc(err.message)}</div>`;
+          document.querySelector('#devLogin .btn').disabled = false;
+        }
+      });
+    </script>
+
+    <section class="art-strip">
+      <div class="art-tile"><canvas class="a-lan" id="artLan" data-art="Lantern" ></canvas><span class="cap"> <!--LANTERN--> </span></div>
+      <div class="art-tile"><canvas class="a-tree" id="artTree" data-art="Tree"></canvas><span class="cap"> <!--BLOSSOM--></span></div>
+      <div class="art-tile"><canvas class="a-stu" id="artStu" data-art="Student"></canvas><span class="cap"> <!--STUDENT--></span></div>
+      <div class="art-tile"><canvas class="a-cup" id="artCup" data-art="Cup"></canvas><span class="cap"> <!--MUG--></span></div>
+      <div class="art-tile"><canvas class="a-book" id="artBook" data-art="Book"></canvas><span class="cap"> <!--NOTEBOOK--></span></div>
+      <div class="art-tile"><canvas class="a-lappy" id="artLap" data-art="Laptop"></canvas><span class="cap"> <!--LAPTOP--></span></div>
+      <div class="art-tile"><canvas class="a-moon" id="artMoon" data-art="Moon"></canvas><span class="cap"> <!--NIGHT--></span></div>
+    </section>
+
+    <div class="feature-head">THE SHOP IS OPEN</div>
+
+    <section class="grid">
+      <div class="card pixel-border">
+        <span class="icon">&#9749;</span>
+        <h3>INSTANT MESSAGING</h3>
+        <p>Search any student in your school community by name and start a chat instantly. No friend requests, no faff — just pour.</p>
+      </div>
+      <div class="card pixel-border">
+        <span class="icon">&#128101;</span>
+        <h3>PROJECT GROUPS</h3>
+        <p>Pull classmates into dedicated groups per project. Shared channels, shared notes, shared deadlines — all over coffee.</p>
+      </div>
+      <div class="card pixel-border">
+        <span class="icon">&#127891;</span>
+        <h3>CLASS CHANNELS</h3>
+        <p>Every class gets its own channel across all periods. Help explain tricky topics, run discussions, and never lose the thread.</p>
+      </div>
+    </section>
+
+    <section class="banner pixel-border">
+      <div>
+        <div class="b-label">MEET THEHOUSE AIDES</div>
+        <p>Call <span class="mono">@baristi</span> in any channel to get instant explanations powered by Google Gemini.<br>
+           Call <span class="mono">@brewer</span> to distill the whole chat feed into clean study notes (NotebookLM-style).</p>
+      </div>
+      <a class="btn matcha" href="ai-assistant.html">TRY THE AI</a>
+    </section>
+
+    <footer>
+      <div class="foot-art">
+        <canvas id="footTree" data-art="Tree"></canvas>
+        <canvas id="footCup" data-art="Cup"></canvas>
+        <canvas id="footStu" data-art="Student"></canvas>
+      </div>
+      <div class="pixel-strip"></div>
+      A free brew for every student. Sign in with your Google account and join your school community.
+    </footer>
+
+  </div>
+
+  <!-- school community picker -->
+  <div class="modal-overlay" id="schoolModal">
+    <div class="modal">
+      <h2>JOIN YOUR SCHOOL COMMUNITY</h2>
+      <p id="schoolModalGreet">Almost there! Pick the school you attend. You can change it later from Settings.</p>
+      <select id="schoolSelect"></select>
+      <button class="btn matcha" id="schoolJoin">JOIN COMMUNITY</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="art.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let CFG = null;
+    let LOGGED_IN_USER = null;
+    const $ = id => document.getElementById(id);
+
+    async function boot() {
+      try { CFG = await api('/api/config'); }
+      catch (e) { CFG = { firebaseConfigured: false, devLogin: true }; } // no backend? keep the box visible
+      $('devLogin').style.display = CFG.devLogin ? 'block' : 'none';
+
+      try {
+        const me = await api('/api/me');
+        LOGGED_IN_USER = me.user;
+        showLoggedIn(me);
+      } catch (e) { /* not logged in */ }
+
+      if (CFG.firebaseConfigured && window.firebase) {
+        firebase.initializeApp(CFG.firebase);
+        $('googleBtn').innerHTML =
+          '<button class="btn matcha" id="googleSignInBtn" style="padding:14px 20px;font-size:11px;">SIGN IN WITH GOOGLE</button>';
+        $('googleSignInBtn').addEventListener('click', signInWithGoogle);
+      } else {
+        $('loginStatus').innerHTML =
+          '<div class="notice">Firebase Sign-In is not configured yet. Add <code>FIREBASE_WEB_CONFIG</code> and a ' +
+          'service account to <code>.env</code> (see <code>notes-docs.md</code>). ' +
+          'While it\'s off, use the DEV LOGIN box below to create real accounts and explore.</div>';
+      }
+      Art.initTheme();
+    }
+
+    function showLoggedIn(me) {
+      $('navUser').style.display = 'inline';
+      $('navUser').innerHTML = `<b>${esc(me.user.name)}</b>${me.school ? ' &middot; ' + esc(me.school.name) : ''}`;
+      $('navHall').style.display = 'inline-block';
+      $('navSettings').style.display = 'inline-block';
+    }
+
+    async function signInWithGoogle() {
+      const btn = $('googleSignInBtn');
+      btn.disabled = true;
+      btn.textContent = 'SIGNING IN...';
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        const idToken = await result.user.getIdToken();
+        const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+        afterLogin(data);
+      } catch (err) {
+        $('loginStatus').innerHTML = `<div class="notice">Sign-in failed: ${esc(err.message)}</div>`;
+        btn.disabled = false;
+        btn.textContent = 'SIGN IN WITH GOOGLE';
+      }
+    }
+
+    function afterLogin(data) {
+      LOGGED_IN_USER = data.user;
+      showLoggedIn(data);
+      if (data.school) {
+        location.href = '/student.html';
+      } else {
+        openSchoolPicker(data.user);
+      }
+    }
+
+    /* ---- school community picker ---- */
+    async function openSchoolPicker(user) {
+      $('schoolModalGreet').textContent =
+        `Welcome, ${user.name || 'student'}! One community at a time — pick the school you attend. You can switch later from Settings.`;
+      const schools = await api('/api/schools');
+      $('schoolSelect').innerHTML = schools.map(s =>
+        `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      $('schoolModal').classList.add('on');
+    }
+
+    $('schoolJoin').addEventListener('click', async () => {
+      $('schoolJoin').disabled = true;
+      try {
+        await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value) } });
+        location.href = '/student.html';
+      } catch (err) {
+        alert('Could not join community: ' + err.message);
+        $('schoolJoin').disabled = false;
+      }
+    });
+
+    /* ---- dev login is wired above (before the CDN scripts) ---- */
+
+    boot();
+  </script>
+</body>
+</html>

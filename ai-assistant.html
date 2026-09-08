@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoffeeHouse - AI Aides</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #201208;
+    --bgB:      #26150a;
+    --panel:    #3b2314;
+    --panel2:   #5a3a22;
+    --line:     #221308;
+    --ink:      #f4e5c3;
+    --soft:     #b98a58;
+    --accent:   #6b8f49;
+    --accentD:  #3f5c2a;
+    --barista:  #e0a94f;
+    --brewer:   #d8a0ff;
+    --head:     #c99a63;
+    --head-ink: #221308;
+    --btnB:     #3b2314;
+    --btn-ink:  #f4e5c3;
+    --paper:    #f6ead0;
+    --paper-ink:#37220f;
+    --shad:     rgba(0,0,0,0.5);
+  }
+  body[data-theme="dark"]{
+    --bg:       #060a18;
+    --bgB:      #0d1126;
+    --panel:    #12162c;
+    --panel2:   #1f2442;
+    --line:     #05070f;
+    --ink:      #f7e9f2;
+    --soft:     #a9a3c4;
+    --accent:   #f093b5;
+    --accentD:  #552a44;
+    --barista:  #ffd98a;
+    --brewer:   #d8a0ff;
+    --head:     #262d50;
+    --head-ink: #f7e9f2;
+    --btnB:     #262d50;
+    --btn-ink:  #ffd0e0;
+    --paper:    #f4ecd8;
+    --paper-ink:#37220f;
+    --shad:     rgba(0,0,0,0.6);
+  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(45deg, var(--bg) 25%, transparent 25%, transparent 75%, var(--bg) 75%),
+      linear-gradient(45deg, var(--bgB) 25%, transparent 25%, transparent 75%, var(--bgB) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+    color: var(--ink);
+    font-family: "VT323", monospace;
+    font-size: 20px;
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color .2s, color .2s;
+  }
+  .pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2); }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 14px; background: var(--head); color: var(--head-ink);
+    gap: 12px; flex-wrap: wrap;
+  }
+  header .logo{ font-family:"Press Start 2P"; font-size: 12px; color: var(--head-ink); }
+  header .logo canvas{ width: 32px; height: 32px; vertical-align: middle; margin-right: 8px; image-rendering: pixelated; }
+  header .me{ display:flex; align-items:center; gap:10px; font-size: 18px; color: var(--head-ink); }
+  .btn{
+    font-family:"Press Start 2P"; font-size: 10px; padding: 10px 12px;
+    color: var(--btn-ink); background: var(--btnB); border: 3px solid var(--line);
+    cursor: pointer; display:inline-block; text-decoration:none;
+    box-shadow: 3px 3px 0 var(--shad);
+  }
+  .btn:hover{ filter: brightness(1.15); }
+  .btn.light{ background: var(--barista); color: #2a1708; }
+  .btn.brew{ background: var(--brewer); color: var(--line); }
+  .btn:disabled{ opacity:.5; cursor:default; }
+  .theme-toggle{
+    font-family:"Press Start 2P"; font-size: 9px; cursor: pointer;
+    background: var(--btnB); color: var(--btn-ink);
+    border: 3px solid var(--line); padding: 10px 12px;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 3px 3px 0 var(--shad);
+  }
+  .theme-toggle:hover{ filter: brightness(1.2); }
+
+  /* TABS */
+  .tabs{ display:flex; background: var(--panel); }
+  .tab{
+    flex:1; padding: 14px 10px; cursor:pointer; text-align:center;
+    background: var(--panel); color: var(--soft);
+    border:none; border-bottom: 4px solid var(--line);
+    font-family:"Press Start 2P"; font-size: 11px;
+  }
+  .tab small{ display:block; font-family:"VT323", monospace; font-size: 15px; margin-top: 3px; }
+  .tab.active.bar{ background: var(--barista); color: var(--line); border-bottom-color: var(--barista); }
+  .tab.active.brew{ background: var(--brewer); color: var(--line); border-bottom-color: var(--brewer); }
+
+  .app{ display: grid; grid-template-columns: 1fr 300px; height: calc(100vh - 158px); }
+  @media (max-width: 760px){ .app{ grid-template-columns: 1fr; } .side-rack{ display:none; } }
+
+  /* WORKSPACE */
+  .workspace{ position:relative; overflow:hidden; }
+  .ws-panel{ position:absolute; inset:0; display:none; flex-direction:column; }
+  .ws-panel.on{ display:flex; }
+
+  /* BARISTI CHAT */
+  .chat-flow{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; }
+  .chat-flow::-webkit-scrollbar{ width: 12px; }
+  .chat-flow::-webkit-scrollbar-thumb{ background: var(--panel); border: 3px solid var(--line); }
+  .msg{ display:flex; gap:10px; max-width: 85%; }
+  .msg.me{ align-self:flex-end; flex-direction: row-reverse; }
+  .msg .avatar{ width: 38px; height: 38px; flex-shrink:0; }
+  .avatar{
+    border: 3px solid var(--line);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:"Press Start 2P"; font-size: 10px; color:#fff; background: var(--accent);
+    overflow:hidden;
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover; }
+  .bubble{ background: var(--panel2); border:3px solid var(--line); padding:10px 13px; box-shadow:3px 3px 0 var(--shad); }
+  .msg.me .bubble{ background: var(--accentD); }
+  .bubble .who{ font-family:"Press Start 2P"; font-size:8px; color:var(--soft); margin-bottom:5px; }
+  .msg.me .bubble .who{ color: var(--ink); }
+  .bubble p{ white-space:pre-wrap; color:var(--ink); }
+  .bubble .time{ display:block; margin-top:5px; font-size:14px; color:var(--soft); text-align:right; }
+  .bubble.bot{ background: var(--panel); border-color: var(--barista); }
+  .bubble.thinking p{ color: var(--soft); font-style: italic; }
+  .search-bar{ padding: 12px 14px; background: var(--panel); border-top: 4px solid var(--line); display:flex; gap:10px; }
+  .search-bar input{
+    flex:1; background: var(--line); color: var(--ink);
+    border: 3px solid var(--panel2); padding: 10px 12px;
+    font-family:"VT323", monospace; font-size: 19px; outline:none;
+  }
+  .search-bar input:focus{ border-color: var(--barista); }
+  .chips{ padding: 10px 14px 0; display:flex; gap:8px; flex-wrap:wrap; }
+  .chips span{
+    font-family:"Press Start 2P"; font-size:8px; padding:6px 8px; cursor:pointer;
+    background: var(--line); color: var(--barista); border: 2px solid var(--barista);
+  }
+  .chips span:hover{ background: var(--barista); color: var(--line); }
+
+  /* BREWER */
+  .brew-top{ display:flex; gap:14px; padding: 14px 18px; background: var(--panel); border-bottom: 4px solid var(--line); align-items:flex-end; flex-wrap:wrap; }
+  .brew-top label{ font-family:"Press Start 2P"; font-size:9px; color:var(--brewer); display:block; margin-bottom:6px; }
+  .brew-top .pick, .brew-top .channel-pick{
+    background: var(--line); border: 3px solid var(--panel2); color: var(--ink);
+    padding: 9px; font-family:"VT323", monospace; font-size:17px; cursor:pointer;
+  }
+  .brew-top input[type=text]{
+    background: var(--line); color: var(--ink); border: 3px solid var(--panel2);
+    padding: 9px 12px; width: 260px; font-family:"VT323", monospace; font-size:17px; outline:none;
+  }
+  .brew-source-wrap{ flex: 1 1 100%; display:flex; gap:10px; }
+  .brew-source-wrap textarea{
+    flex:1; background: var(--line); color: var(--ink); border: 3px solid var(--panel2);
+    padding: 10px 12px; font-family:"VT323", monospace; font-size:17px; min-height: 84px; outline:none;
+  }
+  .brew-flow{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px; padding: 18px; }
+  .brew-flow::-webkit-scrollbar{ width: 12px; }
+  .brew-flow::-webkit-scrollbar-thumb{ background: var(--panel); border: 3px solid var(--line); }
+  .doc-card{ background: var(--paper); color: var(--paper-ink); border:3px solid var(--line); box-shadow: 4px 4px 0 var(--shad); padding: 16px 18px; }
+  .doc-card h3{ font-family:"Press Start 2P"; font-size:11px; color:#6b3f1f; margin-bottom:4px; }
+  .doc-card .stamp{
+    display:inline-block; font-family:"Press Start 2P"; font-size:8px; padding:3px 5px;
+    background: var(--brewer); color: var(--line); margin-left:8px; vertical-align:middle;
+  }
+  .doc-card .engine{
+    display:inline-block; font-family:"Press Start 2P"; font-size:8px; padding:3px 5px;
+    background:#7fae8d; color: var(--line); margin-left:8px; vertical-align:middle;
+  }
+  .doc-card p{ font-size: 18px; white-space: pre-wrap; }
+  .doc-card hr{ border: 2px dashed #b98a58; margin: 10px 0; }
+  .doc-card .src{ display:inline-block; margin-top:8px; font-size:15px; color:#7a5a35; }
+  .brew-flow .hint{ color: var(--soft); font-style:italic; font-size: 18px; }
+  .doc-link{ font-size: 16px; color:#7a5a35; display:block; margin-top:6px; }
+  .doc-link a{ color:#5a3a15; }
+
+  /* SIDE RACK */
+  .side-rack{ background: var(--panel); border-left: 4px solid var(--line); overflow-y:auto; }
+  .side-rack::-webkit-scrollbar{ width: 10px; }
+  .side-rack::-webkit-scrollbar-thumb{ background: var(--panel2); border: 2px solid var(--panel); }
+  .rack-art{
+    display:flex; gap: 8px; justify-content:center; align-items:flex-end;
+    padding: 12px 10px; border-bottom: 3px solid var(--line); background: var(--panel2);
+  }
+  .rack-art canvas{ image-rendering: pixelated; }
+  .rack-art .ta{ width: 34px; height: 34px; }
+  .rack-art .tl{ width: 26px; height: 33px; }
+  .rack-art .tc{ width: 34px; height: 34px; }
+  .panel{ padding: 14px; border-bottom: 3px solid var(--line); }
+  .panel h3{ font-family:"Press Start 2P"; font-size:10px; color: var(--barista); margin-bottom:10px; }
+  .panel.brew h3{ color: var(--brewer); }
+  .cheat-list{ display:flex; flex-direction:column; gap:8px; }
+  .cheat-item{
+    background: var(--panel2); border: 2px solid var(--barista); padding: 8px 10px; cursor:pointer; font-size:17px;
+  }
+  .cheat-item:hover{ filter: brightness(1.2); }
+  .cheat-item small{ color: var(--soft); font-size:14px; display:block; }
+  .doc-row{ display:flex; align-items:center; gap:9px; padding: 8px 4px; border-bottom: 2px dashed var(--panel2); font-size:17px; cursor:pointer; color: var(--ink); }
+  .doc-row:hover{ filter:brightness(1.2); }
+  .doc-row small{ color: var(--soft); font-size:14px; display:block; }
+  .doc-row .doc-ic{ width:30px; height:30px; background: var(--paper); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:"Press Start 2P"; font-size:8px; color: #37220f; }
+</style>
+</head>
+<body>
+
+  <header class="pixel-border">
+    <span class="logo"><canvas id="navCup" data-art="Cup"></canvas>COFFEEHOUSE AI</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="me" id="engineStatus">Baristi = Google Gemini &middot; Brewer = NotebookLM engine</span>
+      <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
+      <a class="btn" href="student.html" style="padding:8px 10px;">STUDENT HALL</a>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active bar" data-panel="baristi">BARISTI AI<small>explain anything &middot; make cheat sheets &middot; Google Gemini</small></button>
+    <button class="tab brew" data-panel="brewer">BREWER AI<small>NotebookLM engine &middot; analyze text &amp; chat feeds</small></button>
+  </div>
+
+  <div class="app">
+
+    <main class="workspace">
+      <!-- BARISTI -->
+      <section class="ws-panel on" id="baristi">
+        <div class="chat-flow" id="barChat"></div>
+        <div class="chips">
+          <span data-q="@baristi explain the krebs cycle in 3 lines">KREBS IN 3 LINES</span>
+          <span data-q="@baristi make a cheat sheet for mitosis">MAKE MITOSIS CHEAT SHEET</span>
+          <span data-q="@baristi how do I integrate e^x * sin(x)?">INTEGRATE e^x sin(x)</span>
+        </div>
+        <form class="search-bar" id="barForm">
+          <input id="barInput" autocomplete="off" placeholder="Ask Baristi anything... try @baristi">
+          <button class="btn" type="submit" id="barSend">ASK</button>
+        </form>
+      </section>
+
+      <!-- BREWER -->
+      <section class="ws-panel" id="brewer">
+        <div class="brew-top">
+          <div>
+            <label>SOURCE NAME</label>
+            <input type="text" id="brewSource" value="BIO-301 #general" placeholder="channel or file name">
+          </div>
+          <div>
+            <label>OR LOAD A CHANNEL</label>
+            <select class="channel-pick" id="brewChannel"><option value="">— paste text below —</option></select>
+          </div>
+          <button class="btn brew" id="brewBtn">&#9729; BREW NOTES</button>
+          <div class="brew-source-wrap">
+            <textarea id="brewText" placeholder="Paste the source text here, or pick a channel above to load its recent messages. Then hit BREW NOTES."></textarea>
+          </div>
+        </div>
+        <div class="brew-flow" id="brewFlow">
+          <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text with the NotebookLM engine and returns a clean study doc.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SIDE RACK -->
+    <aside class="side-rack">
+      <div class="rack-art">
+        <canvas class="tc" id="rackCup" data-art="Cup"></canvas>
+        <canvas class="ta" id="rackTree" data-art="Tree"></canvas>
+        <canvas class="tl" id="rackLan" data-art="Lantern"></canvas>
+      </div>
+      <div class="panel">
+        <h3>BARISTI CHEAT SHEETS</h3>
+        <div class="cheat-list" id="cheatList"></div>
+      </div>
+      <div class="panel brew">
+        <h3>BREWER DOCUMENTS</h3>
+        <div id="docList"></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <script src="art.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    /* ---------- boot ---------- */
+    async function boot() {
+      Art.initTheme();
+      try { await api('/api/me'); } catch (e) { location.href = '/'; return; }
+      try {
+        const cfg = await api('/api/config');
+        $('engineStatus').textContent =
+          'Baristi = ' + (cfg.geminiConfigured ? 'Google Gemini' : 'Gemini (not configured)') +
+          ' &middot; Brewer = ' + (cfg.notebooklmEnabled ? 'NotebookLM Enterprise + Gemini' : 'NotebookLM-style via Gemini');
+      } catch (e) {}
+      loadChannels();
+      loadCheats();
+      loadDocs();
+    }
+
+    /* ---------- tab switching ---------- */
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.querySelectorAll('.ws-panel').forEach(p => p.classList.remove('on'));
+        $(t.dataset.panel).classList.add('on');
+      });
+    });
+
+    /* ---------- Baristi chat ---------- */
+    const INTRO = "Hi! I'm Baristi AI \u2615 Your free study barista, powered by Google Gemini. Ask me anything with @baristi, or hit a chip below. I live in every channel too.";
+
+    function addChat(msg, bot, thinking) {
+      const flow = $('barChat');
+      const row = document.createElement('div');
+      row.className = 'msg' + (bot ? '' : ' me');
+      if (bot) {
+        const av = document.createElement('span');
+        av.className = 'avatar'; av.style.background = '#8a5a2b'; av.textContent = 'BA';
+        row.appendChild(av);
+      }
+      const bub = document.createElement('div');
+      bub.className = 'bubble' + (bot ? ' bot' : '') + (thinking ? ' thinking' : '');
+      const who = document.createElement('div'); who.className = 'who';
+      who.textContent = bot ? 'BARISTI AI' : 'You';
+      const p = document.createElement('p'); p.textContent = msg;
+      const time = document.createElement('span'); time.className = 'time'; time.textContent = nowTime();
+      bub.appendChild(who); bub.appendChild(p); bub.appendChild(time);
+      row.appendChild(bub);
+      flow.appendChild(row);
+      flow.scrollTop = flow.scrollHeight;
+      return row;
+    }
+
+    document.querySelectorAll('#baristi .chips span').forEach(c => {
+      c.addEventListener('click', () => {
+        const inp = $('barInput');
+        inp.value = c.dataset.q;
+        inp.focus();
+        $('barForm').dispatchEvent(new Event('submit', { cancelable: true }));
+      });
+    });
+
+    $('barForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const inp = $('barInput');
+      const q = inp.value.trim();
+      if (!q) return;
+      inp.value = '';
+      $('barSend').disabled = true;
+      addChat(q, false);
+      const think = addChat('Pouring a fresh answer...', true, true);
+      try {
+        const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q } });
+        think.remove();
+        addChat('@baristi ' + res.reply, true);
+        if (/cheat\s*sheet/i.test(q)) {
+          try {
+            const cs = await api('/api/ai/baristi/cheats', { method: 'POST', body: { topic: q } });
+            loadCheats();
+            addChat("I saved that cheat sheet to your rack: '" + cs.topic + "'. Click it to review.", true);
+          } catch (err) {}
+        }
+      } catch (err) {
+        think.remove();
+        addChat('Baristi hit a snag: ' + err.message, true);
+      }
+      $('barSend').disabled = false;
+    });
+
+    /* ---------- Baristi cheat sheets ---------- */
+    async function loadCheats() {
+      let cheats = [];
+      try { cheats = await api('/api/ai/baristi/cheats'); } catch (e) { return; }
+      const list = $('cheatList');
+      list.innerHTML = '';
+      if (!cheats.length) list.innerHTML = '<div class="empty" style="color:var(--soft);">No cheat sheets yet.</div>';
+      cheats.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'cheat-item';
+        item.innerHTML = `<b>&#128196; Cheat #${c.id}</b><br><small>${esc(c.topic)}</small>`;
+        item.addEventListener('click', () => addChat('@baristi cheat sheet — ' + c.topic + ':\n\n' + c.content, true));
+        list.appendChild(item);
+      });
+    }
+
+    /* ---------- Brewer ---------- */
+    let BREW_DOCS = [];
+
+    async function loadChannels() {
+      try {
+        const data = await api('/api/channels');
+        const sel = $('brewChannel');
+        data.classes.forEach(c => c.channels.forEach(ch => {
+          const o = document.createElement('option');
+          o.value = ch.key;
+          o.textContent = `${c.code} #${ch.title}`;
+          sel.appendChild(o);
+        }));
+      } catch (e) {}
+    }
+
+    $('brewChannel').addEventListener('change', async () => {
+      const key = $('brewChannel').value;
+      if (!key) return;
+      const msgs = await api('/api/messages?channel=' + encodeURIComponent(key));
+      const text = msgs.map(m => (m.author + ': ' + m.text)).join('\n');
+      $('brewSource').value = key.replace('channel:', '').replace(':', ' #');
+      $('brewText').value = text;
+    });
+
+    function renderBrewDoc(doc) {
+      const flow = $('brewFlow');
+      flow.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'doc-card';
+      card.innerHTML = `
+        <h3>&#127807; ${esc(doc.title)} <span class="stamp">BREWED</span><span class="engine">${esc(doc.engine || 'gemini')}</span></h3>
+        <hr>
+        <p>${esc(doc.body)}</p>
+        ${doc.notebook && doc.notebook.link
+          ? `<div class="doc-link">Also saved to your NotebookLM notebook: <a href="${esc(doc.notebook.link)}" target="_blank" rel="noopener">open notebook &#8599;</a></div>`
+          : ''}
+        <div class="src">brewed ${nowTime()} &middot; source: ${esc(doc.src || 'pasted text')}</div>
+      `;
+      flow.appendChild(card);
+    }
+
+    async function brewNewNotes() {
+      const source = $('brewSource').value.trim() || 'pasted text';
+      const text = $('brewText').value.trim();
+      if (!text) { $('brewFlow').innerHTML = '<div class="hint">Paste some text first, or pick a channel above.</div>'; return; }
+      $('brewBtn').disabled = true;
+      $('brewBtn').textContent = 'BREWING...';
+      try {
+        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text } });
+        renderBrewDoc({ title: 'Fresh Brew', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
+        loadDocs();
+      } catch (err) {
+        $('brewFlow').innerHTML = '<div class="hint">Brew failed: ' + esc(err.message) + '</div>';
+      }
+      $('brewBtn').disabled = false;
+      $('brewBtn').textContent = '\u2603 BREW NOTES';
+    }
+
+    async function loadDocs() {
+      try { BREW_DOCS = await api('/api/brewer/docs'); } catch (e) { return; }
+      const list = $('docList');
+      list.innerHTML = '';
+      if (!BREW_DOCS.length) list.innerHTML = '<div style="color:var(--soft); font-style:italic; font-size:16px;">No brewed documents yet.</div>';
+      BREW_DOCS.forEach(d => {
+        const row = document.createElement('div');
+        row.className = 'doc-row';
+        row.innerHTML = `<div class="doc-ic">N${d.id}</div><div>${esc(d.title)}<small>${d.body.split('\n').length} lines &middot; ${esc(d.src || 'text')}</small></div>`;
+        row.addEventListener('click', () => renderBrewDoc({ title: d.title, body: d.body, src: d.src, engine: 'saved' }));
+        list.appendChild(row);
+      });
+    }
+
+    $('brewBtn').addEventListener('click', brewNewNotes);
+
+    /* ---------- init ---------- */
+    addChat(INTRO, true);
+    boot();
+  </script>
+</body>
+</html>

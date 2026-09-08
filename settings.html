@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoffeeHouse - Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:       #201208;
+    --bgB:      #26150a;
+    --panel:    #3b2314;
+    --panel2:   #5a3a22;
+    --line:     #221308;
+    --ink:      #f4e5c3;
+    --soft:     #b98a58;
+    --accent:   #6b8f49;
+    --accentD:  #3f5c2a;
+    --accent2:  #e0a94f;
+    --danger:   #c0504a;
+    --head:     #c99a63;
+    --head-ink: #221308;
+    --btnB:     #3b2314;
+    --btn-ink:  #f4e5c3;
+    --shad:     rgba(0,0,0,0.5);
+  }
+  body[data-theme="dark"]{
+    --bg:       #060a18;
+    --bgB:      #0d1126;
+    --panel:    #12162c;
+    --panel2:   #1f2442;
+    --line:     #05070f;
+    --ink:      #f7e9f2;
+    --soft:     #a9a3c4;
+    --accent:   #f093b5;
+    --accentD:  #552a44;
+    --accent2:  #ffd98a;
+    --danger:   #c06060;
+    --head:     #262d50;
+    --head-ink: #f7e9f2;
+    --btnB:     #262d50;
+    --btn-ink:  #ffd0e0;
+    --shad:     rgba(0,0,0,0.6);
+  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(45deg, var(--bg) 25%, transparent 25%, transparent 75%, var(--bg) 75%),
+      linear-gradient(45deg, var(--bgB) 25%, transparent 25%, transparent 75%, var(--bgB) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+    color: var(--ink);
+    font-family: "VT323", monospace;
+    font-size: 20px;
+    min-height: 100vh;
+    transition: background-color .2s, color .2s;
+  }
+  .pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2); }
+  .wrap{ max-width: 680px; margin: 0 auto; padding: 28px 16px; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 14px; background: var(--head); color: var(--head-ink);
+    gap: 12px; flex-wrap: wrap;
+  }
+  header .logo{ font-family:"Press Start 2P"; font-size: 12px; color: var(--head-ink); }
+  header .logo canvas{ width: 32px; height: 32px; vertical-align: middle; margin-right: 8px; image-rendering: pixelated; }
+
+  .btn{
+    font-family:"Press Start 2P"; font-size: 10px; padding: 10px 12px;
+    color: var(--btn-ink); background: var(--btnB); border: 3px solid var(--line);
+    cursor: pointer; display:inline-block; text-decoration:none;
+    box-shadow: 3px 3px 0 var(--shad);
+  }
+  .btn:hover{ filter: brightness(1.15); }
+  .btn.matcha{ background: var(--accent); color:#fff; }
+  .btn.danger{ background: var(--danger); color:#fff; }
+  .btn:disabled{ opacity:.5; cursor:default; }
+
+  .theme-toggle{
+    font-family:"Press Start 2P"; font-size: 9px; cursor: pointer;
+    background: var(--btnB); color: var(--btn-ink);
+    border: 3px solid var(--line); padding: 10px 12px;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 3px 3px 0 var(--shad);
+  }
+  .theme-toggle:hover{ filter: brightness(1.2); }
+
+  .page-title{ font-family:"Press Start 2P"; font-size: 15px; color: var(--accent2); margin: 30px 0 18px; text-shadow: 2px 2px 0 var(--line); }
+
+  .card{ background: var(--panel); padding: 20px; margin-bottom: 18px; }
+  .card h3{ font-family:"Press Start 2P"; font-size: 11px; color: var(--accent); margin-bottom: 12px; }
+  .avatar{
+    width: 64px; height: 64px; border: 3px solid var(--line);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:"Press Start 2P"; font-size: 18px; color:#fff; overflow:hidden;
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover; }
+  .profile{ display:flex; gap: 16px; align-items:center; }
+  .profile .p-name{ font-size: 24px; color: var(--ink); }
+  .profile .p-email{ color: var(--soft); font-size: 18px; }
+  .row{ display:flex; align-items:center; gap: 12px; flex-wrap: wrap; }
+  .cur-school{ font-size: 20px; color: var(--ink); margin-bottom: 10px; }
+  .cur-school b{ color: var(--accent2); }
+  select{
+    flex:1; min-width: 240px; background: var(--line); color: var(--ink);
+    border: 3px solid var(--panel2); padding: 10px 12px; font-family:"VT323", monospace; font-size: 19px; cursor:pointer;
+  }
+  .note{ color: var(--soft); font-size: 17px; margin-top: 8px; }
+  .note.ok{ color: var(--accent); }
+  .note.err{ color: #ff8f8a; }
+  .spacer{ height: 14px; }
+  .actions{ display:flex; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+  <header class="pixel-border">
+    <span class="logo"><canvas id="navCup" data-art="Cup"></canvas>COFFEEHOUSE</span>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
+      <a class="btn" href="student.html">STUDENT HALL</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <div class="page-title">SETTINGS</div>
+
+    <div class="card pixel-border">
+      <h3>YOUR ACCOUNT</h3>
+      <div class="profile">
+        <span class="avatar" id="meAvatar"></span>
+        <div>
+          <div class="p-name" id="meName">...</div>
+          <div class="p-email" id="meEmail">...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pixel-border">
+      <h3>SCHOOL COMMUNITY</h3>
+      <div class="cur-school">Current: <b id="curSchool">loading...</b></div>
+      <div class="row">
+        <select id="schoolSelect"></select>
+        <button class="btn matcha" id="changeSchool">CHANGE COMMUNITY</button>
+      </div>
+      <div class="note">You belong to one school community at a time. Joining another school moves you instantly — your chats are per-school.</div>
+      <div class="note" id="schoolStatus"></div>
+    </div>
+
+    <div class="card pixel-border">
+      <h3>SESSION</h3>
+      <div class="actions">
+        <button class="btn danger" id="logoutBtn">LOG OUT</button>
+      </div>
+      <div class="note">Logging out clears your CoffeeHouse session. Sign back in with Google anytime.</div>
+    </div>
+
+  </div>
+
+  <script src="art.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    let SCHOOLS = [];
+
+    async function boot() {
+      Art.initTheme();
+      let me;
+      try { me = await api('/api/me'); } catch (e) { location.href = '/'; return; }
+      if (!me.school) location.href = '/';
+
+      const av = $('meAvatar');
+      av.style.background = colorFor(me.user.name);
+      av.innerHTML = me.user.picture ? `<img src="${esc(me.user.picture)}">` : esc(initials(me.user.name));
+      $('meName').textContent = me.user.name;
+      $('meEmail').textContent = me.user.email;
+      $('curSchool').textContent = me.school.name;
+
+      SCHOOLS = await api('/api/schools');
+      $('schoolSelect').innerHTML = SCHOOLS.map(s =>
+        `<option value="${s.id}" ${s.id === me.school.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+    }
+
+    $('changeSchool').addEventListener('click', async () => {
+      $('changeSchool').disabled = true;
+      const st = $('schoolStatus');
+      st.className = 'note';
+      st.textContent = '';
+      try {
+        const res = await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value) } });
+        $('curSchool').textContent = res.school.name;
+        st.className = 'note ok';
+        st.textContent = 'Community updated to ' + res.school.name + '. You are now sorted into that school\'s halls.';
+      } catch (err) {
+        st.className = 'note err';
+        st.textContent = 'Failed: ' + err.message;
+      }
+      $('changeSchool').disabled = false;
+    });
+
+    $('logoutBtn').addEventListener('click', async () => {
+      $('logoutBtn').disabled = true;
+      await api('/api/logout', { method: 'POST' }).catch(() => {});
+      location.href = '/';
+    });
+
+    boot();
+  </script>
+</body>
+</html>
