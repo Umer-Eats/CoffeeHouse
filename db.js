@@ -1,18 +1,20 @@
-/* CoffeeHouse database layer — uses Node's built-in SQLite (node:sqlite). */
+/* CoffeeHouse database layer — libSQL / Turso (works on Vercel serverless). */
 'use strict';
 
-const { DatabaseSync } = require('node:sqlite');
+const { createClient } = require('@libsql/client');
 const path = require('node:path');
-const fs = require('node:fs');
+const crypto = require('node:crypto');
 
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+/* ---------------- client ---------------- */
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'coffeehouse.db'));
-db.exec('PRAGMA foreign_keys = ON;');
-db.exec('PRAGMA journal_mode = WAL;');
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:' + path.join(__dirname, 'data', 'coffeehouse.db'),
+  authToken: process.env.TURSO_AUTH_TOKEN || undefined,
+});
 
-db.exec(`
+/* ---------------- schema ---------------- */
+
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   firebase_uid TEXT UNIQUE NOT NULL,
@@ -74,15 +76,9 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
-`);
+`;
 
-/* rename legacy google_sub column on old databases */
-const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
-if (userCols.includes('google_sub') && !userCols.includes('firebase_uid')) {
-  db.exec('ALTER TABLE users RENAME COLUMN google_sub TO firebase_uid;');
-}
-
-/* ---------------- seed ---------------- */
+/* ---------------- seed data ---------------- */
 
 const SCHOOLS = [
   'Pembroke Pines Charter High School',
@@ -90,68 +86,81 @@ const SCHOOLS = [
   'West Broward High School'
 ];
 
-function seedSchools() {
-  const ins = db.prepare('INSERT OR IGNORE INTO schools (name) VALUES (?)');
-  for (const name of SCHOOLS) ins.run(name);
+const BOTS = [
+  { sub: 'bot-baristi', email: 'baristi@coffeehouse.ai', name: 'Baristi AI' },
+  { sub: 'bot-brewer',  email: 'brewer@coffeehouse.ai',  name: 'Brewer AI' }
+];
+
+/* ---------------- init (call once per cold start) ---------------- */
+
+let initialized = false;
+
+async function init() {
+  if (initialized) return;
+  const stmts = SCHEMA.split(';').map(s => s.trim()).filter(Boolean);
+  for (const sql of stmts) {
+    await client.execute(sql);
+  }
+  for (const name of SCHOOLS) {
+    await client.execute({ sql: 'INSERT OR IGNORE INTO schools (name) VALUES (?)', args: [name] });
+  }
+  for (const b of BOTS) {
+    await client.execute({
+      sql: 'INSERT OR IGNORE INTO users (firebase_uid, email, name, is_bot) VALUES (?, ?, ?, 1)',
+      args: [b.sub, b.email, b.name]
+    });
+  }
+  initialized = true;
 }
 
-function seedBots() {
-  const ins = db.prepare(
-    `INSERT OR IGNORE INTO users (firebase_uid, email, name, is_bot)
-     VALUES (?, ?, ?, 1)`
-  );
-  ins.run('bot-baristi', 'baristi@coffeehouse.ai', 'Baristi AI');
-  ins.run('bot-brewer', 'brewer@coffeehouse.ai', 'Brewer AI');
+/* ---------------- low-level helpers ---------------- */
+
+async function all(sql, ...params) {
+  const rs = await client.execute({ sql, args: params });
+  return rs.rows;
 }
 
-seedSchools();
-seedBots();
+async function get(sql, ...params) {
+  const rs = await client.execute({ sql, args: params });
+  return rs.rows[0] || null;
+}
 
-/* ---------------- helpers ---------------- */
-
-function all(sql, ...params) { return db.prepare(sql).all(...params); }
-function get(sql, ...params) { return db.prepare(sql).get(...params); }
-function run(sql, ...params) { return db.prepare(sql).run(...params); }
+async function run(sql, ...params) {
+  const rs = await client.execute({ sql, args: params });
+  return { changes: rs.rowsAffected, lastInsertRowid: Number(rs.lastInsertRowid) };
+}
 
 /* ---------------- queries ---------------- */
 
-function findSchoolByName(name) {
-  return get('SELECT * FROM schools WHERE name = ?', name);
-}
-
-function listSchools() {
+async function listSchools() {
   return all('SELECT * FROM schools ORDER BY name');
 }
 
-function upsertUser(profile) {
-  const existing = get('SELECT * FROM users WHERE firebase_uid = ?', profile.sub);
+async function upsertUser(profile) {
+  const existing = await get('SELECT * FROM users WHERE firebase_uid = ?', profile.sub);
   if (existing) {
-    run(
+    await run(
       'UPDATE users SET email = ?, name = ?, picture = COALESCE(?, picture) WHERE id = ?',
       profile.email, profile.name, profile.picture || null, existing.id
     );
     return get('SELECT * FROM users WHERE id = ?', existing.id);
   }
-  const info = run(
+  const info = await run(
     'INSERT INTO users (firebase_uid, email, name, picture) VALUES (?, ?, ?, ?)',
     profile.sub, profile.email, profile.name, profile.picture || null
   );
   return get('SELECT * FROM users WHERE id = ?', info.lastInsertRowid);
 }
 
-function findUserByEmail(email) {
-  return get('SELECT * FROM users WHERE email = ?', email);
-}
-
-function findBotByEmail(email) {
+async function findBotByEmail(email) {
   return get('SELECT * FROM users WHERE email = ? AND is_bot = 1', email);
 }
 
-function getUser(id) {
+async function getUser(id) {
   return get('SELECT * FROM users WHERE id = ?', id);
 }
 
-function getUserSchool(userId) {
+async function getUserSchool(userId) {
   return get(
     `SELECT s.* FROM memberships m JOIN schools s ON s.id = m.school_id
      WHERE m.user_id = ? LIMIT 1`,
@@ -159,44 +168,43 @@ function getUserSchool(userId) {
   );
 }
 
-function setUserSchool(userId, schoolId) {
-  db.exec('BEGIN');
+async function setUserSchool(userId, schoolId) {
+  await client.execute('BEGIN');
   try {
-    run('DELETE FROM memberships WHERE user_id = ?', userId);
-    run('INSERT INTO memberships (user_id, school_id) VALUES (?, ?)', userId, schoolId);
-    db.exec('COMMIT');
+    await run('DELETE FROM memberships WHERE user_id = ?', userId);
+    await run('INSERT INTO memberships (user_id, school_id) VALUES (?, ?)', userId, schoolId);
+    await client.execute('COMMIT');
   } catch (err) {
-    db.exec('ROLLBACK');
+    await client.execute('ROLLBACK');
     throw err;
   }
   return getUserSchool(userId);
 }
 
-function createSession(userId, ttlMs) {
-  const token = require('node:crypto').randomBytes(32).toString('hex');
+async function createSession(userId, ttlMs) {
+  const token = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + ttlMs).toISOString();
-  run('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)', token, userId, expires);
+  await run('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)', token, userId, expires);
   return token;
 }
 
-function sessionUser(token) {
+async function sessionUser(token) {
   if (!token) return null;
-  const s = get('SELECT * FROM sessions WHERE token = ?', token);
+  const s = await get('SELECT * FROM sessions WHERE token = ?', token);
   if (!s) return null;
   if (new Date(s.expires_at).getTime() < Date.now()) {
-    run('DELETE FROM sessions WHERE token = ?', token);
+    await run('DELETE FROM sessions WHERE token = ?', token);
     return null;
   }
   return getUser(s.user_id);
 }
 
-function destroySession(token) {
-  if (token) run('DELETE FROM sessions WHERE token = ?', token);
+async function destroySession(token) {
+  if (token) await run('DELETE FROM sessions WHERE token = ?', token);
 }
 
-/* students in the same school (real accounts only), with online status */
-function schoolStudents(schoolId, excludeUserId) {
-  const rows = all(
+async function schoolStudents(schoolId, excludeUserId) {
+  const rows = await all(
     `SELECT u.id, u.name, u.email, u.picture
      FROM memberships mb
      JOIN users u ON u.id = mb.user_id
@@ -204,33 +212,36 @@ function schoolStudents(schoolId, excludeUserId) {
      ORDER BY u.name COLLATE NOCASE`,
     schoolId, excludeUserId
   );
-  return rows.map(row => {
-    const o = get('SELECT last_seen FROM online WHERE user_id = ?', row.id);
+  const results = [];
+  for (const row of rows) {
+    const o = await get('SELECT last_seen FROM online WHERE user_id = ?', row.id);
     const on = o && new Date(o.last_seen).getTime() > Date.now() - 90 * 1000;
-    return { id: row.id, name: row.name, email: row.email, picture: row.picture, on };
-  });
+    results.push({ id: row.id, name: row.name, email: row.email, picture: row.picture, on });
+  }
+  return results;
 }
 
-function heartbeat(userId) {
-  run('INSERT INTO online (user_id, last_seen) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET last_seen = excluded.last_seen',
-    userId, new Date().toISOString());
+async function heartbeat(userId) {
+  await run(
+    'INSERT INTO online (user_id, last_seen) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET last_seen = excluded.last_seen',
+    userId, new Date().toISOString()
+  );
 }
 
-/* messages */
-
-function channelMessages(schoolId, channel, limit = 200) {
-  return all(
+async function channelMessages(schoolId, channel, limit = 200) {
+  const rows = await all(
     `SELECT m.id, m.channel, m.text, m.created_at,
             u.id AS user_id, u.name AS author, u.picture, u.is_bot
      FROM messages m JOIN users u ON u.id = m.user_id
      WHERE m.school_id = ? AND m.channel = ?
      ORDER BY m.id DESC LIMIT ?`,
     schoolId, channel, limit
-  ).reverse();
+  );
+  return rows.reverse();
 }
 
-function insertMessage(schoolId, channel, userId, text) {
-  const info = run(
+async function insertMessage(schoolId, channel, userId, text) {
+  const info = await run(
     'INSERT INTO messages (school_id, channel, user_id, text) VALUES (?, ?, ?, ?)',
     schoolId, channel, userId, text
   );
@@ -242,7 +253,7 @@ function insertMessage(schoolId, channel, userId, text) {
   );
 }
 
-function dmThreads(userId, schoolId) {
+async function dmThreads(userId, schoolId) {
   return all(
     `SELECT m.channel, MAX(m.id) AS last_id, COUNT(*) AS n
      FROM messages m
@@ -253,43 +264,38 @@ function dmThreads(userId, schoolId) {
   );
 }
 
-/* brewed docs */
-
-function addBrewDoc(userId, title, body, src) {
-  const info = run(
+async function addBrewDoc(userId, title, body, src) {
+  const info = await run(
     'INSERT INTO brewed_docs (user_id, title, body, src) VALUES (?, ?, ?, ?)',
     userId, title, body, src
   );
   return get('SELECT * FROM brewed_docs WHERE id = ?', info.lastInsertRowid);
 }
 
-function listBrewDocs(userId) {
+async function listBrewDocs(userId) {
   return all('SELECT * FROM brewed_docs WHERE user_id = ? ORDER BY id DESC', userId);
 }
 
-/* cheat sheets */
-
-function addCheatSheet(userId, topic, content) {
-  const info = run(
+async function addCheatSheet(userId, topic, content) {
+  const info = await run(
     'INSERT INTO cheat_sheets (user_id, topic, content) VALUES (?, ?, ?)',
     userId, topic, content
   );
   return get('SELECT * FROM cheat_sheets WHERE id = ?', info.lastInsertRowid);
 }
 
-function listCheatSheets(userId) {
+async function listCheatSheets(userId) {
   return all('SELECT * FROM cheat_sheets WHERE user_id = ? ORDER BY id DESC', userId);
 }
 
 module.exports = {
-  db,
+  client,
+  init,
   get,
   run,
   all,
-  findSchoolByName,
   listSchools,
   upsertUser,
-  findUserByEmail,
   findBotByEmail,
   getUser,
   getUserSchool,

@@ -1,5 +1,5 @@
-/* CoffeeHouse — backend server.
-   Express + Node SQLite + Firebase Auth (Google sign-in) + Gemini/NotebookLM AI. */
+/* CoffeeHouse — backend server (Vercel-compatible).
+   Express + libSQL/Turso + Firebase Auth (Google sign-in) + Gemini/NotebookLM AI. */
 'use strict';
 
 const path = require('node:path');
@@ -21,6 +21,14 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SESSION_COOKIE = 'ch_session';
 
 const DEV_LOGIN = String(process.env.DEV_LOGIN || '').toLowerCase() === 'true';
+
+/* ---------------- lazy DB init (runs once per cold start) ---------------- */
+
+let dbReady = null;
+function ensureDb() {
+  if (!dbReady) dbReady = db.init();
+  return dbReady;
+}
 
 /* ---------------- Firebase Admin SDK ---------------- */
 
@@ -84,7 +92,6 @@ const GROUP_TEMPLATES = [
 ];
 
 const channelKey = (code, slug) => `channel:${code}:${slug}`;
-const dmKey = (userId) => `dm:${userId}`;
 
 /* ---------------- helpers ---------------- */
 
@@ -106,15 +113,16 @@ function publicMessage(m, meId) {
   };
 }
 
-function requireAuth(req, res, next) {
-  const user = db.sessionUser(req.cookies[SESSION_COOKIE]);
+async function requireAuth(req, res, next) {
+  await ensureDb();
+  const user = await db.sessionUser(req.cookies[SESSION_COOKIE]);
   if (!user) return res.status(401).json({ error: 'not_authenticated' });
   req.user = user;
   next();
 }
 
-function requireSchool(req, res, next) {
-  const school = db.getUserSchool(req.user.id);
+async function requireSchool(req, res, next) {
+  const school = await db.getUserSchool(req.user.id);
   if (!school) return res.status(403).json({ error: 'no_school' });
   req.school = school;
   next();
@@ -131,7 +139,8 @@ function setSessionCookie(res, token) {
 
 /* ---------------- config ---------------- */
 
-app.get('/api/config', (req, res) => {
+app.get('/api/config', async (req, res) => {
+  await ensureDb();
   const fb = firebaseWebConfig && firebaseWebConfig.apiKey && firebaseAuth;
   res.json({
     firebaseConfigured: !!fb,
@@ -145,6 +154,7 @@ app.get('/api/config', (req, res) => {
 /* ---------------- auth ---------------- */
 
 app.post('/api/auth/firebase', async (req, res) => {
+  await ensureDb();
   const { idToken } = req.body || {};
   if (!idToken) return res.status(400).json({ error: 'Missing Firebase ID token.' });
   if (!firebaseAuth) {
@@ -155,15 +165,15 @@ app.post('/api/auth/firebase', async (req, res) => {
   try {
     const decoded = await firebaseAuth.verifyIdToken(idToken);
     if (!decoded.email) return res.status(403).json({ error: 'This account has no email address.' });
-    const user = db.upsertUser({
+    const user = await db.upsertUser({
       sub: decoded.uid,
       email: decoded.email,
       name: decoded.name || decoded.email.split('@')[0],
       picture: decoded.picture || null
     });
-    const token = db.createSession(user.id, SESSION_TTL_MS);
+    const token = await db.createSession(user.id, SESSION_TTL_MS);
     setSessionCookie(res, token);
-    const school = db.getUserSchool(user.id);
+    const school = await db.getUserSchool(user.id);
     res.json({ user: publicUser(user), school: school ? { id: school.id, name: school.name } : null });
   } catch (err) {
     console.error('Firebase verify failed:', err.message);
@@ -172,63 +182,67 @@ app.post('/api/auth/firebase', async (req, res) => {
 });
 
 /* Dev-only real-account login so you can try the app before configuring Firebase. */
-app.post('/api/auth/dev', (req, res) => {
+app.post('/api/auth/dev', async (req, res) => {
+  await ensureDb();
   if (!DEV_LOGIN) return res.status(404).json({ error: 'Dev login is disabled.' });
   const { email, name } = req.body || {};
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'A valid email is required.' });
   const displayName = (name || '').trim() || email.split('@')[0];
   const sub = 'dev-' + email;
-  let user = db.get('SELECT * FROM users WHERE firebase_uid = ?', sub);
+  let user = await db.get('SELECT * FROM users WHERE firebase_uid = ?', sub);
   if (!user) {
-    const info = db.run('INSERT INTO users (firebase_uid, email, name) VALUES (?, ?, ?)', sub, email, displayName);
-    user = db.get('SELECT * FROM users WHERE id = ?', info.lastInsertRowid);
+    const info = await db.run('INSERT INTO users (firebase_uid, email, name) VALUES (?, ?, ?)', sub, email, displayName);
+    user = await db.get('SELECT * FROM users WHERE id = ?', info.lastInsertRowid);
   }
-  const token = db.createSession(user.id, SESSION_TTL_MS);
+  const token = await db.createSession(user.id, SESSION_TTL_MS);
   setSessionCookie(res, token);
-  const school = db.getUserSchool(user.id);
+  const school = await db.getUserSchool(user.id);
   res.json({ user: publicUser(user), school: school ? { id: school.id, name: school.name } : null });
 });
 
-app.post('/api/logout', (req, res) => {
-  db.destroySession(req.cookies[SESSION_COOKIE]);
+app.post('/api/logout', async (req, res) => {
+  await ensureDb();
+  await db.destroySession(req.cookies[SESSION_COOKIE]);
   res.clearCookie(SESSION_COOKIE);
   res.json({ ok: true });
 });
 
-app.get('/api/me', requireAuth, (req, res) => {
-  const school = db.getUserSchool(req.user.id);
+app.get('/api/me', requireAuth, async (req, res) => {
+  const school = await db.getUserSchool(req.user.id);
   res.json({ user: publicUser(req.user), school: school ? { id: school.id, name: school.name } : null });
 });
 
 /* ---------------- schools / communities ---------------- */
 
-app.get('/api/schools', requireAuth, (req, res) => {
-  res.json(db.listSchools().map(s => ({ id: s.id, name: s.name })));
+app.get('/api/schools', requireAuth, async (req, res) => {
+  const schools = await db.listSchools();
+  res.json(schools.map(s => ({ id: s.id, name: s.name })));
 });
 
-app.post('/api/school/join', requireAuth, (req, res) => {
+app.post('/api/school/join', requireAuth, async (req, res) => {
   const schoolId = Number((req.body || {}).schoolId);
-  const school = db.get('SELECT * FROM schools WHERE id = ?', schoolId);
+  const school = await db.get('SELECT * FROM schools WHERE id = ?', schoolId);
   if (!school) return res.status(400).json({ error: 'Unknown school.' });
-  db.setUserSchool(req.user.id, school.id);
+  await db.setUserSchool(req.user.id, school.id);
   res.json({ school: { id: school.id, name: school.name } });
 });
 
 /* ---------------- students (real accounts, sorted by school) ---------------- */
 
-app.get('/api/students', requireAuth, requireSchool, (req, res) => {
-  res.json(db.schoolStudents(req.school.id, req.user.id));
+app.get('/api/students', requireAuth, requireSchool, async (req, res) => {
+  res.json(await db.schoolStudents(req.school.id, req.user.id));
 });
 
-app.post('/api/heartbeat', requireAuth, (req, res) => {
-  db.heartbeat(req.user.id);
+app.post('/api/heartbeat', requireAuth, async (req, res) => {
+  await db.heartbeat(req.user.id);
   res.json({ ok: true });
 });
 
 /* ---------------- channels ---------------- */
 
-app.get('/api/channels', requireAuth, requireSchool, (req, res) => {
-  const members = db.get('SELECT COUNT(*) AS n FROM memberships WHERE school_id = ?', req.school.id).n;
+app.get('/api/channels', requireAuth, requireSchool, async (req, res) => {
+  const row = await db.get('SELECT COUNT(*) AS n FROM memberships WHERE school_id = ?', req.school.id);
+  const members = row.n;
   res.json({
     school: { id: req.school.id, name: req.school.name },
     members,
@@ -247,46 +261,47 @@ const BOT_ALIASES = {
   '@brewer':  { email: 'brewer@coffeehouse.ai',  handler: () => Promise.reject(new Error('brewer handled inline')) }
 };
 
-app.get('/api/messages', requireAuth, requireSchool, (req, res) => {
+app.get('/api/messages', requireAuth, requireSchool, async (req, res) => {
   const { channel } = req.query;
   if (!channel) return res.status(400).json({ error: 'channel is required.' });
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
     return res.status(400).json({ error: 'bad channel' });
   }
-  res.json(db.channelMessages(req.school.id, channel).map(m => publicMessage(m, req.user.id)));
+  const messages = await db.channelMessages(req.school.id, channel);
+  res.json(messages.map(m => publicMessage(m, req.user.id)));
 });
 
-app.post('/api/messages', requireAuth, requireSchool, (req, res) => {
+app.post('/api/messages', requireAuth, requireSchool, async (req, res) => {
   const { channel, text } = req.body || {};
   if (!channel || !text) return res.status(400).json({ error: 'channel and text are required.' });
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
     return res.status(400).json({ error: 'unknown channel type' });
   }
-  const msg = db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
+  const msg = await db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
   res.json(publicMessage(msg, req.user.id));
 
   /* fire the AI sidekicks when summoned */
   for (const [alias, cfg] of Object.entries(BOT_ALIASES)) {
     if (new RegExp(alias, 'i').test(text)) {
-      const bot = db.findBotByEmail(cfg.email);
+      const bot = await db.findBotByEmail(cfg.email);
       if (!bot) continue;
       setTimeout(() => {
         (async () => {
           try {
             let reply;
             if (alias === '@brewer') {
-              const feed = db.channelMessages(req.school.id, channel, 40)
-                .map(m => `${m.author}: ${m.text}`).join('\n');
+              const feedRows = await db.channelMessages(req.school.id, channel, 40);
+              const feed = feedRows.map(m => `${m.author}: ${m.text}`).join('\n');
               const { doc } = await ai.brewNotes(channel, feed);
               reply = doc;
             } else {
               reply = await cfg.handler(text);
             }
             const full = `${alias} ${reply}`;
-            db.insertMessage(req.school.id, channel, bot.id, full.slice(0, 4000));
+            await db.insertMessage(req.school.id, channel, bot.id, full.slice(0, 4000));
           } catch (err) {
             console.error('Bot reply failed:', err.message);
-            db.insertMessage(req.school.id, channel, bot.id,
+            await db.insertMessage(req.school.id, channel, bot.id,
               `${alias} I couldn't brew that right now — ${err.message}`);
           }
         })();
@@ -296,30 +311,33 @@ app.post('/api/messages', requireAuth, requireSchool, (req, res) => {
   }
 });
 
-app.get('/api/dms', requireAuth, requireSchool, (req, res) => {
-  const threads = db.dmThreads(req.user.id, req.school.id);
-  const out = threads.map(t => {
+app.get('/api/dms', requireAuth, requireSchool, async (req, res) => {
+  const threads = await db.dmThreads(req.user.id, req.school.id);
+  const out = [];
+  for (const t of threads) {
     const partnerId = Number(t.channel.split(':')[1]);
-    const partner = db.getUser(partnerId);
-    const last = db.get(
+    const partner = await db.getUser(partnerId);
+    const last = await db.get(
       `SELECT * FROM messages WHERE school_id = ? AND channel = ? ORDER BY id DESC LIMIT 1`,
       req.school.id, t.channel
     );
-    return {
-      partner: partner ? publicUser(partner) : null,
-      channel: t.channel,
-      n: t.n,
-      lastPreview: last ? last.text.slice(0, 40) : ''
-    };
-  }).filter(d => d.partner);
+    if (partner) {
+      out.push({
+        partner: publicUser(partner),
+        channel: t.channel,
+        n: t.n,
+        lastPreview: last ? last.text.slice(0, 40) : ''
+      });
+    }
+  }
   out.sort((a, b) => b.n - a.n);
   res.json(out);
 });
 
 /* ---------------- project groups ---------------- */
 
-app.get('/api/groups', requireAuth, requireSchool, (req, res) => {
-  const students = db.schoolStudents(req.school.id, req.user.id);
+app.get('/api/groups', requireAuth, requireSchool, async (req, res) => {
+  const students = await db.schoolStudents(req.school.id, req.user.id);
   const groups = GROUP_TEMPLATES.map((g, i) => {
     const picked = [];
     for (let j = 0; j < students.length && picked.length < 4; j++) {
@@ -352,15 +370,15 @@ app.post('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
     if (!body) {
       body = await ai.baristaCheatSheet(topic);
     }
-    const sheet = db.addCheatSheet(req.user.id, String(topic).slice(0, 200), body);
+    const sheet = await db.addCheatSheet(req.user.id, String(topic).slice(0, 200), body);
     res.json({ id: sheet.id, topic: sheet.topic, content: body });
   } catch (err) {
     res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
   }
 });
 
-app.get('/api/ai/baristi/cheats', requireAuth, (req, res) => {
-  res.json(db.listCheatSheets(req.user.id));
+app.get('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
+  res.json(await db.listCheatSheets(req.user.id));
 });
 
 app.post('/api/ai/brewer', requireAuth, async (req, res) => {
@@ -368,43 +386,54 @@ app.post('/api/ai/brewer', requireAuth, async (req, res) => {
   if (!text || !text.trim()) return res.status(400).json({ error: 'No source text to brew.' });
   try {
     const { doc, notebook, engine } = await ai.brewNotes(source || 'uploaded text', text);
-    const stored = db.addBrewDoc(req.user.id, `Brew — ${(source || 'text').slice(0, 60)}`, doc, source || null);
+    const stored = await db.addBrewDoc(req.user.id, `Brew — ${(source || 'text').slice(0, 60)}`, doc, source || null);
     res.json({ doc, id: stored.id, notebook, engine });
   } catch (err) {
     res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
   }
 });
 
-app.get('/api/brewer/docs', requireAuth, (req, res) => {
-  res.json(db.listBrewDocs(req.user.id));
+app.get('/api/brewer/docs', requireAuth, async (req, res) => {
+  res.json(await db.listBrewDocs(req.user.id));
 });
 
 /* ---------------- pages ---------------- */
 
-function guardPage(page) {
-  return (req, res) => {
-    const user = db.sessionUser(req.cookies[SESSION_COOKIE]);
-    if (!user) return res.redirect('/');
-    res.sendFile(path.join(__dirname, page));
-  };
+async function guardPage(req, res, page) {
+  await ensureDb();
+  const user = await db.sessionUser(req.cookies[SESSION_COOKIE]);
+  if (!user) return res.redirect('/');
+  res.sendFile(path.join(__dirname, page));
 }
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  await ensureDb();
   const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8')
     .replace('__DEV_LOGIN__', DEV_LOGIN ? 'block' : 'none');
   res.type('html').send(html);
 });
-app.get('/student.html', guardPage('student.html'));
-app.get('/settings.html', guardPage('settings.html'));
-app.get('/ai-assistant.html', guardPage('ai-assistant.html'));
+app.get('/student.html', (req, res) => guardPage(req, res, 'student.html'));
+app.get('/settings.html', (req, res) => guardPage(req, res, 'settings.html'));
+app.get('/ai-assistant.html', (req, res) => guardPage(req, res, 'ai-assistant.html'));
 
 app.use(express.static(__dirname));
 
-/* ---------------- boot ---------------- */
+/* ---------------- export for Vercel serverless / start locally ---------------- */
 
-app.listen(PORT, () => {
-  console.log(`\u2615 CoffeeHouse server running at http://localhost:${PORT}`);
-  console.log('  Firebase login:', firebaseAuth ? 'configured' : 'NOT configured (see notes-docs.md)');
-  console.log('  Gemini (Baristi):', ai.genAI ? 'configured' : 'NOT configured (add GEMINI_API_KEY to .env)');
-  console.log('  NotebookLM (Brewer):', ai.notebooklmEnabled() ? 'enterprise enabled' : 'gemini fallback');
-});
+if (process.env.VERCEL) {
+  // Vercel: export the app (no listen)
+  module.exports = app;
+} else {
+  // Local / other hosts: start the server
+  ensureDb().then(() => {
+    app.listen(PORT, () => {
+      console.log(`\u2615 CoffeeHouse server running at http://localhost:${PORT}`);
+      console.log('  Firebase login:', firebaseAuth ? 'configured' : 'NOT configured (see notes-docs.md)');
+      console.log('  Gemini (Baristi):', ai.genAI ? 'configured' : 'NOT configured (add GEMINI_API_KEY to .env)');
+      console.log('  NotebookLM (Brewer):', ai.notebooklmEnabled() ? 'enterprise enabled' : 'gemini fallback');
+    });
+  }).catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });
+}
