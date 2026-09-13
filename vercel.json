@@ -3,13 +3,16 @@
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["art.js", "app.js", "index.html", "student.html", "settings.html", "ai-assistant.html"]
+      }
     }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "server.js" },
     { "src": "/(student|settings|ai-assistant)\\.html", "dest": "server.js" },
     { "src": "/(art|app)\\.js", "dest": "server.js" },
-    { "src": "/", "dest": "server.js" }
+    { "src": "/(.*)", "dest": "server.js" }
   ]
 }
