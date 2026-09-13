@@ -4,319 +4,641 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CoffeeHouse</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:       #201208;
-    --bgB:      #26150a;
-    --panel:    #3b2314;
-    --panel2:   #5a3a22;
-    --line:     #221308;
-    --ink:      #f4e5c3;
-    --soft:     #b98a58;
-    --accent:   #6b8f49;
-    --accentD:  #3f5c2a;
-    --accent2:  #e0a94f;
-    --head:     #c99a63;
-    --head-ink: #221308;
-    --btnB:     #3b2314;
-    --btn-ink:  #f4e5c3;
-    --card:     #3b2314;
-    --shad:     rgba(0,0,0,0.5);
+  :root {
+    --bg: #faf6f0;
+    --bg2: #f0e8da;
+    --hero-bg: #c4956a;
+    --hero-overlay: rgba(62,33,14,0.55);
+    --nav-bg: rgba(250,246,240,0.92);
+    --nav-border: rgba(0,0,0,0.08);
+    --text: #3b2314;
+    --text-soft: #7a5a3a;
+    --text-hero: #fff;
+    --card-bg: #fff;
+    --card-border: rgba(0,0,0,0.06);
+    --card-shadow: 0 2px 16px rgba(60,30,10,0.08);
+    --card-hover-shadow: 0 8px 32px rgba(60,30,10,0.14);
+    --accent: #6b8f49;
+    --accent2: #e0a94f;
+    --pill-bg: rgba(255,255,255,0.18);
+    --pill-border: rgba(255,255,255,0.3);
+    --bottom-bg: #3b2314;
+    --bottom-text: #f4e5c3;
+    --toggle-bg: #e8dcd0;
+    --toggle-active: #fff;
+    --toggle-text: #7a5a3a;
+    --toggle-active-text: #3b2314;
+    --tagline-bg: rgba(80,50,20,0.65);
+    --hero-gradient: linear-gradient(180deg,
+      #8b6040 0%, #a07050 20%, #c4956a 40%, #d4a878 60%, #b8885a 80%, #7a5535 100%);
+    --feature-icon-bg: rgba(107,143,73,0.12);
+    --feature-icon-color: #5a7a38;
+    --footer-bg: #3b2314;
+    --footer-text: #c9a87a;
+    --footer-border: #5a3a22;
+    --hero-cup-shadow: rgba(0,0,0,0.3);
   }
-  body[data-theme="dark"]{
-    --bg:       #060a18;
-    --bgB:      #0d1126;
-    --panel:    #12162c;
-    --panel2:   #1f2442;
-    --line:     #05070f;
-    --ink:      #f7e9f2;
-    --soft:     #a9a3c4;
-    --accent:   #f093b5;
-    --accentD:  #552a44;
-    --accent2:  #ffd98a;
-    --head:     #262d50;
-    --head-ink: #f7e9f2;
-    --btnB:     #262d50;
-    --btn-ink:  #ffd0e0;
-    --card:     #161b34;
-    --shad:     rgba(0,0,0,0.6);
+  body[data-theme="dark"] {
+    --bg: #0d0f1a;
+    --bg2: #111428;
+    --hero-bg: #1a1040;
+    --hero-overlay: rgba(13,15,26,0.4);
+    --nav-bg: rgba(13,15,26,0.92);
+    --nav-border: rgba(255,255,255,0.06);
+    --text: #e8ddf2;
+    --text-soft: #9a8cb8;
+    --text-hero: #fff;
+    --card-bg: #181c36;
+    --card-border: rgba(255,255,255,0.06);
+    --card-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    --card-hover-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    --accent: #f093b5;
+    --accent2: #ffd98a;
+    --pill-bg: rgba(255,255,255,0.1);
+    --pill-border: rgba(255,255,255,0.18);
+    --bottom-bg: #0d0f1a;
+    --bottom-text: #c8b8e0;
+    --toggle-bg: #1f2442;
+    --toggle-active: #262d50;
+    --toggle-text: #9a8cb8;
+    --toggle-active-text: #f7e9f2;
+    --tagline-bg: rgba(20,22,50,0.7);
+    --hero-gradient: linear-gradient(180deg,
+      #0a0520 0%, #15082e 15%, #1a1050 30%, #201460 50%, #1a1050 70%, #0d0828 100%);
+    --feature-icon-bg: rgba(240,147,181,0.12);
+    --feature-icon-color: #f093b5;
+    --footer-bg: #0d0f1a;
+    --footer-text: #7a6ca0;
+    --footer-border: #1f2442;
+    --hero-cup-shadow: rgba(0,0,0,0.5);
   }
-  *{ box-sizing: border-box; margin: 0; padding: 0; }
-  body{
-    background-color: var(--bg);
-    background-image:
-      linear-gradient(45deg, var(--bg) 25%, transparent 25%, transparent 75%, var(--bg) 75%),
-      linear-gradient(45deg, var(--bgB) 25%, transparent 25%, transparent 75%, var(--bgB) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 8px 8px;
-    color: var(--ink);
-    font-family: "VT323", monospace;
-    font-size: 20px;
-    line-height: 1.45;
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
     min-height: 100vh;
-    transition: background-color .2s, color .2s;
+    transition: background .3s, color .3s;
+    overflow-x: hidden;
   }
-  .wrap{ max-width: 980px; margin: 0 auto; padding: 32px 16px; }
 
-  .pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2), 6px 6px 0 rgba(0,0,0,0.45); }
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--nav-border);
+    transition: background .3s;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Press Start 2P'; font-size: 13px;
+    color: var(--text); text-decoration: none;
+    letter-spacing: 0.5px;
+  }
+  .nav-logo canvas { image-rendering: pixelated; }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 14px; font-weight: 500; color: var(--text-soft);
+    text-decoration: none; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-user { font-size: 14px; font-weight: 600; color: var(--text); display: none; }
+  .btn-login {
+    font-size: 13px; font-weight: 600; padding: 10px 22px;
+    border-radius: 24px; border: 2px solid var(--text);
+    background: transparent; color: var(--text);
+    cursor: pointer; transition: all .2s; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-login:hover { background: var(--text); color: var(--bg); }
+  .btn-login svg { width: 16px; height: 16px; }
 
-  /* NAV */
-  nav{
-    display:flex; align-items:center; justify-content:space-between;
-    gap: 14px; flex-wrap: wrap;
-    background: var(--head);
-    color: var(--head-ink);
-    padding: 12px 16px;
+  /* ── THEME TOGGLE ── */
+  .theme-toggle {
+    display: flex; border-radius: 24px; overflow: hidden;
+    border: 2px solid var(--nav-border); background: var(--toggle-bg);
+    cursor: pointer; position: relative;
   }
-  nav .logo{ font-family:"Press Start 2P"; font-size: 14px; letter-spacing: 1px; color: var(--head-ink); }
-  nav .pixel-cup{ width: 36px; height: 36px; vertical-align: middle; margin-right: 8px; image-rendering: pixelated; }
-  .nav-right{ display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
-  .btn{
-    display:inline-block;
-    font-family:"Press Start 2P";
-    font-size: 10px;
-    padding: 12px 13px;
-    color: var(--btn-ink);
-    background: var(--btnB);
-    border: 3px solid var(--line);
-    text-decoration: none;
-    cursor: pointer;
-    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
-    transition: transform 0.06s steps(2), box-shadow 0.06s steps(2);
+  .theme-toggle .opt {
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    color: var(--toggle-text); display: flex; align-items: center; gap: 6px;
+    position: relative; z-index: 1; transition: color .2s; user-select: none;
   }
-  .btn:hover{ transform: translate(2px,2px); box-shadow: 0 0 0 rgba(0,0,0,0.5); }
-  .btn.matcha{ background: var(--accent); color: #fff; box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
-  .btn:disabled{ opacity:.5; cursor:default; transform:none; }
+  .theme-toggle .slider {
+    position: absolute; top: 3px; left: 3px;
+    width: calc(50% - 3px); height: calc(100% - 6px);
+    border-radius: 20px; background: var(--toggle-active);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  body[data-theme="dark"] .theme-toggle .slider { transform: translateX(100%); }
+  .theme-toggle .opt.active { color: var(--toggle-active-text); }
 
-  .theme-toggle{
-    font-family:"Press Start 2P"; font-size: 9px; cursor: pointer;
-    background: var(--btnB); color: var(--btn-ink);
-    border: 3px solid var(--line); padding: 12px 12px;
-    display: inline-flex; align-items: center; gap: 7px;
-    box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+  /* ── HERO ── */
+  .hero {
+    position: relative; width: 100%; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--hero-gradient);
+    overflow: hidden; padding-top: 80px;
   }
-  .theme-toggle:hover{ filter: brightness(1.2); }
+  .hero-scene {
+    position: absolute; inset: 0; overflow: hidden;
+  }
+  /* Day scene elements */
+  .hero-scene .day-scene {
+    position: absolute; inset: 0;
+    opacity: 1; transition: opacity .6s;
+  }
+  body[data-theme="dark"] .hero-scene .day-scene { opacity: 0; }
+  /* Night scene elements */
+  .hero-scene .night-scene {
+    position: absolute; inset: 0;
+    opacity: 0; transition: opacity .6s;
+  }
+  body[data-theme="dark"] .hero-scene .night-scene { opacity: 1; }
 
-  /* HERO */
-  .hero{ text-align:center; margin: 44px 0 10px; display:flex; flex-direction:column; align-items:center; gap: 20px; }
-  .hero .big-cup{ width: 216px; height: 216px; image-rendering: pixelated; filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.5)); }
-  .hero h1{ font-family:"Press Start 2P"; font-size: 26px; color: var(--ink); text-shadow: 3px 3px 0 var(--line); }
-  .hero h1 .amp{ color: var(--accent); }
-  .hero p.tagline{ font-size: 22px; color: var(--soft); max-width: 580px; }
-  .hero-actions{ display:flex; gap: 14px; flex-wrap: wrap; justify-content:center; }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: var(--hero-overlay);
+    z-index: 2;
+  }
+  .hero-content {
+    position: relative; z-index: 3;
+    text-align: center; padding: 0 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .hero-cup {
+    width: 80px; height: 80px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 12px var(--hero-cup-shadow));
+  }
+  .hero-title {
+    font-family: 'Press Start 2P'; font-size: 36px;
+    color: var(--text-hero); text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+  }
+  .hero-tagline {
+    font-size: 16px; font-weight: 500; letter-spacing: 4px;
+    color: rgba(255,255,255,0.85); text-transform: uppercase;
+  }
+  .hero-subtitle {
+    padding: 14px 32px; border-radius: 30px;
+    background: var(--tagline-bg);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    color: #fff; font-size: 15px; font-weight: 500;
+    max-width: 360px; line-height: 1.5;
+  }
 
-  /* SIGN-IN */
-  .login-box{
-    margin: 10px 0 4px; padding: 24px 22px;
-    background: var(--panel2);
-    display:flex; flex-direction:column; align-items:center; gap: 14px;
-    max-width: 460px; margin-left:auto; margin-right:auto;
+  /* ── SCROLL INDICATOR ── */
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: rgba(255,255,255,0.6); font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    animation: bounce 2s infinite;
   }
-  .login-box .lb-title{ font-family:"Press Start 2P"; font-size: 11px; color: var(--ink); }
-  .login-box .lb-sub{ color: var(--soft); font-size: 18px; text-align:center; }
-  #googleBtn{ min-height: 40px; display:flex; align-items:center; justify-content:center; }
-  .notice{
-    font-size: 17px; color: var(--accent2); background: var(--line);
-    border: 2px dashed var(--accent2); padding: 10px 12px; max-width: 560px;
-    text-align:left; line-height: 1.5;
+  .scroll-hint svg { width: 20px; height: 20px; stroke: rgba(255,255,255,0.6); }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
   }
-  .notice code{ background:#000; padding: 0 4px; color: var(--accent2); }
 
-  /* DEV LOGIN */
-  .dev-login{ max-width:460px; margin: 14px auto; padding: 14px; background: var(--panel); border: 3px solid var(--line); }
-  .dev-login h4{ font-family:"Press Start 2P"; font-size: 9px; color: var(--soft); margin-bottom: 8px; }
-  .dev-login form{ display:flex; gap:8px; flex-wrap:wrap; }
-  .dev-login input{
-    flex:1; min-width: 170px; background: var(--line); color: var(--ink);
-    border: 3px solid var(--panel2); padding: 8px 10px; font-family:"VT323", monospace; font-size: 18px;
+  /* ── FEATURE CARDS ── */
+  .features {
+    padding: 80px 40px; max-width: 1200px; margin: 0 auto;
   }
-  .dev-login .btn{ padding: 8px 10px; }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 36px 24px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    transition: transform .3s, box-shadow .3s, background .3s;
+    opacity: 0; transform: translateY(30px);
+  }
+  .feature-card.visible {
+    opacity: 1; transform: translateY(0);
+    transition: opacity .6s ease-out, transform .6s ease-out, box-shadow .3s, background .3s;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-hover-shadow);
+  }
+  .feature-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--feature-icon-bg);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .feature-icon svg { width: 28px; height: 28px; stroke: var(--feature-icon-color); fill: none; stroke-width: 1.8; }
+  .feature-card h3 {
+    font-size: 16px; font-weight: 700; margin-bottom: 8px;
+    color: var(--text);
+  }
+  .feature-card p {
+    font-size: 14px; color: var(--text-soft); line-height: 1.6;
+  }
 
-  /* SCHOOL PICKER MODAL */
-  .modal-overlay{
-    position: fixed; inset: 0; background: rgba(0,0,0,0.72);
-    display:none; align-items:center; justify-content:center; z-index: 50;
+  /* ── BOTTOM CTA ── */
+  .bottom-cta {
+    margin: 0 40px 80px; max-width: 1120px; margin-left: auto; margin-right: auto;
+    background: var(--bottom-bg);
+    border-radius: 20px;
+    padding: 48px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 40px; flex-wrap: wrap;
+    opacity: 0; transform: translateY(30px);
+    transition: opacity .6s ease-out, transform .6s ease-out;
   }
-  .modal-overlay.on{ display:flex; }
-  .modal{
+  .bottom-cta.visible {
+    opacity: 1; transform: translateY(0);
+  }
+  .bottom-cta-text {
+    color: var(--bottom-text);
+    font-size: 20px; font-weight: 600; line-height: 1.6;
+  }
+  .bottom-cta-text .heart { color: var(--accent); }
+  .bottom-cta canvas { image-rendering: pixelated; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 32px 40px;
+    border-top: 1px solid var(--footer-border);
+    background: var(--footer-bg);
+  }
+  footer p { color: var(--footer-text); font-size: 13px; }
+
+  /* ── SCHOOL MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.on { display: flex; }
+  .modal {
     max-width: 440px; width: calc(100% - 32px);
-    background: var(--panel2); border: 3px solid var(--line);
-    box-shadow: 0 0 0 4px var(--panel), 8px 8px 0 rgba(0,0,0,0.5);
-    padding: 22px; text-align:center;
+    background: var(--card-bg); border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    padding: 32px; text-align: center;
   }
-  .modal h2{ font-family:"Press Start 2P"; font-size: 13px; color: var(--accent2); margin-bottom: 12px; line-height: 1.6; }
-  .modal p{ color: var(--ink); margin-bottom: 14px; }
-  .modal select{
-    width:100%; background: var(--line); color: var(--ink);
-    border: 3px solid var(--panel); padding: 12px; margin-bottom: 14px;
-    font-family:"VT323", monospace; font-size: 19px; cursor:pointer;
+  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .modal p { color: var(--text-soft); margin-bottom: 16px; font-size: 14px; }
+  .modal select {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    border: 2px solid var(--card-border); background: var(--bg2);
+    color: var(--text); font-size: 15px; margin-bottom: 16px;
+    font-family: inherit; cursor: pointer;
   }
-  .modal .btn{ width: 100%; }
-
-  /* ART GALLERY STRIP */
-  .art-strip{
-    display:flex; gap: 18px; justify-content:center; align-items:flex-end; flex-wrap: wrap;
-    padding: 26px 14px; margin: 18px 0 4px;
-    background: var(--panel2);
-    background: color-mix(in srgb, var(--panel2) 55%, transparent);
-    border: 3px solid var(--line);
+  .modal .btn-join {
+    width: 100%; padding: 14px; border-radius: 12px;
+    border: none; background: var(--accent); color: #fff;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: filter .2s;
   }
-  .art-tile{ display:flex; flex-direction:column; align-items:center; gap: 6px; }
-  .art-tile canvas{ image-rendering: pixelated; filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.4)); }
-  .art-tile .cap{ font-family:"Press Start 2P"; font-size: 8px; color: var(--soft); }
-  .a-tree{ width: 66px; height: 66px; }
-  .a-stu{ width: 56px; height: 56px; }
-  .a-cup{ width: 64px; height: 64px; }
-  .a-book{ width: 56px; height: 42px; }
-  .a-lappy{ width: 58px; height: 41px; }
-  .a-lan{ width: 50px; height: 64px; }
-  .a-moon{ width: 84px; height: 56px; }
+  .modal .btn-join:hover { filter: brightness(1.1); }
 
-  .feature-head{ text-align:center; font-family:"Press Start 2P"; font-size: 13px; color: var(--accent); margin: 42px 0 8px; text-shadow: 2px 2px 0 var(--line); }
-
-  /* FEATURES */
-  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 18px; margin: 26px 0; }
-  .card{ background: var(--card); padding: 20px 18px; image-rendering: pixelated; }
-  .card .icon{ font-size: 30px; display:block; margin-bottom: 10px; }
-  .card h3{ font-family:"Press Start 2P"; font-size: 11px; color: var(--accent); margin-bottom: 10px; line-height:1.6; }
-  .card p{ color: var(--ink); }
-
-  .banner{
-    display:flex; gap: 18px; align-items:center; justify-content: space-between;
-    background: var(--accentD);
-    padding: 18px 22px;
-    margin: 44px 0 8px;
-    flex-wrap: wrap;
+  /* ── DEV LOGIN ── */
+  .dev-login {
+    max-width: 440px; margin: 0 auto 80px; padding: 20px;
+    background: var(--card-bg); border-radius: 16px;
+    border: 1px solid var(--card-border);
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .5s, transform .5s;
   }
-  .banner .b-label{ font-family:"Press Start 2P"; font-size: 11px; color: var(--ink); line-height:1.7; margin-bottom:8px; }
-  .banner p{ color: var(--ink); }
-  .banner .mono{ font-family:"Press Start 2P"; font-size: 10px; color: var(--accent2); background: var(--line); padding: 5px 7px; display:inline-block; }
-
-  footer{ text-align:center; color: var(--soft); padding: 24px 0 12px; font-size: 18px; }
-  footer .pixel-strip{
-    height: 8px; margin: 0 auto 14px; width: 260px;
-    background:
-      linear-gradient(90deg,
-        var(--panel2) 0 25%, var(--accent) 25% 50%, var(--accent2) 50% 75%, var(--panel) 75% 100%);
-    border: 2px solid var(--line);
+  .dev-login.visible { opacity: 1; transform: translateY(0); }
+  .dev-login h4 { font-size: 12px; font-weight: 700; color: var(--text-soft); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .dev-login form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dev-login input {
+    flex: 1; min-width: 160px; padding: 10px 14px; border-radius: 10px;
+    border: 2px solid var(--card-border); background: var(--bg2);
+    color: var(--text); font-family: inherit; font-size: 14px;
   }
-  .foot-art{ display:flex; gap: 12px; justify-content:center; margin-bottom: 12px; }
-  .foot-art canvas{ image-rendering: pixelated; width: 42px; height: 42px; }
+  .dev-login .btn-dev {
+    padding: 10px 18px; border-radius: 10px; border: none;
+    background: var(--accent); color: #fff; font-weight: 600;
+    font-size: 14px; cursor: pointer;
+  }
+
+  /* ── LOGIN STATUS ── */
+  .login-notice {
+    font-size: 13px; color: var(--accent2); background: var(--bg2);
+    border: 1px dashed var(--accent2); border-radius: 10px;
+    padding: 12px 16px; max-width: 440px; margin: 0 auto 80px;
+    text-align: left; line-height: 1.6;
+  }
+  .login-notice code { background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 4px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    nav { padding: 14px 20px; }
+    .nav-links { gap: 20px; }
+    .hero-title { font-size: 26px; }
+    .features { padding: 60px 20px; }
+    .bottom-cta { margin: 0 20px 60px; padding: 36px 28px; }
+  }
+  @media (max-width: 600px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hero-title { font-size: 20px; }
+    .hero-tagline { font-size: 13px; letter-spacing: 2px; }
+    .bottom-cta { flex-direction: column; text-align: center; }
+  }
 </style>
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
 </head>
 <body>
 
-  <div class="wrap">
-
-    <nav class="pixel-border">
-      <span class="logo"><canvas class="pixel-cup" id="navCup" data-art="Cup"></canvas>COFFEEHOUSE</span>
-      <div class="nav-right">
-        <span id="navUser" style="display:none;"></span>
-        <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
-        <a class="btn" href="student.html" id="navHall" style="display:none;">STUDENT HALL</a>
-        <a class="btn" href="settings.html" id="navSettings" style="display:none;">SETTINGS</a>
-      </div>
-    </nav>
-
-    <section class="hero">
-      <canvas class="big-cup" id="bigCup" data-art="Cup"></canvas>
-      <h1>COFFEE<span class="amp">&amp;</span>HOUSE</h1>
-      <p class="tagline">Where students brew ideas, chat across classes, and pour out project groups — all in one warm little shop.</p>
-    </section>
-
-    <section class="login-box pixel-border">
-      <div class="lb-title">SIGN IN WITH YOUR GOOGLE ACCOUNT</div>
-      <div class="lb-sub">Only students at a member school can enter. After signing in you'll pick your school community.</div>
-      <div id="googleBtn"></div>
-      <div id="loginStatus"></div>
-    </section>
-
-    <div class="dev-login" id="devLogin" style="display:__DEV_LOGIN__;">
-      <h4>DEV LOGIN (only for testing — creates a real account)</h4>
-      <form id="devForm">
-        <input id="devEmail" placeholder="you@school.edu" autocomplete="off">
-        <input id="devName" placeholder="Full name" autocomplete="off">
-        <button class="btn matcha" type="submit">LOG IN</button>
-      </form>
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <canvas id="navCup" width="24" height="24" data-art="Cup"></canvas>
+      CoffeeHouse
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="student.html">Chat</a>
+      <a href="ai-assistant.html">Study</a>
+      <a href="settings.html">Profile</a>
     </div>
-
-    <script>
-      document.getElementById('devForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const email = document.getElementById('devEmail').value.trim();
-        const name = document.getElementById('devName').value.trim();
-        if (!email) return;
-        document.querySelector('#devLogin .btn').disabled = true;
-        try {
-          const data = await api('/api/auth/dev', { method: 'POST', body: { email, name } });
-          afterLogin(data);
-        } catch (err) {
-          document.getElementById('loginStatus').innerHTML = `<div class="notice">Dev login failed: ${esc(err.message)}</div>`;
-          document.querySelector('#devLogin .btn').disabled = false;
-        }
-      });
-    </script>
-
-    <section class="art-strip">
-      <div class="art-tile"><canvas class="a-lan" id="artLan" data-art="Lantern" ></canvas><span class="cap"> <!--LANTERN--> </span></div>
-      <div class="art-tile"><canvas class="a-tree" id="artTree" data-art="Tree"></canvas><span class="cap"> <!--BLOSSOM--></span></div>
-      <div class="art-tile"><canvas class="a-stu" id="artStu" data-art="Student"></canvas><span class="cap"> <!--STUDENT--></span></div>
-      <div class="art-tile"><canvas class="a-cup" id="artCup" data-art="Cup"></canvas><span class="cap"> <!--MUG--></span></div>
-      <div class="art-tile"><canvas class="a-book" id="artBook" data-art="Book"></canvas><span class="cap"> <!--NOTEBOOK--></span></div>
-      <div class="art-tile"><canvas class="a-lappy" id="artLap" data-art="Laptop"></canvas><span class="cap"> <!--LAPTOP--></span></div>
-      <div class="art-tile"><canvas class="a-moon" id="artMoon" data-art="Moon"></canvas><span class="cap"> <!--NIGHT--></span></div>
-    </section>
-
-    <div class="feature-head">THE SHOP IS OPEN</div>
-
-    <section class="grid">
-      <div class="card pixel-border">
-        <span class="icon">&#9749;</span>
-        <h3>INSTANT MESSAGING</h3>
-        <p>Search any student in your school community by name and start a chat instantly. No friend requests, no faff — just pour.</p>
+    <div class="nav-right">
+      <span class="nav-user" id="navUser"></span>
+      <a class="btn-login" href="#" id="loginBtn" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Login
+      </a>
+      <a class="btn" href="student.html" id="navHall" style="display:none; padding:10px 22px; border-radius:24px; font-family:Inter; font-size:13px; font-weight:600; background:var(--text); color:var(--bg); text-decoration:none;">Enter Hall</a>
+      <div class="theme-toggle" title="Toggle day/night">
+        <div class="slider"></div>
+        <div class="opt" data-theme="light">&#9728; Day</div>
+        <div class="opt" data-theme="dark">&#9790; Night</div>
       </div>
-      <div class="card pixel-border">
-        <span class="icon">&#128101;</span>
-        <h3>PROJECT GROUPS</h3>
-        <p>Pull classmates into dedicated groups per project. Shared channels, shared notes, shared deadlines — all over coffee.</p>
-      </div>
-      <div class="card pixel-border">
-        <span class="icon">&#127891;</span>
-        <h3>CLASS CHANNELS</h3>
-        <p>Every class gets its own channel across all periods. Help explain tricky topics, run discussions, and never lose the thread.</p>
-      </div>
-    </section>
+    </div>
+  </nav>
 
-    <section class="banner pixel-border">
-      <div>
-        <div class="b-label">MEET THEHOUSE AIDES</div>
-        <p>Call <span class="mono">@baristi</span> in any channel to get instant explanations.<br>
-           Call <span class="mono">@brewer</span> to distill the whole chat feed into clean study notes.</p>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-scene">
+      <!-- Day scene: warm coffee shop -->
+      <div class="day-scene">
+        <svg viewBox="0 0 1440 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+          <!-- sky through window -->
+          <rect x="0" y="0" width="1440" height="900" fill="#87CEEB"/>
+          <rect x="0" y="0" width="1440" height="400" fill="#b8dff0"/>
+          <!-- clouds -->
+          <ellipse cx="300" cy="120" rx="80" ry="30" fill="#fff" opacity="0.7"/>
+          <ellipse cx="340" cy="110" rx="60" ry="25" fill="#fff" opacity="0.8"/>
+          <ellipse cx="900" cy="80" rx="90" ry="28" fill="#fff" opacity="0.6"/>
+          <ellipse cx="1200" cy="150" rx="70" ry="22" fill="#fff" opacity="0.5"/>
+          <!-- cityscape -->
+          <rect x="50" y="200" width="60" height="200" fill="#7a8a6a" opacity="0.4"/>
+          <rect x="130" y="240" width="45" height="160" fill="#6a7a5a" opacity="0.35"/>
+          <rect x="200" y="180" width="70" height="220" fill="#8a9a7a" opacity="0.3"/>
+          <rect x="1200" y="220" width="55" height="180" fill="#7a8a6a" opacity="0.35"/>
+          <rect x="1280" y="260" width="50" height="140" fill="#6a7a5a" opacity="0.3"/>
+          <rect x="1350" y="190" width="65" height="210" fill="#8a9a7a" opacity="0.25"/>
+          <!-- window frame -->
+          <rect x="180" y="60" width="1080" height="500" fill="none" stroke="#5a3a22" stroke-width="12" rx="4"/>
+          <line x1="540" y1="60" x2="540" y2="560" stroke="#5a3a22" stroke-width="8"/>
+          <line x1="900" y1="60" x2="900" y2="560" stroke="#5a3a22" stroke-width="8"/>
+          <line x1="180" y1="310" x2="1260" y2="310" stroke="#5a3a22" stroke-width="8"/>
+          <!-- counter/shelf -->
+          <rect x="0" y="560" width="1440" height="340" fill="#8b5e3c"/>
+          <rect x="0" y="560" width="1440" height="20" fill="#a07050"/>
+          <rect x="0" y="560" width="1440" height="4" fill="#6b4530"/>
+          <!-- left shelf with books -->
+          <rect x="30" y="200" width="120" height="340" fill="#6b4530" rx="4"/>
+          <rect x="38" y="210" width="20" height="60" fill="#c45a5a" rx="2"/>
+          <rect x="62" y="220" width="18" height="50" fill="#5a8ac4" rx="2"/>
+          <rect x="84" y="215" width="22" height="55" fill="#7ac45a" rx="2"/>
+          <rect x="110" y="225" width="16" height="45" fill="#c4a45a" rx="2"/>
+          <rect x="38" y="290" width="24" height="55" fill="#9a5ac4" rx="2"/>
+          <rect x="66" y="295" width="20" height="50" fill="#c47a5a" rx="2"/>
+          <rect x="90" y="285" width="22" height="60" fill="#5ac4a4" rx="2"/>
+          <!-- right shelf with coffee items -->
+          <rect x="1290" y="200" width="120" height="340" fill="#6b4530" rx="4"/>
+          <rect x="1300" y="220" width="40" height="50" fill="#3a2a1a" rx="4"/>
+          <rect x="1350" y="230" width="35" height="40" fill="#4a3a2a" rx="3"/>
+          <rect x="1300" y="300" width="30" height="35" fill="#5a4a3a" rx="2"/>
+          <rect x="1340" y="290" width="45" height="45" fill="#3a2a1a" rx="4"/>
+          <!-- plants on window sill -->
+          <rect x="200" y="530" width="80" height="30" fill="#5a3a22" rx="4"/>
+          <circle cx="240" cy="520" r="25" fill="#4a8a3a"/>
+          <circle cx="225" cy="510" r="18" fill="#5a9a4a"/>
+          <circle cx="255" cy="512" r="20" fill="#3a7a2a"/>
+          <rect x="1160" y="530" width="80" height="30" fill="#5a3a22" rx="4"/>
+          <circle cx="1200" cy="520" r="22" fill="#4a8a3a"/>
+          <circle cx="1185" cy="512" r="16" fill="#5a9a4a"/>
+          <!-- hanging vines left -->
+          <path d="M200,60 Q190,120 195,180 Q200,220 190,260" stroke="#4a8a3a" stroke-width="3" fill="none"/>
+          <circle cx="192" cy="140" r="8" fill="#5a9a4a" opacity="0.8"/>
+          <circle cx="197" cy="200" r="6" fill="#4a8a3a" opacity="0.7"/>
+          <circle cx="188" cy="245" r="7" fill="#5a9a4a" opacity="0.6"/>
+          <path d="M220,60 Q215,100 218,160 Q222,200 212,240" stroke="#3a7a2a" stroke-width="2" fill="none"/>
+          <circle cx="217" cy="110" r="6" fill="#4a8a3a" opacity="0.7"/>
+          <circle cx="214" cy="180" r="8" fill="#5a9a4a" opacity="0.6"/>
+          <!-- hanging vines right -->
+          <path d="M1240,60 Q1245,130 1240,200 Q1235,250 1242,280" stroke="#4a8a3a" stroke-width="3" fill="none"/>
+          <circle cx="1241" cy="150" r="7" fill="#5a9a4a" opacity="0.7"/>
+          <circle cx="1238" cy="220" r="6" fill="#4a8a3a" opacity="0.6"/>
+          <path d="M1260,60 Q1258,110 1262,170 Q1265,210 1255,250" stroke="#3a7a2a" stroke-width="2" fill="none"/>
+          <circle cx="1260" cy="120" r="8" fill="#5a9a4a" opacity="0.6"/>
+          <!-- counter items -->
+          <rect x="620" y="575" width="200" height="12" fill="#5a3a22" rx="2"/>
+          <!-- laptop on counter -->
+          <rect x="350" y="540" width="140" height="90" fill="#2a2a2a" rx="6"/>
+          <rect x="355" y="545" width="130" height="70" fill="#4a6a8a" rx="3"/>
+          <rect x="320" y="630" width="200" height="8" fill="#3a3a3a" rx="2"/>
+          <!-- coffee cup -->
+          <rect x="700" y="555" width="50" height="40" fill="#f5e6d0" rx="4"/>
+          <rect x="750" y="562" width="18" height="20" fill="none" stroke="#f5e6d0" stroke-width="3" rx="8"/>
+          <rect x="710" y="550" width="30" height="6" fill="#d4a574" rx="2"/>
+          <!-- books stack -->
+          <rect x="530" y="570" width="70" height="12" fill="#c45a5a" rx="2"/>
+          <rect x="535" y="558" width="65" height="12" fill="#5a8ac4" rx="2"/>
+          <rect x="540" y="546" width="55" height="12" fill="#7ac45a" rx="2"/>
+          <!-- cat sleeping -->
+          <ellipse cx="1100" cy="590" rx="50" ry="25" fill="#e8a050"/>
+          <ellipse cx="1100" cy="595" rx="45" ry="20" fill="#d4904a"/>
+          <circle cx="1065" cy="580" r="15" fill="#e8a050"/>
+          <circle cx="1060" cy="578" r="2" fill="#2a1a0a"/>
+          <path d="M1050,585 Q1065,595 1080,585" stroke="#2a1a0a" stroke-width="1.5" fill="none"/>
+          <!-- warm light glow -->
+          <circle cx="350" cy="100" r="60" fill="#ffd080" opacity="0.15"/>
+          <circle cx="720" cy="90" r="50" fill="#ffd080" opacity="0.12"/>
+          <circle cx="1100" cy="100" r="55" fill="#ffd080" opacity="0.1"/>
+        </svg>
       </div>
-      <a class="btn matcha" href="ai-assistant.html">TRY THE AI</a>
-    </section>
-
-    <footer>
-      <div class="foot-art">
-        <canvas id="footTree" data-art="Tree"></canvas>
-        <canvas id="footCup" data-art="Cup"></canvas>
-        <canvas id="footStu" data-art="Student"></canvas>
+      <!-- Night scene: cherry blossom / Japanese night -->
+      <div class="night-scene">
+        <svg viewBox="0 0 1440 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+          <!-- night sky -->
+          <rect x="0" y="0" width="1440" height="900" fill="#0a0520"/>
+          <rect x="0" y="0" width="1440" height="500" fill="#100828"/>
+          <!-- stars -->
+          <circle cx="100" cy="80" r="1.5" fill="#fff" opacity="0.8"/>
+          <circle cx="250" cy="50" r="1" fill="#fff" opacity="0.6"/>
+          <circle cx="400" cy="120" r="1.5" fill="#fff" opacity="0.7"/>
+          <circle cx="550" cy="60" r="1" fill="#fff" opacity="0.5"/>
+          <circle cx="700" cy="100" r="2" fill="#fff" opacity="0.8"/>
+          <circle cx="850" cy="40" r="1" fill="#fff" opacity="0.6"/>
+          <circle cx="1000" cy="90" r="1.5" fill="#fff" opacity="0.7"/>
+          <circle cx="1150" cy="70" r="1" fill="#fff" opacity="0.5"/>
+          <circle cx="1300" cy="110" r="1.5" fill="#fff" opacity="0.6"/>
+          <circle cx="180" cy="180" r="1" fill="#fff" opacity="0.4"/>
+          <circle cx="620" cy="160" r="1.5" fill="#fff" opacity="0.5"/>
+          <circle cx="950" cy="150" r="1" fill="#fff" opacity="0.4"/>
+          <!-- moon -->
+          <circle cx="1100" cy="100" r="50" fill="#ffe8b0" opacity="0.9"/>
+          <circle cx="1115" cy="90" r="45" fill="#0a0520"/>
+          <!-- pagoda silhouette -->
+          <polygon points="1200,560 1180,500 1160,560" fill="#1a0830"/>
+          <polygon points="1210,500 1190,440 1170,500" fill="#1a0830"/>
+          <polygon points="1215,440 1200,380 1185,440" fill="#1a0830"/>
+          <rect x="1195" y="380" width="10" height="40" fill="#1a0830"/>
+          <rect x="1170" y="560" width="60" height="15" fill="#1a0830"/>
+          <!-- window frame -->
+          <rect x="180" y="60" width="1080" height="500" fill="none" stroke="#2a1a3a" stroke-width="12" rx="4"/>
+          <line x1="540" y1="60" x2="540" y2="560" stroke="#2a1a3a" stroke-width="8"/>
+          <line x1="900" y1="60" x2="900" y2="560" stroke="#2a1a3a" stroke-width="8"/>
+          <line x1="180" y1="310" x2="1260" y2="310" stroke="#2a1a3a" stroke-width="8"/>
+          <!-- counter -->
+          <rect x="0" y="560" width="1440" height="340" fill="#1a1030"/>
+          <rect x="0" y="560" width="1440" height="20" fill="#2a1a40"/>
+          <!-- cherry blossoms -->
+          <circle cx="200" cy="150" r="12" fill="#f093b5" opacity="0.6"/>
+          <circle cx="220" cy="130" r="10" fill="#ffc2d8" opacity="0.5"/>
+          <circle cx="185" cy="170" r="8" fill="#f093b5" opacity="0.4"/>
+          <circle cx="240" cy="160" r="14" fill="#ffc2d8" opacity="0.3"/>
+          <circle cx="1300" cy="140" r="12" fill="#f093b5" opacity="0.6"/>
+          <circle cx="1320" cy="120" r="10" fill="#ffc2d8" opacity="0.5"/>
+          <circle cx="1285" cy="160" r="8" fill="#f093b5" opacity="0.4"/>
+          <circle cx="1340" cy="150" r="14" fill="#ffc2d8" opacity="0.3"/>
+          <!-- branches -->
+          <path d="M160,60 Q180,120 200,150 Q220,180 200,200" stroke="#3a2040" stroke-width="3" fill="none"/>
+          <path d="M1280,60 Q1300,100 1300,140 Q1300,170 1280,200" stroke="#3a2040" stroke-width="3" fill="none"/>
+          <!-- hanging lanterns -->
+          <rect x="340" y="560" width="30" height="50" fill="#ffd98a" opacity="0.3" rx="4"/>
+          <rect x="345" y="565" width="20" height="40" fill="#ffd98a" opacity="0.2" rx="3"/>
+          <circle cx="355" cy="585" r="20" fill="#ffd98a" opacity="0.08"/>
+          <rect x="1060" y="560" width="30" height="50" fill="#ffd98a" opacity="0.3" rx="4"/>
+          <circle cx="1075" cy="585" r="20" fill="#ffd98a" opacity="0.08"/>
+          <!-- cat silhouette -->
+          <ellipse cx="700" cy="590" rx="45" ry="22" fill="#0a0520"/>
+          <circle cx="665" cy="578" r="14" fill="#0a0520"/>
+          <polygon points="655,568 650,550 660,565" fill="#0a0520"/>
+          <polygon points="672,566 678,548 668,563" fill="#0a0520"/>
+          <circle cx="660" cy="576" r="2" fill="#f093b5" opacity="0.6"/>
+          <!-- laptop glow -->
+          <rect x="350" y="540" width="140" height="90" fill="#1a1030" rx="6"/>
+          <rect x="355" y="545" width="130" height="70" fill="#2a3a6a" rx="3"/>
+          <circle cx="420" cy="580" r="40" fill="#4a6aaa" opacity="0.1"/>
+          <rect x="320" y="630" width="200" height="8" fill="#1a1030" rx="2"/>
+          <!-- warm lantern glow -->
+          <circle cx="355" cy="585" r="50" fill="#ffd98a" opacity="0.06"/>
+          <circle cx="1075" cy="585" r="50" fill="#ffd98a" opacity="0.06"/>
+          <!-- bottom plants silhouette -->
+          <circle cx="100" cy="540" r="30" fill="#0a0820"/>
+          <circle cx="120" cy="530" r="25" fill="#0a0820"/>
+          <circle cx="85" cy="535" r="20" fill="#0a0820"/>
+          <circle cx="1340" cy="540" r="28" fill="#0a0820"/>
+          <circle cx="1360" cy="530" r="22" fill="#0a0820"/>
+        </svg>
       </div>
-      <div class="pixel-strip"></div>
-      A free brew for every student. Sign in with your Google account and join your school community.
-    </footer>
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <canvas class="hero-cup" id="bigCup" width="48" height="48" data-art="Cup"></canvas>
+      <h1 class="hero-title">CoffeeHouse</h1>
+      <p class="hero-tagline">Chat. Study. Grow. Together.</p>
+      <div class="hero-subtitle">Your cozy space for communication and study.</div>
+    </div>
+    <div class="scroll-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </section>
 
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="features-grid">
+      <div class="feature-card" data-delay="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Chat</h3>
+        <p>Connect with friends & peers.</p>
+      </div>
+      <div class="feature-card" data-delay="100">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <h3>Study</h3>
+        <p>Share notes, resources & tips.</p>
+      </div>
+      <div class="feature-card" data-delay="200">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Groups</h3>
+        <p>Join study groups and communities.</p>
+      </div>
+      <div class="feature-card" data-delay="300">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Events</h3>
+        <p>Find study sessions and more.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <section class="bottom-cta" id="bottomCta">
+    <div class="bottom-cta-text">
+      Better conversations.<br>
+      Deeper learning.<br>
+      A brighter you. <span class="heart">&hearts;</span>
+    </div>
+    <canvas id="ctaCup" width="64" height="64" data-art="Cup"></canvas>
+  </section>
+
+  <!-- DEV LOGIN -->
+  <div class="dev-login" id="devLogin" style="display:__DEV_LOGIN__;">
+    <h4>Dev Login</h4>
+    <form id="devForm">
+      <input id="devEmail" placeholder="you@school.edu" autocomplete="off">
+      <input id="devName" placeholder="Full name" autocomplete="off">
+      <button class="btn-dev" type="submit">Log In</button>
+    </form>
   </div>
 
-  <!-- school community picker -->
+  <div id="loginStatus"></div>
+
+  <footer>
+    <p>A free brew for every student. Sign in with your Google account and join your school community.</p>
+  </footer>
+
+  <!-- SCHOOL MODAL -->
   <div class="modal-overlay" id="schoolModal">
     <div class="modal">
-      <h2>JOIN YOUR SCHOOL COMMUNITY</h2>
-      <p id="schoolModalGreet">Almost there! Pick the school you attend. You can change it later from Settings.</p>
+      <h2>Join Your School</h2>
+      <p id="schoolModalGreet">Pick the school you attend. You can change it later from Settings.</p>
       <select id="schoolSelect"></select>
-      <button class="btn matcha" id="schoolJoin">JOIN COMMUNITY</button>
+      <button class="btn-join" id="schoolJoin">Join Community</button>
     </div>
   </div>
 
@@ -329,10 +651,24 @@
     let LOGGED_IN_USER = null;
     const $ = id => document.getElementById(id);
 
+    /* ── scroll reveal ── */
+    const revealEls = document.querySelectorAll('.feature-card, .bottom-cta, .dev-login');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const delay = parseInt(e.target.dataset.delay || '0', 10);
+          setTimeout(() => e.target.classList.add('visible'), delay);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(el => observer.observe(el));
+
     async function boot() {
       try { CFG = await api('/api/config'); }
-      catch (e) { CFG = { firebaseConfigured: false, devLogin: true }; } // no backend? keep the box visible
+      catch (e) { CFG = { firebaseConfigured: false, devLogin: true }; }
       $('devLogin').style.display = CFG.devLogin ? 'block' : 'none';
+      $('loginBtn').style.display = 'block';
 
       try {
         const me = await api('/api/me');
@@ -342,29 +678,23 @@
 
       if (CFG.firebaseConfigured && window.firebase) {
         firebase.initializeApp(CFG.firebase);
-        $('googleBtn').innerHTML =
-          '<button class="btn matcha" id="googleSignInBtn" style="padding:14px 20px;font-size:11px;">SIGN IN WITH GOOGLE</button>';
-        $('googleSignInBtn').addEventListener('click', signInWithGoogle);
-      } else {
-        $('loginStatus').innerHTML =
-          '<div class="notice">Firebase Sign-In is not configured yet. Add <code>FIREBASE_WEB_CONFIG</code> and a ' +
-          'service account to <code>.env</code> (see <code>notes-docs.md</code>). ' +
-          'While it\'s off, use the DEV LOGIN box below to create real accounts and explore.</div>';
+        $('loginBtn').addEventListener('click', signInWithGoogle);
       }
       Art.initTheme();
     }
 
     function showLoggedIn(me) {
       $('navUser').style.display = 'inline';
-      $('navUser').innerHTML = `<b>${esc(me.user.name)}</b>${me.school ? ' &middot; ' + esc(me.school.name) : ''}`;
+      $('navUser').textContent = me.user.name;
       $('navHall').style.display = 'inline-block';
-      $('navSettings').style.display = 'inline-block';
+      $('loginBtn').style.display = 'none';
     }
 
-    async function signInWithGoogle() {
-      const btn = $('googleSignInBtn');
-      btn.disabled = true;
-      btn.textContent = 'SIGNING IN...';
+    async function signInWithGoogle(e) {
+      e.preventDefault();
+      const btn = $('loginBtn');
+      btn.style.pointerEvents = 'none';
+      btn.textContent = 'Signing in...';
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
         const result = await firebase.auth().signInWithPopup(provider);
@@ -372,9 +702,9 @@
         const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
         afterLogin(data);
       } catch (err) {
-        $('loginStatus').innerHTML = `<div class="notice">Sign-in failed: ${esc(err.message)}</div>`;
-        btn.disabled = false;
-        btn.textContent = 'SIGN IN WITH GOOGLE';
+        $('loginStatus').innerHTML = '<div class="login-notice">Sign-in failed: ' + esc(err.message) + '</div>';
+        btn.style.pointerEvents = '';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Login';
       }
     }
 
@@ -388,13 +718,12 @@
       }
     }
 
-    /* ---- school community picker ---- */
     async function openSchoolPicker(user) {
       $('schoolModalGreet').textContent =
-        `Welcome, ${user.name || 'student'}! One community at a time — pick the school you attend. You can switch later from Settings.`;
+        'Welcome, ' + (user.name || 'student') + '! Pick the school you attend.';
       const schools = await api('/api/schools');
       $('schoolSelect').innerHTML = schools.map(s =>
-        `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+        '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('');
       $('schoolModal').classList.add('on');
     }
 
@@ -404,12 +733,23 @@
         await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value) } });
         location.href = '/student.html';
       } catch (err) {
-        alert('Could not join community: ' + err.message);
+        alert('Could not join: ' + err.message);
         $('schoolJoin').disabled = false;
       }
     });
 
-    /* ---- dev login is wired above (before the CDN scripts) ---- */
+    document.getElementById('devForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('devEmail').value.trim();
+      const name = document.getElementById('devName').value.trim();
+      if (!email) return;
+      try {
+        const data = await api('/api/auth/dev', { method: 'POST', body: { email, name } });
+        afterLogin(data);
+      } catch (err) {
+        document.getElementById('loginStatus').innerHTML = '<div class="login-notice">Dev login failed: ' + esc(err.message) + '</div>';
+      }
+    });
 
     boot();
   </script>
