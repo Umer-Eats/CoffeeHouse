@@ -173,5 +173,24 @@
     }
   });
 
+  /* ── Scroll reveal ── */
+  const reveals = $$('.reveal');
+  if (reveals.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    reveals.forEach((el) => io.observe(el));
+  } else {
+    reveals.forEach((el) => el.classList.add('visible'));
+  }
+
   boot();
 })();
