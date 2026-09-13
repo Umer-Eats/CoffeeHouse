@@ -416,7 +416,7 @@ app.get('/student.html', (req, res) => guardPage(req, res, 'student.html'));
 app.get('/settings.html', (req, res) => guardPage(req, res, 'settings.html'));
 app.get('/ai-assistant.html', (req, res) => guardPage(req, res, 'ai-assistant.html'));
 
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 /* ---------------- export for Vercel serverless / start locally ---------------- */
 
