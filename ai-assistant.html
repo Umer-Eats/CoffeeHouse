@@ -215,15 +215,15 @@
   <header class="pixel-border">
     <span class="logo"><canvas id="navCup" data-art="Cup"></canvas>COFFEEHOUSE AI</span>
     <div style="display:flex; align-items:center; gap:10px;">
-      <span class="me" id="engineStatus">Baristi = Google Gemini &middot; Brewer = NotebookLM engine</span>
+      <span class="me" id="engineStatus">Baristi AI · Brewer AI</span>
       <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
       <a class="btn" href="student.html" style="padding:8px 10px;">STUDENT HALL</a>
     </div>
   </header>
 
   <div class="tabs">
-    <button class="tab active bar" data-panel="baristi">BARISTI AI<small>explain anything &middot; make cheat sheets &middot; Google Gemini</small></button>
-    <button class="tab brew" data-panel="brewer">BREWER AI<small>NotebookLM engine &middot; analyze text &amp; chat feeds</small></button>
+    <button class="tab active bar" data-panel="baristi">BARISTI AI<small>explain anything &middot; make cheat sheets</small></button>
+    <button class="tab brew" data-panel="brewer">BREWER AI<small>analyze text &amp; chat feeds &middot; brew study notes</small></button>
   </div>
 
   <div class="app">
@@ -260,7 +260,7 @@
           </div>
         </div>
         <div class="brew-flow" id="brewFlow">
-          <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text with the NotebookLM engine and returns a clean study doc.</div>
+          <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text and returns a clean study doc.</div>
         </div>
       </section>
     </main>
@@ -296,8 +296,8 @@
       try {
         const cfg = await api('/api/config');
         $('engineStatus').textContent =
-          'Baristi = ' + (cfg.geminiConfigured ? 'Google Gemini' : 'Gemini (not configured)') +
-          ' &middot; Brewer = ' + (cfg.notebooklmEnabled ? 'NotebookLM Enterprise + Gemini' : 'NotebookLM-style via Gemini');
+          'Baristi = ' + (cfg.baristaConfigured ? 'Gemini' : 'not configured') +
+          ' · Brewer = ' + (cfg.brewerConfigured ? 'Gemini' : 'not configured');
       } catch (e) {}
       loadChannels();
       loadCheats();
@@ -315,7 +315,7 @@
     });
 
     /* ---------- Baristi chat ---------- */
-    const INTRO = "Hi! I'm Baristi AI \u2615 Your free study barista, powered by Google Gemini. Ask me anything with @baristi, or hit a chip below. I live in every channel too.";
+    const INTRO = "Hi! I'm Baristi AI \u2615 Your free study barista. Ask me anything with @baristi, or hit a chip below. I live in every channel too.";
 
     function addChat(msg, bot, thinking) {
       const flow = $('barChat');
@@ -425,9 +425,6 @@
         <h3>&#127807; ${esc(doc.title)} <span class="stamp">BREWED</span><span class="engine">${esc(doc.engine || 'gemini')}</span></h3>
         <hr>
         <p>${esc(doc.body)}</p>
-        ${doc.notebook && doc.notebook.link
-          ? `<div class="doc-link">Also saved to your NotebookLM notebook: <a href="${esc(doc.notebook.link)}" target="_blank" rel="noopener">open notebook &#8599;</a></div>`
-          : ''}
         <div class="src">brewed ${nowTime()} &middot; source: ${esc(doc.src || 'pasted text')}</div>
       `;
       flow.appendChild(card);

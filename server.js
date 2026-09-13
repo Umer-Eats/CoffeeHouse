@@ -1,5 +1,5 @@
 /* CoffeeHouse — backend server (Vercel-compatible).
-   Express + libSQL/Turso + Firebase Auth (Google sign-in) + Gemini/NotebookLM AI. */
+   Express + libSQL/Turso + Firebase Auth (Google sign-in) + Gemini AI. */
 'use strict';
 
 const path = require('node:path');
@@ -153,8 +153,8 @@ app.get('/api/config', async (req, res) => {
   res.json({
     firebaseConfigured: !!fb,
     firebase: fb ? firebaseWebConfig : null,
-    geminiConfigured: !!ai.genAI,
-    notebooklmEnabled: ai.notebooklmEnabled(),
+    baristaConfigured: ai.isConfigured(),
+    brewerConfigured: ai.isConfigured(),
     devLogin: DEV_LOGIN
   });
 });
@@ -393,9 +393,9 @@ app.post('/api/ai/brewer', requireAuth, async (req, res) => {
   const { source, text } = req.body || {};
   if (!text || !text.trim()) return res.status(400).json({ error: 'No source text to brew.' });
   try {
-    const { doc, notebook, engine } = await ai.brewNotes(source || 'uploaded text', text);
+    const { doc, engine } = await ai.brewNotes(source || 'uploaded text', text);
     const stored = await db.addBrewDoc(req.user.id, `Brew — ${(source || 'text').slice(0, 60)}`, doc, source || null);
-    res.json({ doc, id: stored.id, notebook, engine });
+    res.json({ doc, id: stored.id, engine });
   } catch (err) {
     res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
   }
@@ -439,8 +439,8 @@ if (process.env.VERCEL) {
     app.listen(PORT, () => {
       console.log(`\u2615 CoffeeHouse server running at http://localhost:${PORT}`);
       console.log('  Firebase login:', firebaseAuth ? 'configured' : 'NOT configured (see notes-docs.md)');
-      console.log('  Gemini (Baristi):', ai.genAI ? 'configured' : 'NOT configured (add GEMINI_API_KEY to .env)');
-      console.log('  NotebookLM (Brewer):', ai.notebooklmEnabled() ? 'enterprise enabled' : 'gemini fallback');
+      console.log('  Baristi (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BARISTA_API_KEY to .env)');
+      console.log('  Brewer (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BREWER_API_KEY to .env)');
     });
   }).catch(err => {
     console.error('Failed to initialize database:', err);
