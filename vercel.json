@@ -1,7 +1,7 @@
 {
   "functions": {
     "server.js": {
-      "includeFiles": "{art.js,app.js,db.js,ai.js,*.html}"
+      "includeFiles": "{art.js,app.js,db.js,ai.js,*.html,public/**}"
     }
   },
   "rewrites": [
