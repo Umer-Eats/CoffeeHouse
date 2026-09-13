@@ -12,7 +12,7 @@
 .welcome{text-align:center;color:var(--title);padding-top:clamp(15px,5.5vw,67px);margin-top:-100px;margin-bottom:24px}.hero-cup{display:block;width:clamp(70px,6vw,100px);height:clamp(70px,6vw,100px);margin:0 auto;color:#fff0cf;filter:drop-shadow(3px 0 0 #3c2417) drop-shadow(-3px 0 0 #3c2417) drop-shadow(0 3px 0 #3c2417)}
 .steam{animation:steam 2.8s steps(4,end) infinite}@keyframes steam{0%,100%{opacity:.65;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
 h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(48px,5.9vw,100px);line-height:1.05;letter-spacing:-2px;margin:7px 0 3px;text-shadow:2px 2px 0 #fff4cf}.tagline{font-family:"Pixelify Sans",monospace;font-size:clamp(21px,2vw,34px);font-weight:600;margin:0;text-shadow:1px 1px 0 #fff4cf}
-.intro{display:inline-block;font-size:clamp(24px,1.85vw,31px);line-height:1.12;letter-spacing:.3px;margin:20px 0 0;padding:12px clamp(25px,3.6vw,60px);background:var(--panel);border:2px solid #b58a56;border-radius:20px;color:var(--cream)}
+.intro{display:inline-block;font-size:clamp(24px,1.85vw,31px);line-height:1.12;letter-spacing:.3px;margin:70px 0 0;padding:12px clamp(25px,3.6vw,60px);background:var(--panel);border:2px solid #b58a56;border-radius:20px;color:var(--cream)}
 html[data-theme=dark] h1,html[data-theme=dark] .tagline{text-shadow:3px 3px 0 #10102d}html[data-theme=dark] .tagline{color:#ece0ff}html[data-theme=dark] .intro{border-color:var(--border)}
 .feature-section{position:relative;background:var(--header);padding:clamp(40px,6vw,80px) 20px clamp(40px,6vw,80px);display:flex;justify-content:center;overflow:hidden}
 .lofi-decor{position:absolute;inset:0;pointer-events:none}
