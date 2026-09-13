@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "outputDirectory": "public",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/student.html", "destination": "/api/index" },
-    { "source": "/settings.html", "destination": "/api/index" },
-    { "source": "/ai-assistant.html", "destination": "/api/index" },
-    { "source": "/", "destination": "/api/index" }
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/index.js" },
+    { "src": "/(student|settings|ai-assistant)\\.html", "dest": "api/index.js" },
+    { "src": "/", "dest": "api/index.js" },
+    { "src": "/(art\\.js|app\\.js)", "dest": "/public/$1" }
   ]
 }
