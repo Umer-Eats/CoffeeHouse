@@ -3,96 +3,66 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#4a2c1c">
-  <title>CoffeeHouse</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body { background: #432817; font-family: system-ui, sans-serif; }
-    .home-scene { position: relative; width: 100%; min-height: 100svh; overflow: hidden; background: #432817; }
-    .reference-art { display: block; width: 100%; height: 100svh; object-fit: cover; object-position: center; image-rendering: pixelated; }
-    .reference-art--night { display: none; }
-    body[data-theme="dark"] { background: #0b0b2b; }
-    body[data-theme="dark"] .home-scene { min-height: auto; background: #0b0b2b; }
-    body[data-theme="dark"] .reference-art--day { display: none; }
-    body[data-theme="dark"] .reference-art--night { display: block; height: auto; min-height: 100svh; object-fit: contain; object-position: top center; }
-    .hotspot { position: absolute; display: block; appearance: none; border: 0; background: transparent; color: transparent; cursor: pointer; padding: 0; }
-    .hotspot:focus-visible { outline: 3px solid #fff4c7; outline-offset: 3px; }
-    .home-link { top: 2%; left: 26%; width: 4%; height: 6%; }
-    .chat-link { top: 2%; left: 32%; width: 4%; height: 6%; }
-    .study-link { top: 2%; left: 38%; width: 5%; height: 6%; }
-    .profile-link { top: 2%; left: 45%; width: 5%; height: 6%; }
-    .login-link { top: 1.4%; right: 34%; width: 10%; height: 6%; }
-    .day-toggle { top: 1.4%; right: 12%; width: 8%; height: 6%; }
-    .night-toggle { top: 1.4%; right: 4%; width: 8%; height: 6%; }
-    .chat-card { left: 21%; bottom: 7%; width: 13%; height: 20%; }
-    .study-card { left: 35%; bottom: 7%; width: 13%; height: 20%; }
-    .groups-card { left: 50%; bottom: 7%; width: 13%; height: 20%; }
-    .events-card { left: 65%; bottom: 7%; width: 13%; height: 20%; }
-    .school-picker { position: fixed; inset: 0; z-index: 2; display: none; place-items: center; padding: 20px; background: rgba(0, 0, 0, .65); }
-    .school-picker.is-open { display: grid; }
-    .school-picker__panel { width: min(420px, 100%); padding: 26px; border: 3px solid #f4d18b; border-radius: 14px; background: #382114; color: #fff1d4; box-shadow: 0 18px 50px rgba(0, 0, 0, .45); }
-    .school-picker h1 { margin: 0 0 10px; font-size: 20px; }
-    .school-picker p { margin: 0 0 18px; }
-    .school-picker select, .school-picker button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; font: inherit; }
-    .school-picker button { border: 0; background: #e4aa53; color: #2c170c; font-weight: 700; cursor: pointer; }
-  </style>
+  <meta name="theme-color" content="#3d261a">
+  <meta name="description" content="Your cozy space for communication and study. Chat. Study. Grow. Together.">
+  <title>CoffeeHouse — Chat. Study. Grow. Together.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/home.css">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
 </head>
-<body data-theme="light">
-  <main class="home-scene" aria-label="CoffeeHouse home page">
-    <img class="reference-art reference-art--day" src="/images/coffeehouse-day.png" alt="CoffeeHouse café in daylight">
-    <img class="reference-art reference-art--night" src="/images/coffeehouse-night-reference.png" alt="CoffeeHouse café at night">
-    <a class="hotspot home-link" href="/" aria-label="Home"></a>
-    <a class="hotspot chat-link" href="student.html" aria-label="Chat"></a>
-    <a class="hotspot study-link" href="ai-assistant.html" aria-label="Study"></a>
-    <a class="hotspot profile-link" href="settings.html" aria-label="Profile"></a>
-    <button class="hotspot login-link" id="loginBtn" type="button" aria-label="Log in"></button>
-    <button class="hotspot day-toggle" type="button" data-set-theme="light" aria-label="Use day theme"></button>
-    <button class="hotspot night-toggle" type="button" data-set-theme="dark" aria-label="Use night theme"></button>
-    <a class="hotspot chat-card" href="student.html" aria-label="Open Chat"></a>
-    <a class="hotspot study-card" href="ai-assistant.html" aria-label="Open Study"></a>
-    <a class="hotspot groups-card" href="student.html" aria-label="Open Groups"></a>
-    <a class="hotspot events-card" href="student.html" aria-label="Open Events"></a>
+<body>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="cup" viewBox="0 0 40 40">
+      <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
+      <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
+      <path fill="var(--coffee, #502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
+    </symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path fill="currentColor" d="M5 2h14v2h3v3h2v9h-3v3H10l-6 4v-7H1V7h2V4h2z"/><path fill="var(--panel)" d="M6 9h3v3H6zm6 0h3v3h-3zm6 0h3v3h-3z"/></symbol>
+    <symbol id="book" viewBox="0 0 24 24"><path fill="currentColor" d="M2 3h7v1h2v2h2V4h2V3h7v17h-7v1H9v-1H2zM0 5h1v17h9v1H0zm23 0h1v18H14v-1h9z"/><path fill="var(--panel)" d="M11 7h2v12h-2zm5 0h4v1h-4zm0 3h4v1h-4z"/></symbol>
+    <symbol id="group" viewBox="0 0 24 24"><path fill="currentColor" d="M9 1h6v2h2v5h-2v2H9V8H7V3h2zM2 6h3v2h1v4H1V8h1zm17 0h3v2h1v4h-5V8h1zM8 12h8v2h3v9H5v-9h3zM1 14h3v7H0v-5h1zm19 0h3v2h1v5h-4z"/></symbol>
+    <symbol id="calendar" viewBox="0 0 24 24"><path fill="currentColor" d="M4 1h2v5H4zm14 0h2v5h-2zM1 4h2v4h4V4h10v4h4V4h2v19H1z"/><path fill="var(--panel)" d="M4 11h16v9H4z"/><path fill="currentColor" d="M6 13h3v2H6zm6 0h3v2h-3zm-6 4h3v2H6zm10 0h2v2h-2z"/></symbol>
+    <symbol id="user" viewBox="0 0 24 24"><path fill="currentColor" d="M9 1h6v2h2v6h-2v2H9V9H7V3h2zM7 13h10v2h3v3h1v5H3v-5h1v-3h3z"/></symbol>
+    <symbol id="sun" viewBox="0 0 24 24"><path fill="currentColor" d="M11 0h2v4h-2zm0 20h2v4h-2zM0 11h4v2H0zm20 0h4v2h-4zM3 3h3v3H3zm15 0h3v3h-3zM3 18h3v3H3zm15 0h3v3h-3zM8 6h8v2h2v8h-2v2H8v-2H6V8h2z"/></symbol>
+    <symbol id="moon" viewBox="0 0 24 24"><path fill="currentColor" d="M10 1h5v2h-3v3h-2v7h2v3h3v2h7v2h-3v2H8v-2H4v-3H2V7h2V4h3V2h3z"/></symbol>
+  </defs></svg>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
+    <nav class="navigation" aria-label="Main navigation"><a href="/" aria-current="page">Home</a><a href="/student.html">Chat</a><a href="/ai-assistant.html">Study</a><a href="/settings.html">Profile</a></nav>
+    <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
+    <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
+  </header>
+  <main class="cafe" id="main">
+    <div class="scenery scenery-day" aria-hidden="true"></div><div class="scenery scenery-night" aria-hidden="true"></div>
+    <section class="welcome" aria-labelledby="title">
+      <svg class="hero-cup" aria-hidden="true"><use href="#cup"/></svg>
+      <h1 id="title">CoffeeHouse</h1>
+      <p class="tagline">Chat. Study. Grow. Together.</p>
+      <p class="intro">Your cozy space for<br>communication and study.</p>
+    </section>
+    <nav class="feature-grid" aria-label="Explore CoffeeHouse">
+      <a class="feature" href="/student.html"><svg aria-hidden="true"><use href="#chat"/></svg><h2>Chat</h2><p>Connect with<br>friends &amp; peers.</p></a>
+      <a class="feature" href="/ai-assistant.html"><svg aria-hidden="true"><use href="#book"/></svg><h2>Study</h2><p>Share notes,<br>resources &amp; tips.</p></a>
+      <a class="feature" href="/student.html#groupList"><svg aria-hidden="true"><use href="#group"/></svg><h2>Groups</h2><p>Join study groups<br>and communities.</p></a>
+      <button class="feature" id="eventsBtn" type="button"><svg aria-hidden="true"><use href="#calendar"/></svg><h2>Events</h2><p>Find study sessions<br>and more.</p></button>
+    </nav>
   </main>
-  <section class="school-picker" id="schoolPicker" aria-modal="true" aria-labelledby="schoolHeading" role="dialog">
-    <div class="school-picker__panel">
-      <h1 id="schoolHeading">Welcome to CoffeeHouse</h1>
-      <p id="schoolGreeting">Choose your school to join the conversation.</p>
-      <select id="schoolSelect" aria-label="School"></select>
-      <button id="schoolJoin" type="button">Join school</button>
-    </div>
-  </section>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="app.js"></script>
-  <script>
-    const $ = id => document.getElementById(id);
-    let config = null;
-    function setTheme(theme) { document.body.dataset.theme = theme; try { localStorage.setItem('ch-theme', theme); } catch (_) {} }
-    document.querySelectorAll('[data-set-theme]').forEach(button => button.addEventListener('click', () => setTheme(button.dataset.setTheme)));
-    async function openSchoolPicker(user) {
-      $('schoolGreeting').textContent = `Welcome, ${user.name || 'student'}! Choose your school to join the conversation.`;
-      const schools = await api('/api/schools');
-      $('schoolSelect').innerHTML = schools.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-      $('schoolPicker').classList.add('is-open');
-    }
-    async function afterLogin(data) { if (data.school) return location.assign('/student.html'); await openSchoolPicker(data.user); }
-    async function signIn() {
-      if (!config || !config.firebaseConfigured || !window.firebase) return;
-      const result = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
-      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken: await result.user.getIdToken() } });
-      await afterLogin(data);
-    }
-    $('loginBtn').addEventListener('click', () => signIn().catch(() => {}));
-    $('schoolJoin').addEventListener('click', async () => {
-      const schoolId = Number($('schoolSelect').value); if (!schoolId) return;
-      await api('/api/school/join', { method: 'POST', body: { schoolId } }); location.assign('/student.html');
-    });
-    (async function boot() {
-      try { setTheme(localStorage.getItem('ch-theme') || 'light'); } catch (_) {}
-      try { config = await api('/api/config'); } catch (_) { config = { firebaseConfigured: false }; }
-      if (config.firebaseConfigured && window.firebase) firebase.initializeApp(config.firebase);
-    })();
-  </script>
+  <dialog id="accountDialog" aria-labelledby="accountTitle">
+    <button class="close-dialog" type="button" aria-label="Close dialog">×</button>
+    <svg class="dialog-cup" aria-hidden="true"><use href="#cup"/></svg>
+    <h2 id="accountTitle">Welcome to CoffeeHouse</h2>
+    <p id="accountHint">Pull up a chair. Sign in to join your school community.</p>
+    <button class="primary-button" id="googleLogin">Continue with Google</button>
+    <form id="devForm" hidden><label>Email<input id="devEmail" type="email" autocomplete="email" required></label><label>Name<input id="devName" autocomplete="name" required></label><button class="primary-button">Sign in locally</button></form>
+    <form id="schoolForm" hidden><label>Your school<select id="schoolSelect" required></select></label><button class="primary-button">Join your school</button></form>
+    <p id="loginStatus" role="status" aria-live="polite"></p>
+  </dialog>
+  <dialog id="eventsDialog" aria-labelledby="eventsTitle"><button class="close-dialog" type="button" aria-label="Close dialog">×</button><h2 id="eventsTitle">Study sessions</h2><p>Meet your classmates in the Student Hall to arrange your next study session.</p><a class="primary-button" href="/student.html">Visit the Student Hall</a></dialog>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/home.js" defer></script>
 </body>
 </html>

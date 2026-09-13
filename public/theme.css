@@ -1,0 +1,57 @@
+/* Shared CoffeeHouse day/night skin for the interactive application pages. */
+:root {
+  --bg: #ead6ad;
+  --bgB: #f5e4bf;
+  --panel: #4a2c1b;
+  --panel2: #6d4428;
+  --line: #301a0f;
+  --ink: #fff2d4;
+  --soft: #edca87;
+  --accent: #779d55;
+  --accentD: #496a35;
+  --accent2: #f5c96e;
+  --head: #422719;
+  --head-ink: #fff2d4;
+  --btnB: #593520;
+  --btn-ink: #fff2d4;
+  --shad: rgba(48, 25, 12, .28);
+}
+body[data-theme="dark"] {
+  --bg: #0b0d2a;
+  --bgB: #15183d;
+  --panel: #17153b;
+  --panel2: #29245a;
+  --line: #09081f;
+  --ink: #f3ebff;
+  --soft: #c4b5f0;
+  --accent: #e688b8;
+  --accentD: #6d3158;
+  --accent2: #d0b6ff;
+  --head: #121136;
+  --head-ink: #f3ebff;
+  --btnB: #242051;
+  --btn-ink: #f3ebff;
+  --shad: rgba(0, 0, 0, .38);
+}
+body {
+  background-color: var(--bg) !important;
+  background-image: radial-gradient(circle at 14% 12%, rgba(255,255,255,.18) 0 2px, transparent 3px), linear-gradient(135deg, var(--bgB), var(--bg)) !important;
+}
+header.pixel-border, header {
+  min-height: 72px;
+  padding: 12px clamp(16px, 3vw, 42px) !important;
+  border: 0 !important;
+  border-bottom: 4px solid var(--accent2) !important;
+  box-shadow: none !important;
+}
+header .logo { font-size: 13px !important; }
+.btn, .theme-toggle { border: 2px solid var(--accent2) !important; border-radius: 7px; box-shadow: 3px 3px 0 var(--shad) !important; }
+.btn.matcha { background: var(--accent) !important; }
+.app, .workspace { border-top: 0 !important; }
+.side-left, .side-right, .chat, .workspace > * { box-shadow: none; }
+.side-left, .side-right, .panel, .chat-head, .composer, .workspace .panel { border-color: var(--line) !important; }
+.class-btn, .bubble, .bot-bubble, .panel, .card, .settings-card, .tool-card { border-radius: 7px; }
+.chat-head, .composer, .panel { background: var(--panel) !important; }
+.bubble, .class-btn { box-shadow: 3px 3px 0 var(--shad) !important; }
+body[data-theme="dark"] .avatar { border-color: var(--accent2); }
+@media (max-width: 640px) { header { min-height: 62px; } header .logo { font-size: 10px !important; } }
