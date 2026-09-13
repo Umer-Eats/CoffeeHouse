@@ -15,6 +15,10 @@ const ai = require('./ai');
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'art.js'), 'utf8');
 const APP_JS = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const STUDENT_HTML = fs.readFileSync(path.join(__dirname, 'student.html'), 'utf8');
+const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'settings.html'), 'utf8');
+const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'ai-assistant.html'), 'utf8');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -407,18 +411,17 @@ async function guardPage(req, res, page) {
   await ensureDb();
   const user = await db.sessionUser(req.cookies[SESSION_COOKIE]);
   if (!user) return res.redirect('/');
-  res.sendFile(path.join(__dirname, page));
+  res.type('html').send(page);
 }
 
 app.get('/', async (req, res) => {
   await ensureDb();
-  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8')
-    .replace('__DEV_LOGIN__', DEV_LOGIN ? 'block' : 'none');
+  const html = INDEX_HTML.replace('__DEV_LOGIN__', DEV_LOGIN ? 'block' : 'none');
   res.type('html').send(html);
 });
-app.get('/student.html', (req, res) => guardPage(req, res, 'student.html'));
-app.get('/settings.html', (req, res) => guardPage(req, res, 'settings.html'));
-app.get('/ai-assistant.html', (req, res) => guardPage(req, res, 'ai-assistant.html'));
+app.get('/student.html', (req, res) => guardPage(req, res, STUDENT_HTML));
+app.get('/settings.html', (req, res) => guardPage(req, res, SETTINGS_HTML));
+app.get('/ai-assistant.html', (req, res) => guardPage(req, res, AI_ASSISTANT_HTML));
 
 app.get('/art.js', (req, res) => res.type('application/javascript').send(ART_JS));
 app.get('/app.js', (req, res) => res.type('application/javascript').send(APP_JS));
