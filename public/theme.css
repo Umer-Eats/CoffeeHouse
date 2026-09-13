@@ -1,57 +1,253 @@
-/* Shared CoffeeHouse day/night skin for the interactive application pages. */
-:root {
-  --bg: #ead6ad;
-  --bgB: #f5e4bf;
-  --panel: #4a2c1b;
-  --panel2: #6d4428;
-  --line: #301a0f;
-  --ink: #fff2d4;
-  --soft: #edca87;
-  --accent: #779d55;
-  --accentD: #496a35;
-  --accent2: #f5c96e;
-  --head: #422719;
-  --head-ink: #fff2d4;
-  --btnB: #593520;
-  --btn-ink: #fff2d4;
-  --shad: rgba(48, 25, 12, .28);
+/* ═══════════════════════════════════════════════════════
+   CoffeeHouse — Shared Brand Theme
+   Warm coffee shop palette + lofi decorations
+   ═══════════════════════════════════════════════════════ */
+
+/* ── SVG sprite (hidden) ── */
+.ch-sprite{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ── Light (Day) ── */
+:root{
+  --bg:       #ead6ad;
+  --bgB:      #f5e4bf;
+  --panel:    #5a3520;
+  --panel2:   #7a4e30;
+  --line:     #3a1e10;
+  --ink:      #fff2d4;
+  --soft:     #edca87;
+  --accent:   #779d55;
+  --accentD:  #4a6e30;
+  --accent2:  #f5c96e;
+  --barista:  #f5c96e;
+  --brewer:   #d8a0ff;
+  --danger:   #d4605a;
+  --head:     #3c261a;
+  --head-ink: #fff0cf;
+  --btnB:     #593520;
+  --btn-ink:  #fff2d4;
+  --paper:    #f6ead0;
+  --paper-ink:#37220f;
+  --shad:     rgba(48,25,12,.28);
+  --gold:     #f7cf89;
+  --border:   #f8dcaa;
+  --coffee:   #482510;
+  --cup-shade:#dfb376;
+  color-scheme: light;
 }
-body[data-theme="dark"] {
-  --bg: #0b0d2a;
-  --bgB: #15183d;
-  --panel: #17153b;
-  --panel2: #29245a;
-  --line: #09081f;
-  --ink: #f3ebff;
-  --soft: #c4b5f0;
-  --accent: #e688b8;
-  --accentD: #6d3158;
-  --accent2: #d0b6ff;
-  --head: #121136;
+
+/* ── Dark (Night) ── */
+body[data-theme="dark"]{
+  --bg:       #0b0d2a;
+  --bgB:      #15183d;
+  --panel:    #17153b;
+  --panel2:   #29245a;
+  --line:     #09081f;
+  --ink:      #f3ebff;
+  --soft:     #c4b5f0;
+  --accent:   #e688b8;
+  --accentD:  #6d3158;
+  --accent2:  #d0b6ff;
+  --barista:  #ffd98a;
+  --brewer:   #d8a0ff;
+  --danger:   #c06060;
+  --head:     #121136;
   --head-ink: #f3ebff;
-  --btnB: #242051;
-  --btn-ink: #f3ebff;
-  --shad: rgba(0, 0, 0, .38);
+  --btnB:     #242051;
+  --btn-ink:  #f3ebff;
+  --paper:    #f4ecd8;
+  --paper-ink:#37220f;
+  --shad:     rgba(0,0,0,.38);
+  --gold:     #c4b0ff;
+  --border:   #7565ae;
+  --coffee:   #3b2347;
+  --cup-shade:#d392bf;
+  color-scheme: dark;
 }
-body {
-  background-color: var(--bg) !important;
-  background-image: radial-gradient(circle at 14% 12%, rgba(255,255,255,.18) 0 2px, transparent 3px), linear-gradient(135deg, var(--bgB), var(--bg)) !important;
+
+/* ── Body ── */
+body{
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(255,255,255,.18) 0 2px, transparent 3px),
+    linear-gradient(135deg, var(--bgB), var(--bg));
+  color: var(--ink);
+  font-family: "VT323", monospace;
+  font-size: 20px;
+  min-height: 100vh;
+  transition: background-color .2s, color .2s;
 }
-header.pixel-border, header {
+
+/* ── Pixel border helper ── */
+.pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2); }
+
+/* ═══════════════════════════════════════
+   HEADER — CoffeeHouse Brand
+   ═══════════════════════════════════════ */
+header, header.pixel-border{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px clamp(16px, 3vw, 42px);
+  background: var(--head);
+  color: var(--head-ink);
+  border: 0;
+  border-bottom: 4px solid var(--accent2);
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
   min-height: 72px;
-  padding: 12px clamp(16px, 3vw, 42px) !important;
-  border: 0 !important;
-  border-bottom: 4px solid var(--accent2) !important;
-  box-shadow: none !important;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 10;
 }
-header .logo { font-size: 13px !important; }
-.btn, .theme-toggle { border: 2px solid var(--accent2) !important; border-radius: 7px; box-shadow: 3px 3px 0 var(--shad) !important; }
-.btn.matcha { background: var(--accent) !important; }
-.app, .workspace { border-top: 0 !important; }
-.side-left, .side-right, .chat, .workspace > * { box-shadow: none; }
-.side-left, .side-right, .panel, .chat-head, .composer, .workspace .panel { border-color: var(--line) !important; }
-.class-btn, .bubble, .bot-bubble, .panel, .card, .settings-card, .tool-card { border-radius: 7px; }
-.chat-head, .composer, .panel { background: var(--panel) !important; }
-.bubble, .class-btn { box-shadow: 3px 3px 0 var(--shad) !important; }
-body[data-theme="dark"] .avatar { border-color: var(--accent2); }
-@media (max-width: 640px) { header { min-height: 62px; } header .logo { font-size: 10px !important; } }
+
+.brand-header{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: var(--head-ink);
+}
+.brand-header svg.ch-cup{
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  color: var(--head-ink);
+}
+.brand-header span{
+  font-family: "Pixelify Sans", "Press Start 2P", monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+header .me{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  color: var(--head-ink);
+}
+header .me small{ display: block; font-size: 15px; opacity: .8; }
+
+/* ── Buttons ── */
+.btn{
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  padding: 10px 12px;
+  color: var(--btn-ink);
+  background: var(--btnB);
+  border: 2px solid var(--accent2);
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 var(--shad);
+  transition: filter .15s, transform .1s;
+}
+.btn:hover{ filter: brightness(1.15); transform: translateY(-1px); }
+.btn:active{ transform: translateY(1px); box-shadow: 1px 1px 0 var(--shad); }
+.btn.matcha{ background: var(--accent); color: #fff; }
+.btn.brew{ background: var(--brewer); color: var(--line); }
+.btn.light{ background: var(--barista); color: #2a1708; }
+.btn.danger{ background: var(--danger); color: #fff; }
+.btn:disabled{ opacity: .5; cursor: default; }
+
+.theme-toggle{
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  cursor: pointer;
+  background: var(--btnB);
+  color: var(--btn-ink);
+  border: 2px solid var(--accent2);
+  border-radius: 7px;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 3px 3px 0 var(--shad);
+  transition: filter .15s;
+}
+.theme-toggle:hover{ filter: brightness(1.2); }
+
+/* ═══════════════════════════════════════
+   LOFI DECORATIONS
+   ═══════════════════════════════════════ */
+.ch-deco{ position: absolute; pointer-events: none; }
+.ch-star{
+  color: var(--gold);
+  font-size: 14px;
+  opacity: .4;
+  animation: ch-twinkle 3s ease-in-out infinite alternate;
+}
+.ch-star.s1{ top: 12%; left: 5%; animation-delay: 0s; }
+.ch-star.s2{ top: 30%; right: 8%; animation-delay: .8s; font-size: 10px; }
+.ch-star.s3{ bottom: 20%; left: 12%; animation-delay: 1.5s; font-size: 11px; }
+.ch-star.s4{ top: 50%; right: 4%; animation-delay: 2.2s; font-size: 12px; }
+.ch-note{
+  color: var(--gold);
+  font-size: 18px;
+  opacity: .35;
+  animation: ch-float 4s ease-in-out infinite alternate;
+}
+.ch-note.n1{ top: 18%; left: 2%; animation-delay: .5s; }
+.ch-note.n2{ bottom: 28%; right: 3%; animation-delay: 2s; font-size: 15px; }
+.ch-plant{
+  position: absolute;
+  width: 20px;
+  height: 28px;
+  opacity: .3;
+}
+.ch-plant.pl{ bottom: 6%; left: 2%; box-shadow: 0 0 0 2px var(--gold),4px -4px 0 2px var(--gold),8px -2px 0 2px var(--gold),-2px -8px 0 2px var(--gold),6px -10px 0 2px var(--gold),2px -14px 0 2px var(--gold),0 4px 0 2px var(--gold),-4px 8px 0 2px var(--gold); }
+.ch-plant.pr{ bottom: 6%; right: 2%; box-shadow: 0 0 0 2px var(--gold),-4px -4px 0 2px var(--gold),-8px -2px 0 2px var(--gold),2px -8px 0 2px var(--gold),-6px -10px 0 2px var(--gold),-2px -14px 0 2px var(--gold),0 4px 0 2px var(--gold),4px 8px 0 2px var(--gold); }
+
+@keyframes ch-twinkle{ 0%{ opacity: .2; transform: scale(.8); } 100%{ opacity: .55; transform: scale(1.1); } }
+@keyframes ch-float{ 0%{ transform: translateY(0); } 100%{ transform: translateY(-5px); } }
+@media(prefers-reduced-motion:reduce){ .ch-star,.ch-note{ animation: none !important; } }
+
+/* ═══════════════════════════════════════
+   SHARED COMPONENTS
+   ═══════════════════════════════════════ */
+.avatar{
+  width: 38px; height: 38px;
+  border: 3px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Press Start 2P", monospace; font-size: 12px; color: #fff;
+  overflow: hidden; flex-shrink: 0;
+}
+.avatar img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+
+input, select, textarea{
+  background: var(--line);
+  color: var(--ink);
+  border: 3px solid var(--panel2);
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-family: "VT323", monospace;
+  font-size: 19px;
+  outline: none;
+  transition: border-color .15s;
+}
+input:focus, select:focus, textarea:focus{ border-color: var(--accent2); }
+
+.card, .panel{
+  background: var(--panel);
+  border-radius: 7px;
+}
+
+.bubble, .class-btn{
+  border-radius: 7px;
+  box-shadow: 3px 3px 0 var(--shad);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{ width: 10px; }
+::-webkit-scrollbar-track{ background: var(--panel); }
+::-webkit-scrollbar-thumb{ background: var(--panel2); border: 2px solid var(--panel); border-radius: 6px; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media(max-width: 640px){
+  header{ min-height: 62px; }
+  .brand-header span{ font-size: 16px; }
+}

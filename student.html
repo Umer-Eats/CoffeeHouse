@@ -6,48 +6,8 @@
 <title>CoffeeHouse - Student Hall</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:       #201208;
-    --bgB:      #26150a;
-    --panel:    #3b2314;
-    --panel2:   #5a3a22;
-    --line:     #221308;
-    --ink:      #f4e5c3;
-    --soft:     #b98a58;
-    --accent:   #6b8f49;
-    --accentD:  #3f5c2a;
-    --accent2:  #e0a94f;
-    --head:     #c99a63;
-    --head-ink: #221308;
-    --btnB:     #3b2314;
-    --btn-ink:  #f4e5c3;
-    --shad:     rgba(0,0,0,0.5);
-  }
-  body[data-theme="dark"]{
-    --bg:       #060a18;
-    --bgB:      #0d1126;
-    --panel:    #12162c;
-    --panel2:   #1f2442;
-    --line:     #05070f;
-    --ink:      #f7e9f2;
-    --soft:     #a9a3c4;
-    --accent:   #f093b5;
-    --accentD:  #552a44;
-    --accent2:  #ffd98a;
-    --head:     #262d50;
-    --head-ink: #f7e9f2;
-    --btnB:     #262d50;
-    --btn-ink:  #ffd0e0;
-    --shad:     rgba(0,0,0,0.6);
-  }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
   body{
-    background-color: var(--bg);
-    background-image:
-      linear-gradient(45deg, var(--bg) 25%, transparent 25%, transparent 75%, var(--bg) 75%),
-      linear-gradient(45deg, var(--bgB) 25%, transparent 25%, transparent 75%, var(--bgB) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 8px 8px;
     color: var(--ink);
     font-family: "VT323", monospace;
     font-size: 20px;
@@ -55,17 +15,9 @@
     overflow: hidden;
     transition: background-color .2s, color .2s;
   }
-  .pixel-border{ border: 3px solid var(--line); box-shadow: 0 0 0 4px var(--panel2); }
 
   /* TOP BAR */
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    gap: 14px; padding: 10px 14px;
-    background: var(--head); color: var(--head-ink);
-    flex-wrap: wrap;
-  }
-  header .logo{ font-family:"Press Start 2P"; font-size: 12px; color: var(--head-ink); }
-  header .logo canvas{ width: 32px; height: 32px; vertical-align: middle; margin-right: 8px; image-rendering: pixelated; }
+  header{ flex-wrap: wrap; }
   .me{ display:flex; align-items:center; gap: 10px; font-size: 20px; color: var(--head-ink); }
   .avatar{
     width: 38px; height: 38px; border: 3px solid var(--line);
@@ -77,22 +29,6 @@
   .me .avatar{ width: 34px; height: 34px; font-size: 10px; }
   .me small{ display:block; color: var(--head-ink); font-size: 16px; opacity:.8; }
   .me .status-dot{ width: 9px; height: 9px; background: #3ddc55; border: 2px solid var(--head-ink); display:inline-block; }
-  .btn{
-    font-family:"Press Start 2P"; font-size: 10px; padding: 10px 12px;
-    color: var(--btn-ink); background: var(--btnB);
-    border: 3px solid var(--line); text-decoration: none; cursor: pointer;
-    box-shadow: 3px 3px 0 var(--shad); display:inline-block;
-  }
-  .btn.matcha{ background: var(--accent); color:#fff; }
-  .btn:hover{ filter: brightness(1.15); }
-  .theme-toggle{
-    font-family:"Press Start 2P"; font-size: 9px; cursor: pointer;
-    background: var(--btnB); color: var(--btn-ink);
-    border: 3px solid var(--line); padding: 10px 12px;
-    display: inline-flex; align-items: center; gap: 7px;
-    box-shadow: 3px 3px 0 var(--shad);
-  }
-  .theme-toggle:hover{ filter: brightness(1.2); }
 
   /* LAYOUT */
   .app{ display: grid; grid-template-columns: 250px 1fr 260px; height: calc(100vh - 66px); }
@@ -214,12 +150,21 @@
   .empty{ color: var(--soft); font-style: italic; font-size: 18px; }
 </style>
 <link rel="stylesheet" href="/theme.css">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
 </head>
 <body>
 
-  <header class="pixel-border">
-    <span class="logo"><canvas id="navCup" data-art="Cup"></canvas>COFFEEHOUSE</span>
+<svg class="ch-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="ch-cup" viewBox="0 0 40 40">
+    <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
+    <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
+    <path fill="var(--coffee, #502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
+  </symbol>
+</defs></svg>
+
+  <header>
+    <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>COFFEEHOUSE</span></a>
     <div class="me" id="meBox">
       <span class="avatar" id="meAvatar"></span>
       <div id="meName">... <span class="status-dot"></span>
