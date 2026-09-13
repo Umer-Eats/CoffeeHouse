@@ -55,15 +55,21 @@ function initFirebase() {
   console.log('Firebase init — WEB_CONFIG:', !!firebaseWebConfig, 'SA:', !!saRaw, 'PATH:', !!saPath, 'ADC:', !!defaultCred);
   try {
     if (saPath && fs.existsSync(saPath)) {
+      console.log('Firebase: using service account path');
       firebaseAuth = getAuth(initializeApp({ credential: cert(require(saPath)) }));
     } else if (saRaw) {
-      firebaseAuth = getAuth(initializeApp({ credential: cert(JSON.parse(saRaw)) }));
+      console.log('Firebase: parsing service account JSON...');
+      const saObj = JSON.parse(saRaw);
+      console.log('Firebase: SA parsed, key type:', typeof saObj.private_key, 'client_email:', saObj.client_email);
+      const app = initializeApp({ credential: cert(saObj) });
+      console.log('Firebase: app initialized');
+      firebaseAuth = getAuth(app);
+      console.log('Firebase Admin: OK');
     } else if (defaultCred) {
       firebaseAuth = getAuth(initializeApp());
     }
-    console.log('Firebase Admin:', firebaseAuth ? 'OK' : 'NOT initialized');
   } catch (err) {
-    console.error('Firebase Admin init failed:', err.message);
+    console.error('Firebase Admin init FAILED:', err.message, err.stack);
     firebaseAuth = null;
   }
 }
