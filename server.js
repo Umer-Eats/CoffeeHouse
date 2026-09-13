@@ -12,6 +12,10 @@ const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
 
+/* Read static JS at module scope so Vercel's nft bundles them */
+const ART_JS = fs.readFileSync(path.join(__dirname, 'art.js'), 'utf8');
+const APP_JS = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
@@ -415,6 +419,9 @@ app.get('/', async (req, res) => {
 app.get('/student.html', (req, res) => guardPage(req, res, 'student.html'));
 app.get('/settings.html', (req, res) => guardPage(req, res, 'settings.html'));
 app.get('/ai-assistant.html', (req, res) => guardPage(req, res, 'ai-assistant.html'));
+
+app.get('/art.js', (req, res) => res.type('application/javascript').send(ART_JS));
+app.get('/app.js', (req, res) => res.type('application/javascript').send(APP_JS));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
