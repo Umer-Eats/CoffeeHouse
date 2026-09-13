@@ -1,18 +1,14 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["art.js", "app.js", "index.html", "student.html", "settings.html", "ai-assistant.html"]
-      }
+      "use": "@vercel/node"
     }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "server.js" },
-    { "src": "/(student|settings|ai-assistant)\\.html", "dest": "server.js" },
-    { "src": "/(art|app)\\.js", "dest": "server.js" },
-    { "src": "/(.*)", "dest": "server.js" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server.js" },
+    { "source": "/(student|settings|ai-assistant)\\.html", "destination": "/server.js" },
+    { "source": "/(art|app)\\.js", "destination": "/server.js" },
+    { "source": "/(.*)", "destination": "/server.js" }
   ]
 }
