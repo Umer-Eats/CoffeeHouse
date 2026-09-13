@@ -14,7 +14,7 @@ const ai = require('./ai');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'art.js'), 'utf8');
-const APP_JS = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const APP_JS = fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8');
 const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const STUDENT_HTML = fs.readFileSync(path.join(__dirname, 'student.html'), 'utf8');
 const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'settings.html'), 'utf8');

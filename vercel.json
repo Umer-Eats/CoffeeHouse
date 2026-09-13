@@ -1,10 +1,5 @@
 {
-  "functions": {
-    "server.js": {
-      "includeFiles": "{art.js,app.js,db.js,ai.js,*.html,public/**}"
-    }
-  },
   "rewrites": [
-    { "source": "/(.*)", "destination": "server.js" }
+    { "source": "/(.*)", "destination": "/server.js" }
   ]
 }
