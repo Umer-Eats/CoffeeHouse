@@ -52,6 +52,7 @@ function initFirebase() {
   const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
   const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
   const defaultCred = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  console.log('Firebase init — WEB_CONFIG:', !!firebaseWebConfig, 'SA:', !!saRaw, 'PATH:', !!saPath, 'ADC:', !!defaultCred);
   try {
     if (saPath && fs.existsSync(saPath)) {
       firebaseAuth = getAuth(initializeApp({ credential: cert(require(saPath)) }));
@@ -60,6 +61,7 @@ function initFirebase() {
     } else if (defaultCred) {
       firebaseAuth = getAuth(initializeApp());
     }
+    console.log('Firebase Admin:', firebaseAuth ? 'OK' : 'NOT initialized');
   } catch (err) {
     console.error('Firebase Admin init failed:', err.message);
     firebaseAuth = null;
@@ -149,13 +151,16 @@ function setSessionCookie(res, token) {
 
 app.get('/api/config', async (req, res) => {
   await ensureDb();
-  const fb = firebaseWebConfig && firebaseWebConfig.apiKey && firebaseAuth;
+  const hasWebConfig = !!(firebaseWebConfig && firebaseWebConfig.apiKey);
+  const hasAuth = !!firebaseAuth;
+  const fb = hasWebConfig && hasAuth;
   res.json({
     firebaseConfigured: !!fb,
     firebase: fb ? firebaseWebConfig : null,
     baristaConfigured: ai.isConfigured(),
     brewerConfigured: ai.isConfigured(),
-    devLogin: DEV_LOGIN
+    devLogin: DEV_LOGIN,
+    _debug: { hasWebConfig, hasAuth, envWebConfig: !!process.env.FIREBASE_WEB_CONFIG, envSA: !!process.env.FIREBASE_SERVICE_ACCOUNT }
   });
 });
 
