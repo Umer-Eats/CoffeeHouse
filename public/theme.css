@@ -153,21 +153,27 @@ header .me small{ display: block; font-size: 15px; opacity: .8; }
 .btn:disabled{ opacity: .5; cursor: default; }
 
 .theme-toggle{
+  display: inline-flex;
+  border: 2px solid var(--accent2);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.theme-toggle button{
   font-family: "Press Start 2P", monospace;
   font-size: 9px;
   cursor: pointer;
   background: var(--btnB);
   color: var(--btn-ink);
-  border: 2px solid var(--accent2);
-  border-radius: 7px;
-  padding: 10px 12px;
+  border: 0;
+  padding: 9px 14px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  box-shadow: 3px 3px 0 var(--shad);
-  transition: filter .15s;
+  gap: 6px;
+  transition: background .15s;
 }
-.theme-toggle:hover{ filter: brightness(1.2); }
+.theme-toggle button svg{ width: 16px; height: 16px; }
+.theme-toggle button[aria-pressed=true]{ background: var(--accent2); color: var(--line); }
+.theme-toggle button:hover{ filter: brightness(1.15); }
 
 /* ═══════════════════════════════════════
    LOFI DECORATIONS

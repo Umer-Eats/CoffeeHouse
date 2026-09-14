@@ -149,13 +149,18 @@
     <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
     <path fill="var(--coffee, #502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
   </symbol>
+  <symbol id="ch-sun" viewBox="0 0 24 24"><path fill="currentColor" d="M11 0h2v4h-2zm0 20h2v4h-2zM0 11h4v2H0zm20 0h4v2h-4zM3 3h3v3H3zm15 0h3v3h-3zM3 18h3v3H3zm15 0h3v3h-3zM8 6h8v2h2v8h-2v2H8v-2H6V8h2z"/></symbol>
+  <symbol id="ch-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M10 1h5v2h-3v3h-2v7h2v3h3v2h7v2h-3v2H8v-2H4v-3H2V7h2V4h3V2h3z"/></symbol>
 </defs></svg>
 
   <header>
     <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>COFFEEHOUSE AI</span></a>
     <div style="display:flex; align-items:center; gap:10px;">
       <span class="me" id="engineStatus">Baristi AI · Brewer AI</span>
-      <button class="theme-toggle" title="Toggle day/night"><span class="tb-ic"></span><span class="tb-lb"></span></button>
+      <div class="theme-toggle" role="group" aria-label="Color theme">
+        <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
+      </div>
       <a class="btn" href="student.html" style="padding:8px 10px;">STUDENT HALL</a>
     </div>
   </header>
@@ -404,6 +409,24 @@
 
     /* ---------- init ---------- */
     addChat(INTRO, true);
+    /* ---------- theme toggle ---------- */
+    (function() {
+      var saved = 'light';
+      try { saved = localStorage.getItem('ch-theme') || 'light'; } catch(e) {}
+      function applyTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        document.querySelectorAll('.theme-toggle button').forEach(function(b) {
+          b.setAttribute('aria-pressed', b.dataset.themeChoice === theme);
+        });
+        try { localStorage.setItem('ch-theme', theme); } catch(e) {}
+        if (typeof Art !== 'undefined') Art.refreshAll();
+      }
+      applyTheme(saved);
+      document.querySelectorAll('.theme-toggle button').forEach(function(b) {
+        b.addEventListener('click', function() { applyTheme(b.dataset.themeChoice); });
+      });
+    })();
+
     boot();
   </script>
 </body>
