@@ -83,7 +83,15 @@ Never hide the only access to channels, direct messages, settings, or saved stud
 
 The preference key is `ch-theme`, with `light` and `dark` values. Public pages apply it to the HTML element; signed-in pages apply it to the body. The explicit theme buttons must synchronize `aria-pressed` and the scenery palette. Page controllers own button events; `Art.initTheme()` only initializes the art palette.
 
-Cup steam uses a subtle 3-second stepped animation. Decorative public-page icons may drift 4px using stepped timing. Do not animate readable text, make backgrounds pan continuously, or add distracting particles over messages. Honor `prefers-reduced-motion` by disabling decorative motion and transitions.
+Shared motion lives in `public/motion.css` and `public/scenery.js`. Every scenery-bearing page uses a 450ms opacity crossfade between separately loaded Day/Night paintings, matching Home. Panel, text, and border colors transition for the same duration. Do not try to transition a background-image URL directly.
+
+The existing paintings are animated in a decorative canvas layer, never as the interface itself. Leaf regions sway by about 2 source pixels; the sleeping cat breathes by about 2 pixels with its paws anchored. Lanterns glow gently, cup steam rises, and sparse dust/petals stay behind content. Coordinates refer to the original 1751 × 898 artwork and resize with cover positioning. A future separated-sprite art pass can support larger motion without distorting painted edges.
+
+Scenery renders at no more than 15 frames per second, skips inactive theme canvases, and stops scheduling while the tab is hidden or the scene is offscreen. A persistent Pause scenery control freezes decorative motion. `prefers-reduced-motion` disables all animation and transitions and keeps a static scene; it takes precedence over the stored `ch-scenery-paused` preference.
+
+Barista and Brewer are code-native pixel SVG characters defined in `public/companions.js`. Barista is a cream coffee-cup companion in a green apron; Brewer is a lavender kettle companion with a stirring spoon. Both have quiet idle breathing, blinking, and steam. `CoffeeCompanions.setBusy(name, true)` switches to stepped working/stirring animation and announces a waiting status. Call it immediately before an AI request, and reset in `finally` on either success or error, including cheat-sheet saving. Do not use a fixed-duration animation as a proxy for a network request. Backend aliases such as `@baristi` remain compatible even though the display name is Barista.
+
+Small canvas plants sway from their base and lantern sprites glow. Do not animate readable text, make the whole background pan continuously, or put particles over messages. New motion must work with both the pause control and reduced-motion preference.
 
 ## Accessibility and content checks
 

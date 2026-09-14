@@ -1,0 +1,66 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+
+test('every café page uses the shared scene and transition files', () => {
+  for (const file of ['index.html','student.html','settings.html','ai-assistant.html','public/chat.html','public/study.html','public/profile.html']) {
+    const html = read(file);
+    assert.match(html, /href="\/motion.css"/);
+    assert.match(html, /src="\/scenery.js" defer/);
+  }
+  for (const file of ['public/scenery.js','public/companions.js']) new vm.Script(read(file));
+  assert.match(read('public/motion.css'), /--scene-fade:450ms/);
+  assert.match(read('public/motion.css'), /prefers-reduced-motion:reduce/);
+});
+
+test('provider labels are absent from the AI UI', () => {
+  const html = read('ai-assistant.html');
+  assert.match(html, /id="engineStatus">Barista · Brewer</);
+  assert.doesNotMatch(html, /Baristi =|Barista =|Brewer =|class="engine"/);
+});
+
+// Exercise the real inline request handlers with deferred API promises. This
+// verifies waiting/success/error without making paid requests or editing users.
+function harness() {
+  class Element {
+    constructor() { this.value=''; this.disabled=false; this.listeners={}; this.children=[]; this.dataset={}; this.style={}; }
+    addEventListener(name,fn) { this.listeners[name]=fn; }
+    appendChild(child) { this.children.push(child); }
+    querySelector() { return null; }
+    remove() { this.removed=true; }
+    setAttribute() {}
+  }
+  const elements = new Map();
+  const element = id => { if (!elements.has(id)) elements.set(id,new Element()); return elements.get(id); };
+  const states=[]; let resolve, reject;
+  const document = {getElementById:element, querySelectorAll:()=>[], createElement:()=>new Element(),body:new Element()};
+  const context = vm.createContext({document,localStorage:{getItem:()=>null,setItem:()=>{}},Art:{initTheme(){},refreshAll(){}},
+    CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},location:{},esc:String,nowTime:()=>'',
+    api:url=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
+      ?new Promise((yes,no)=>{resolve=yes;reject=no;}):Promise.resolve([])});
+  const html=read('ai-assistant.html');
+  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  vm.runInContext(scripts.at(-1)[1],context);
+  return {element,states,resolve:value=>resolve(value),reject:err=>reject(err)};
+}
+for (const kind of ['barista','brewer']) {
+  for (const outcome of ['success','failure']) {
+    test(`${kind} animation lasts through pending request and stops on ${outcome}`, async () => {
+      const h=harness();
+      h.element(kind==='barista'?'barInput':'brewText').value='A genuine test input';
+      const trigger=h.element(kind==='barista'?'barForm':'brewBtn');
+      const button=h.element(kind==='barista'?'barSend':'brewBtn');
+      const run=trigger.listeners[kind==='barista'?'submit':'click']({preventDefault(){}});
+      assert.equal(button.disabled,true);
+      assert.deepEqual(h.states,[[kind,true]]);
+      if(outcome==='success') h.resolve({reply:'Answer',doc:'Notes'}); else h.reject(new Error('Unavailable'));
+      await run;
+      assert.equal(button.disabled,false);
+      assert.deepEqual(h.states,[[kind,true],[kind,false]]);
+    });
+  }
+}

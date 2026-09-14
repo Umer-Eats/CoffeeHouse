@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="/theme.css">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
+<link rel="stylesheet" href="/motion.css">
+<script src="/scenery.js" defer></script>
 </head>
 <body class="study-page">
 
@@ -24,7 +26,7 @@
   <header>
     <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>CoffeeHouse</span></a>
     <div style="display:flex; align-items:center; gap:10px;">
-      <span class="me" id="engineStatus">Baristi AI · Brewer AI</span>
+      <span class="me" id="engineStatus">Barista · Brewer</span>
       <div class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
         <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
@@ -36,8 +38,8 @@
   <section class="room-banner"><div><p class="eyebrow">COFFEEHOUSE / AI STUDY</p><h1>The study corner</h1><p>A fresh explanation. A clearer set of notes. One idea at a time.</p></div><svg aria-hidden="true"><use href="#ch-cup"/></svg></section>
 
   <div class="tabs">
-    <button class="tab active bar" data-panel="baristi" aria-pressed="true">BARISTI AI<small>explain anything &middot; make cheat sheets</small></button>
-    <button class="tab brew" data-panel="brewer" aria-pressed="false">BREWER AI<small>analyze text &amp; chat feeds &middot; brew study notes</small></button>
+    <button class="tab active bar" data-panel="baristi" aria-pressed="true">BARISTA<small>explain anything &middot; make cheat sheets</small></button>
+    <button class="tab brew" data-panel="brewer" aria-pressed="false">BREWER<small>analyze text &amp; chat feeds &middot; brew study notes</small></button>
   </div>
 
   <div class="app">
@@ -45,16 +47,18 @@
     <main class="workspace">
       <!-- BARISTI -->
       <section class="ws-panel on" id="baristi">
+        <div class="companion" data-companion="barista"></div>
         <div class="chat-flow" id="barChat"></div>
         <p class="study-tip">Ask in your own words. AI can make mistakes—check your class materials.</p>
         <form class="search-bar" id="barForm">
-          <input id="barInput" aria-label="Question for Baristi" autocomplete="off" placeholder="Ask Baristi anything... try @baristi">
+          <input id="barInput" aria-label="Question for Barista" autocomplete="off" placeholder="Ask Barista anything... try @baristi">
           <button class="btn" type="submit" id="barSend">ASK</button>
         </form>
       </section>
 
       <!-- BREWER -->
       <section class="ws-panel" id="brewer">
+        <div class="companion" data-companion="brewer"></div>
         <div class="brew-top">
           <div>
             <label for="brewSource">SOURCE NAME</label>
@@ -83,7 +87,7 @@
         <canvas class="tl" id="rackLan" data-art="Lantern"></canvas>
       </div>
       <div class="panel">
-        <h3>BARISTI CHEAT SHEETS</h3>
+        <h3>BARISTA CHEAT SHEETS</h3>
         <div class="cheat-list" id="cheatList"></div>
       </div>
       <div class="panel brew">
@@ -96,6 +100,7 @@
 
   <script src="art.js"></script>
   <script src="/app.js"></script>
+  <script src="/companions.js"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -103,12 +108,7 @@
     async function boot() {
       Art.initTheme();
       try { await api('/api/me'); } catch (e) { location.href = '/'; return; }
-      try {
-        const cfg = await api('/api/config');
-        $('engineStatus').textContent =
-          'Baristi = ' + (cfg.baristaConfigured ? 'Gemini' : 'not configured') +
-          ' · Brewer = ' + (cfg.brewerConfigured ? 'Gemini' : 'not configured');
-      } catch (e) {}
+      // Provider configuration stays server-side; the header names the companions.
       loadChannels();
       loadCheats();
       loadDocs();
@@ -125,7 +125,7 @@
       });
     });
 
-    /* ---------- Baristi chat ---------- */
+    /* ---------- Barista chat ---------- */
 
     function addChat(msg, bot, thinking) {
       const flow = $('barChat');
@@ -140,7 +140,7 @@
       const bub = document.createElement('div');
       bub.className = 'bubble' + (bot ? ' bot' : '') + (thinking ? ' thinking' : '');
       const who = document.createElement('div'); who.className = 'who';
-      who.textContent = bot ? 'BARISTI AI' : 'You';
+      who.textContent = bot ? 'BARISTA' : 'You';
       const p = document.createElement('p'); p.textContent = msg;
       const time = document.createElement('span'); time.className = 'time'; time.textContent = nowTime();
       bub.appendChild(who); bub.appendChild(p); bub.appendChild(time);
@@ -163,9 +163,10 @@
       e.preventDefault();
       const inp = $('barInput');
       const q = inp.value.trim();
-      if (!q) return;
+      if (!q || $('barSend').disabled) return;
       inp.value = '';
       $('barSend').disabled = true;
+      CoffeeCompanions.setBusy('barista', true);
       addChat(q, false);
       const think = addChat('Pouring a fresh answer...', true, true);
       try {
@@ -181,12 +182,14 @@
         }
       } catch (err) {
         think.remove();
-        addChat('Baristi hit a snag: ' + err.message, true);
+        addChat('Barista hit a snag: ' + err.message, true);
+      } finally {
+        $('barSend').disabled = false;
+        CoffeeCompanions.setBusy('barista', false);
       }
-      $('barSend').disabled = false;
     });
 
-    /* ---------- Baristi cheat sheets ---------- */
+    /* ---------- Barista cheat sheets ---------- */
     async function loadCheats() {
       let cheats = [];
       try { cheats = await api('/api/ai/baristi/cheats'); } catch (e) { $('cheatList').textContent = 'Could not load cheat sheets. Refresh to retry.'; return; }
@@ -236,7 +239,7 @@
       const card = document.createElement('div');
       card.className = 'doc-card';
       card.innerHTML = `
-        <h3>&#127807; ${esc(doc.title)} <span class="stamp">BREWED</span><span class="engine">${esc(doc.engine || 'gemini')}</span></h3>
+        <h3>&#127807; ${esc(doc.title)} <span class="stamp">BREWED</span></h3>
         <hr>
         <p>${esc(doc.body)}</p>
         <div class="src">source: ${esc(doc.src || 'pasted text')}</div>
@@ -245,10 +248,12 @@
     }
 
     async function brewNewNotes() {
+      if ($('brewBtn').disabled) return;
       const source = $('brewSource').value.trim() || 'pasted text';
       const text = $('brewText').value.trim();
       if (!text) { $('brewFlow').innerHTML = '<div class="hint">Paste some text first, or pick a channel above.</div>'; return; }
       $('brewBtn').disabled = true;
+      CoffeeCompanions.setBusy('brewer', true);
       $('brewBtn').textContent = 'BREWING...';
       try {
         const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text } });
@@ -256,9 +261,11 @@
         loadDocs();
       } catch (err) {
         $('brewFlow').innerHTML = '<div class="hint">Brew failed: ' + esc(err.message) + '</div>';
+      } finally {
+        $('brewBtn').disabled = false;
+        $('brewBtn').textContent = 'BREW NOTES';
+        CoffeeCompanions.setBusy('brewer', false);
       }
-      $('brewBtn').disabled = false;
-      $('brewBtn').textContent = 'BREW NOTES';
     }
 
     async function loadDocs() {
@@ -278,7 +285,7 @@
     $('brewBtn').addEventListener('click', brewNewNotes);
 
     /* ---------- init ---------- */
-    $('barChat').innerHTML = '<div class="conversation-empty"><svg aria-hidden="true"><use href="#ch-cup"/></svg><h2>What are we learning today?</h2><p>Ask Baristi to explain a concept or make a cheat sheet.<br>Your conversation begins with your question.</p></div>';
+    $('barChat').innerHTML = '<div class="conversation-empty"><svg aria-hidden="true"><use href="#ch-cup"/></svg><h2>What are we learning today?</h2><p>Ask Barista to explain a concept or make a cheat sheet.<br>Your conversation begins with your question.</p></div>';
     /* ---------- theme toggle ---------- */
     (function() {
       var saved = 'light';

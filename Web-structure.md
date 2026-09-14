@@ -30,6 +30,8 @@ Public primary actions open the account dialog. Google login returns a CoffeeHou
 - Root `index.html`, `student.html`, `settings.html`, `ai-assistant.html`: read by the server at startup. Restart the local server after editing these files.
 - `public/`: static CSS, scripts, images, and the three explanation pages. Root HTML copies are mirrored here for consistency. Tests detect drift.
 - `public/home.js`: public theme, account dialog, Google/development login, school selection.
+- `public/scenery.js` / `public/motion.css`: shared animated café paintings, 450ms theme crossfades, pause preference, and reduced-motion behavior across public and signed-in pages.
+- `public/companions.js`: Barista and Brewer pixel characters; the AI workspace drives their loading state from actual request lifetime and clears it in `finally`. The header shows character names, not provider/model configuration. The existing `/api/ai/baristi` routes and `@baristi` mention remain unchanged.
 - `public/home.css`, `public/explore.css`, `public/theme.css`: home, explanation, and signed-in design respectively.
 - `Wizard-UI-style.md`: reusable visual and interaction rules.
 - `tests/pages.test.js`: script syntax, public route references, duplicate IDs, mirrored HTML, and absence of fabricated groups/courses.

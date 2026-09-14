@@ -1,0 +1,45 @@
+/* Shared café motion. Same 450ms crossfade as the home page. */
+:root{--scene-fade:450ms}
+body,header,.site-header,.room-banner,.panel,.card,.bubble,.tab,.btn,.composer,.chat-head,.side-left,.side-right,.side-rack,.workspace,.chat,.explain-card,.window-sign,input,select,textarea,.theme-toggle button{transition:background-color var(--scene-fade) ease,color var(--scene-fade) ease,border-color var(--scene-fade) ease,box-shadow var(--scene-fade) ease}
+.scene-host{overflow:hidden}
+.scene-host.cafe-window{isolation:isolate}
+.scene-host.cafe-window .window-sign{z-index:1}
+.living-scene{position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+body>.living-scene{position:fixed;z-index:-1}
+body.has-living-scene{isolation:isolate;background-image:none}
+.scene-layer{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity var(--scene-fade) ease;background-size:cover;background-position:center}
+.scene-layer[data-scene=light]{opacity:1;background-image:url('/images/cafe-scenery-day.png')}
+.scene-layer[data-scene=dark]{background-image:url('/images/cafe-scenery-night.png')}
+:is(html,body)[data-theme=dark] .scene-layer[data-scene=light]{opacity:0}
+:is(html,body)[data-theme=dark] .scene-layer[data-scene=dark]{opacity:1}
+.scene-layer canvas{position:absolute;max-width:none;image-rendering:pixelated}
+body>.living-scene::after{content:"";position:absolute;inset:0;background:#1c142080}
+.scene-host>.scenery{visibility:hidden}
+.motion-control{position:fixed;bottom:12px;right:12px;z-index:20;padding:6px 10px;background:var(--panel);color:var(--gold);border:1px solid var(--gold);font:17px "VT323",monospace;box-shadow:2px 2px 0 #171020;cursor:pointer}
+.companion{display:flex;align-items:center;gap:18px;padding:12px 22px;border-bottom:1px solid var(--border);background:var(--panel2);min-height:108px}
+.companion-art{width:72px;height:84px;overflow:visible;flex:none;shape-rendering:crispEdges}
+.companion h2{font-size:25px;color:var(--gold)}
+.companion-status{font-size:19px;color:var(--soft)}
+.companion .character-body{transform-origin:18px 37px;animation:companion-idle 4s steps(2,end) infinite}
+.character-eyes{transform-origin:17px 18px;animation:companion-blink 6s steps(1,end) infinite}
+.character-steam{animation:companion-steam 2s steps(4,end) infinite}
+.character-spark,.brew-bubbles{opacity:0}
+.is-busy .character-body{animation:companion-work .7s steps(3,end) infinite}
+.is-busy .character-hand{transform-origin:26px 27px;animation:companion-stir .5s steps(3,end) infinite}
+.is-busy .character-steam{animation-duration:.65s}
+.is-busy .character-spark,.is-busy .brew-bubbles{animation:companion-dots 1s steps(3,end) infinite}
+.brew-bubbles{margin-left:auto;color:var(--gold);white-space:nowrap}
+.side-art [data-art=Tree],.rack-art [data-art=Tree]{transform-origin:50% 100%;animation:plant-sway 5s steps(4,end) infinite}
+.side-art [data-art=Lantern],.rack-art [data-art=Lantern]{animation:lantern-warmth 4s ease-in-out infinite}
+.rack-art [data-art=Cup]{animation:companion-idle 4s steps(2,end) infinite}
+@keyframes plant-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes lantern-warmth{0%,100%{filter:drop-shadow(0 0 2px #efb56055)}50%{filter:drop-shadow(0 0 6px #efb56099)}}
+@keyframes companion-idle{50%{transform:translateY(-1px)}}
+@keyframes companion-blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes companion-steam{0%{transform:translateY(2px);opacity:0}50%{opacity:1}100%{transform:translateY(-3px);opacity:0}}
+@keyframes companion-work{50%{transform:translateY(-2px) rotate(-3deg)}}
+@keyframes companion-stir{50%{transform:rotate(18deg)}}
+@keyframes companion-dots{0%,100%{opacity:.25}50%{opacity:1}}
+html[data-scenery-paused=true] :is(.companion,.rack-art,.side-art,.room-banner,.brand-header,.brand,.welcome,.window-sign) *{animation-play-state:paused!important}
+@media(max-width:720px){.companion{padding:10px 16px;gap:12px}.companion-art{width:58px;height:68px}.companion-status{font-size:18px}.brew-bubbles{display:none}.motion-control{font-size:15px;bottom:7px;right:7px}}
+@media(prefers-reduced-motion:reduce){:root{--scene-fade:0ms}*,*::before,*::after{animation:none!important;transition:none!important}.is-busy .brew-bubbles{opacity:1}}
