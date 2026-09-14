@@ -77,34 +77,13 @@ initFirebase();
 
 /* ---------------- channel / class structure (applies to every school) ---------------- */
 
+// Shared discussion rooms, not invented school course enrollments.
 const CLASSES = [
-  { code: 'BIO-301', name: 'AP Biology', channels: [
-      { slug: 'general', title: 'General' },
-      { slug: 'hw-help', title: 'Homework help' },
-      { slug: 'exam-prep', title: 'Exam prep' },
-      { slug: 'lab-notes', title: 'Lab notes' }
-  ]},
-  { code: 'CALC-210', name: 'Calculus II', channels: [
-      { slug: 'general', title: 'General' },
-      { slug: 'hw-help', title: 'Homework help' },
-      { slug: 'deriv-drills', title: 'Derivative drills' }
-  ]},
-  { code: 'ENG-105', name: 'English Lit', channels: [
-      { slug: 'general', title: 'General' },
-      { slug: 'discussion', title: 'Discussion' },
-      { slug: 'essay-clinic', title: 'Essay clinic' }
-  ]},
-  { code: 'CS-110', name: 'Programming', channels: [
-      { slug: 'general', title: 'General' },
-      { slug: 'debug-squad', title: 'Debug squad' },
-      { slug: 'project-z', title: 'Project Z' }
+  { code: 'HALL', name: 'School community', channels: [
+    { slug: 'general', title: 'General' },
+    { slug: 'homework', title: 'Homework help' },
+    { slug: 'study', title: 'Study together' }
   ]}
-];
-
-const GROUP_TEMPLATES = [
-  { name: 'Mitosis Masterminds', meta: 'BIO-301 · study group' },
-  { name: 'Team Sigma', meta: 'CALC-210 · study group' },
-  { name: 'Project Z', meta: 'CS-110 · study group' }
 ];
 
 const channelKey = (code, slug) => `channel:${code}:${slug}`;
@@ -356,16 +335,8 @@ app.get('/api/dms', requireAuth, requireSchool, async (req, res) => {
 /* ---------------- project groups ---------------- */
 
 app.get('/api/groups', requireAuth, requireSchool, async (req, res) => {
-  const students = await db.schoolStudents(req.school.id, req.user.id);
-  const groups = GROUP_TEMPLATES.map((g, i) => {
-    const picked = [];
-    for (let j = 0; j < students.length && picked.length < 4; j++) {
-      const st = students[(i + j) % students.length];
-      if (st.on || picked.length < 3) picked.push(st);
-    }
-    return { name: g.name, meta: g.meta, members: picked.map(s => ({ name: s.name, id: s.id })) };
-  });
-  res.json(groups);
+  // No persisted group feature exists yet; never invent teams or memberships.
+  res.json([]);
 });
 
 /* ---------------- AI assistants ---------------- */

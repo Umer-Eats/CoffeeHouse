@@ -1,0 +1,26 @@
+/* Public explanation pages: real HTML over decorative café scenery. */
+.explore-page{display:block;background:var(--panel);color:var(--cream);min-height:100svh}
+.explore{max-width:1320px;margin:auto;padding:clamp(24px,4vw,64px)}
+.explore-hero{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:3px;font-size:18px;margin:0 0 20px}
+.explore h1{font:700 clamp(40px,4.8vw,72px)/1.06 "Pixelify Sans",monospace;margin:0 0 24px;letter-spacing:-1px;color:var(--cream);text-shadow:none}
+.lead{font:26px/1.4 "VT323",monospace;max-width:540px;margin:0 0 28px}
+.explore .primary-button{border-radius:2px;box-shadow:5px 5px 0 #1c130e;font-size:23px;padding:15px 22px;cursor:pointer}
+.small-print{font-size:18px;color:var(--gold);margin-top:16px}
+.cafe-window{height:440px;border:8px solid #9b643d;outline:2px solid var(--gold);background:url('/images/cafe-scenery-day.png') center/cover;image-rendering:pixelated;position:relative;box-shadow:12px 12px 0 #23170f}
+[data-theme=dark] .cafe-window{background-image:url('/images/cafe-scenery-night.png');border-color:#494071;box-shadow:12px 12px 0 #08091f}
+.window-sign{position:absolute;bottom:24px;left:24px;right:24px;border:2px solid var(--gold);background:var(--panel);padding:20px;display:flex;align-items:center;justify-content:center;gap:18px;font-size:25px}
+.window-sign svg{width:44px;height:44px;color:var(--gold)}
+.explain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin:54px 0 30px}
+.explain-card{border:2px solid var(--gold);padding:28px;background:var(--header);box-shadow:5px 5px 0 #171018}
+.step{color:var(--gold);font:26px "Pixelify Sans",monospace;display:block;margin-bottom:24px}
+.explore h2{font:600 26px/1.2 "Pixelify Sans",monospace;margin:0 0 12px}
+.explain-card p,.closing-note p{font:22px/1.4 "VT323",monospace;margin:0;opacity:.92}
+.closing-note{padding:28px;display:flex;gap:25px;align-items:center;border:2px solid var(--gold)}
+.closing-note>svg{width:54px;height:54px;flex:none;color:var(--gold)}
+.closing-note>div{flex:1}
+.closing-note a{color:var(--gold);white-space:nowrap}
+.explore-footer{max-width:1200px;margin:auto;padding:24px;display:flex;justify-content:space-between;gap:20px;font-size:18px;color:var(--gold)}
+.explore-footer a{color:inherit}
+@media(max-width:800px){.explore-hero{grid-template-columns:1fr;gap:28px}.cafe-window{height:300px}.explain-grid{grid-template-columns:1fr;margin-top:32px}.closing-note{flex-wrap:wrap}.explore h1{font-size:48px}.explore-footer{flex-wrap:wrap}}
+@media(prefers-reduced-motion:no-preference){.window-sign svg{animation:welcome-cup 4s steps(3,end) infinite}@keyframes welcome-cup{50%{transform:translateY(-4px)}}}

@@ -1,4 +1,4 @@
-/* CoffeeHouse shared pixel-art engine + day/night theme. */
+/* CoffeeHouse pixel-art engine + day/night theme. */
 (function (global) {
   'use strict';
 
@@ -43,7 +43,8 @@
 
   function drawStudent(id, light) {
     var c = ctx(id, 16, 16); if (!c) return;
-    var K = g(light, 'K'), P = g(light, 'P'), S = g(light, 'S'), H = g(light, 'H'), G = g(light, 'G'), N = g(light, 'N'), C2 = g(light, 'C2');
+    var K = g(light, 'K'), P = g(light, 'P'), S = g(light, 'S'), H = g(light, 'H'),
+        G = g(light, 'G'), N = g(light, 'N'), C2 = g(light, 'C2'), W = g(light, 'W');
     r(c, 6, 0, 3, 1, H); r(c, 7, 1, 1, 1, H);
     r(c, 5, 2, 6, 5, S);
     r(c, 5, 2, 6, 1, H); r(c, 4, 3, 1, 4, H); r(c, 10, 3, 1, 4, H);
@@ -52,13 +53,12 @@
     r(c, 7, 6, 2, 1, C2);
     r(c, 7, 7, 2, 1, S);
     r(c, 4, 8, 8, 5, G);
-    r(c, 7, 8, 2, 1, W());
+    r(c, 7, 8, 2, 1, W);
     r(c, 10, 9, 3, 4, P); r(c, 9, 9, 1, 3, P); r(c, 13, 10, 1, 3, P);
-    r(c, 11, 10, 1, 2, W());
+    r(c, 11, 10, 1, 2, W);
     r(c, 5, 13, 6, 1, N);
     r(c, 5, 14, 2, 2, N); r(c, 9, 14, 2, 2, N);
     r(c, 4, 15, 3, 1, K); r(c, 9, 15, 3, 1, K);
-    function W() { return g(light, 'W'); }
   }
 
   function drawTree(id, light) {
@@ -158,12 +158,15 @@
   function apply(theme) {
     document.body.setAttribute('data-theme', theme);
     var dark = theme === 'dark';
-    var togglers = document.querySelectorAll('.theme-toggle');
-    for (var i = 0; i < togglers.length; i++) {
-      var ic = togglers[i].querySelector('.tb-ic');
-      var lb = togglers[i].querySelector('.tb-lb');
-      if (ic) ic.textContent = dark ? '\u2600' : '\u263E';
-      if (lb) lb.textContent = dark ? 'DAY' : 'NIGHT';
+    /* update theme toggle active states */
+    var opts = document.querySelectorAll('.theme-toggle .opt');
+    for (var i = 0; i < opts.length; i++) {
+      var optTheme = opts[i].getAttribute('data-theme');
+      if (optTheme === theme) {
+        opts[i].classList.add('active');
+      } else {
+        opts[i].classList.remove('active');
+      }
     }
     refreshAll();
   }
@@ -172,14 +175,7 @@
     var saved = 'light';
     try { saved = localStorage.getItem('ch-theme') || 'light'; } catch (e) { saved = 'light'; }
     apply(saved);
-    var togglers = document.querySelectorAll('.theme-toggle');
-    for (var i = 0; i < togglers.length; i++) {
-      togglers[i].addEventListener('click', function () {
-        var cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        apply(cur);
-        try { localStorage.setItem('ch-theme', cur); } catch (e) {}
-      });
-    }
+    // Page controllers own the explicit Day/Night buttons.
   }
 
   global.Art = {

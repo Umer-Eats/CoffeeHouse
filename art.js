@@ -175,14 +175,7 @@
     var saved = 'light';
     try { saved = localStorage.getItem('ch-theme') || 'light'; } catch (e) { saved = 'light'; }
     apply(saved);
-    var toggle = document.querySelector('.theme-toggle');
-    if (toggle) {
-      toggle.addEventListener('click', function () {
-        var cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        apply(cur);
-        try { localStorage.setItem('ch-theme', cur); } catch (e) {}
-      });
-    }
+    // Page controllers own the explicit Day/Night buttons.
   }
 
   global.Art = {

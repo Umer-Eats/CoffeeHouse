@@ -78,13 +78,13 @@ CREATE TABLE IF NOT EXISTS online (
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
 `;
 
-/* ---------------- seed data ---------------- */
+/* ---------------- explicitly configured communities and service identities ---------------- */
 
-const SCHOOLS = [
-  'Pembroke Pines Charter High School',
-  'American Heritage High School',
-  'West Broward High School'
-];
+// Existing schools remain intact. New databases start empty unless configured.
+const SCHOOLS = JSON.parse(process.env.COFFEEHOUSE_SCHOOLS || '[]');
+if (!Array.isArray(SCHOOLS) || SCHOOLS.some(name => typeof name !== 'string' || !name.trim())) {
+  throw new Error('COFFEEHOUSE_SCHOOLS must be a JSON array of school names.');
+}
 
 const BOTS = [
   { sub: 'bot-baristi', email: 'baristi@coffeehouse.ai', name: 'Baristi AI' },

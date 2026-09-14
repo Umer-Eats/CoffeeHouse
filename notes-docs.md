@@ -1,5 +1,7 @@
 # CoffeeHouse — Notes & Documentation
 
+> Historical notes. Use [Web-structure.md](Web-structure.md) and [.env.example](.env.example) for current setup. NotebookLM and automatic school provisioning described below are not implemented. Do not use historical database-reset instructions to remove data.
+
 CoffeeHouse is a warm little digital shop where students brew ideas, chat across
 classes, and pour out project groups. This document covers setup, configuration,
 and how each feature works. For a deep dive into the code layout, see

@@ -1,5 +1,7 @@
 # CoffeeHouse — Product Backlog
 
+> Historical backlog. [Web-structure.md](Web-structure.md) describes current behavior. Fabricated groups/courses and automatic school seeding have been removed; NotebookLM is not integrated.
+
 > Living document. Last updated: 2026-09-07
 
 ---

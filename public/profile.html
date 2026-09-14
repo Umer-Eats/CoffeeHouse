@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#3d261a">
   <meta name="description" content="Your cozy space for communication and study. Chat. Study. Grow. Together.">
-  <title>CoffeeHouse — Chat. Study. Grow. Together.</title>
+  <title>Profile — CoffeeHouse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/home.css">
+  <link rel="stylesheet" href="/explore.css">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
 </head>
-<body>
+<body class="explore-page">
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
     <symbol id="cup" viewBox="0 0 40 40">
       <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
@@ -30,19 +31,18 @@
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
-    <nav class="navigation" aria-label="Main navigation"><a href="/" aria-current="page">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a></nav>
+    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html" aria-current="page">Profile</a></nav>
     <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
     <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
   </header>
-  <main class="cafe" id="main">
-    <div class="scenery scenery-day" aria-hidden="true"></div><div class="scenery scenery-night" aria-hidden="true"></div>
-    <section class="welcome" aria-labelledby="title">
-      <svg class="hero-cup" aria-hidden="true"><use href="#cup"/></svg>
-      <h1 id="title">CoffeeHouse</h1>
-      <p class="tagline">Chat. Study. Grow. Together.</p>
-      <p class="intro">Your cozy space for<br>communication and study.</p>
+  <main id="main" class="explore">
+    <section class="explore-hero">
+      <div class="explore-copy"><p class="eyebrow">Your corner of CoffeeHouse</p><h1>Your community.<br>Your kind of cozy.</h1><p class="lead">One account connects your conversations and study tools. Settle into your school community and make the space feel like yours.</p><button class="primary-button" data-login>Settle into CoffeeHouse <span aria-hidden="true">→</span></button><p class="small-print">Sign in to join your school’s Student Hall.</p></div>
+      <div class="cafe-window" aria-hidden="true"><div class="window-sign"><svg><use href="#user"/></svg><span>Make yourself at home</span></div></div>
     </section>
-  </main>
+    <section class="explain-grid" aria-label="Profile features"><article class="explain-card"><span class="step">01</span><h2>A recognizable identity</h2><p>Sign in with Google. CoffeeHouse uses your account name and picture so classmates know who they are talking to.</p></article><article class="explain-card"><span class="step">02</span><h2>Your school, in one place</h2><p>Choose your school after signing in. Settings lets you change your community when you need to.</p></article><article class="explain-card"><span class="step">03</span><h2>Daylight or moonlight</h2><p>Choose the warm daytime café or the quiet night palette. Your preference stays in this browser as you move between pages.</p></article></section>
+    <section class="closing-note"><svg aria-hidden="true"><use href="#cup"/></svg><div><h2>A simple place to belong.</h2><p>Your settings show your account details, school membership, and session controls. No invented achievements, activity counts, or profile statistics.</p></div><a href="/chat.html">Explore Chat →</a></section>
+  </main><footer class="explore-footer"><a href="/">CoffeeHouse</a><span>Chat. Study. Grow. Together.</span></footer>
 
   <dialog id="accountDialog" aria-labelledby="accountTitle">
     <button class="close-dialog" type="button" aria-label="Close dialog">×</button>

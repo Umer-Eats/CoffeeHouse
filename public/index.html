@@ -30,7 +30,7 @@
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
-    <nav class="navigation" aria-label="Main navigation"><a href="/" aria-current="page">Home</a><a href="/student.html">Chat</a><a href="/ai-assistant.html">Study</a><a href="/settings.html">Profile</a></nav>
+    <nav class="navigation" aria-label="Main navigation"><a href="/" aria-current="page">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a></nav>
     <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
     <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
   </header>
@@ -42,13 +42,8 @@
       <p class="tagline">Chat. Study. Grow. Together.</p>
       <p class="intro">Your cozy space for<br>communication and study.</p>
     </section>
-    <nav class="feature-grid" aria-label="Explore CoffeeHouse">
-      <a class="feature" href="/student.html"><svg aria-hidden="true"><use href="#chat"/></svg><h2>Chat</h2><p>Connect with<br>friends &amp; peers.</p></a>
-      <a class="feature" href="/ai-assistant.html"><svg aria-hidden="true"><use href="#book"/></svg><h2>Study</h2><p>Share notes,<br>resources &amp; tips.</p></a>
-      <a class="feature" href="/student.html#groupList"><svg aria-hidden="true"><use href="#group"/></svg><h2>Groups</h2><p>Join study groups<br>and communities.</p></a>
-      <button class="feature" id="eventsBtn" type="button"><svg aria-hidden="true"><use href="#calendar"/></svg><h2>Events</h2><p>Find study sessions<br>and more.</p></button>
-    </nav>
   </main>
+
   <dialog id="accountDialog" aria-labelledby="accountTitle">
     <button class="close-dialog" type="button" aria-label="Close dialog">×</button>
     <svg class="dialog-cup" aria-hidden="true"><use href="#cup"/></svg>
@@ -59,7 +54,7 @@
     <form id="schoolForm" hidden><label>Your school<select id="schoolSelect" required></select></label><button class="primary-button">Join your school</button></form>
     <p id="loginStatus" role="status" aria-live="polite"></p>
   </dialog>
-  <dialog id="eventsDialog" aria-labelledby="eventsTitle"><button class="close-dialog" type="button" aria-label="Close dialog">×</button><h2 id="eventsTitle">Study sessions</h2><p>Meet your classmates in the Student Hall to arrange your next study session.</p><a class="primary-button" href="/student.html">Visit the Student Hall</a></dialog>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
   <script src="/app.js" defer></script>

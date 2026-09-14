@@ -59,7 +59,8 @@
     try {
       CFG = await api('/api/config');
     } catch (e) {
-      CFG = { firebaseConfigured: false, devLogin: true };
+      CFG = { firebaseConfigured: false, devLogin: false };
+      loginStatus.textContent = 'Could not load sign-in settings. Refresh to retry.';
     }
 
     /* Show/hide dev form */
@@ -79,7 +80,7 @@
     /* Set up Firebase */
     if (CFG.firebaseConfigured && window.firebase) {
       try {
-        firebase.initializeApp(CFG.firebase);
+        if (!firebase.apps.length) firebase.initializeApp(CFG.firebase);
         googleLogin.addEventListener('click', signInWithGoogle);
       } catch (e) {
         loginStatus.textContent = 'Firebase setup failed: ' + e.message;
@@ -92,7 +93,10 @@
 
     /* Open login dialog when login button clicked */
     loginBtn.addEventListener('click', () => openDialog(accountDialog));
+    if (new URLSearchParams(location.search).has('login')) openDialog(accountDialog);
   }
+
+  $$('[data-login]').forEach(b => b.addEventListener('click', () => loginBtn.click()));
 
   function showLoggedIn(me) {
     loginBtn.innerHTML = '<svg aria-hidden="true"><use href="#user"/></svg><span>' + esc(me.user.name) + '</span>';
@@ -147,6 +151,10 @@
 
   async function openSchoolPicker(user) {
     schoolForm.hidden = false;
+    googleLogin.hidden = true;
+    devForm.hidden = true;
+    loginStatus.textContent = '';
+    openDialog(accountDialog);
     $('#accountHint').textContent =
       'Welcome, ' + (user.name || 'student') + '! Pick the school you attend.';
     try {
@@ -154,7 +162,7 @@
       $('#schoolSelect').innerHTML = schools
         .map((s) => '<option value="' + s.id + '">' + esc(s.name) + '</option>')
         .join('');
-      openDialog(accountDialog);
+      if (!schools.length) loginStatus.textContent = 'No schools have been configured yet. Please contact the site owner.';
     } catch (e) {
       loginStatus.textContent = 'Could not load schools: ' + e.message;
     }
