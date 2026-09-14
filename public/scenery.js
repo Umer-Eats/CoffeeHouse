@@ -1,5 +1,21 @@
 /* Animate the existing painting in source-image coordinates, keeping UI separate. */
 'use strict';
+// Pure geometry shared by the renderer and interaction regression tests.
+function sceneryPoint(clientX, clientY, rect) {
+  return {x:(clientX-rect.left)*1751/rect.width,y:(clientY-rect.top)*898/rect.height};
+}
+function leafRepulsion(pointer, region) {
+  if (!pointer) return {x:0,y:0};
+  const [x,y,w,h] = region;
+  const nearestX=Math.max(x,Math.min(pointer.x,x+w));
+  const nearestY=Math.max(y,Math.min(pointer.y,y+h));
+  const distance=Math.hypot(pointer.x-nearestX,pointer.y-nearestY);
+  if(distance>75) return {x:0,y:0};
+  const dx=x+w/2-pointer.x, dy=y+h/2-pointer.y;
+  const length=Math.hypot(dx,dy)||1;
+  const force=18*(1-distance/75);
+  return {x:(dx===0 && dy===0?1:dx/length)*force,y:dy/length*force*.45};
+}
 (function () {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let paused = false;
@@ -27,13 +43,24 @@
   document.body.appendChild(toggle);
   updateControl();
   const scenes = [];
+  let pointer = null;
+  // Listen passively: the decorative canvas never captures clicks or scrolling.
+  document.addEventListener('pointermove', event => {
+    if(event.pointerType==='touch' || paused || reduced.matches) { pointer=null; return; }
+    if(event.target.closest('button,a,input,textarea,select,dialog,.welcome,.window-sign,.panel,.card,.workspace,.chat,.side-left,.room-banner,header')) { pointer=null; return; }
+    pointer={x:event.clientX,y:event.clientY};
+    scenes.forEach(scene=>{scene.pointerRect=scene.canvas.getBoundingClientRect();});
+  }, {passive:true});
+  document.addEventListener('pointerleave',()=>{pointer=null;});
+  addEventListener('blur',()=>{pointer=null;});
+  addEventListener('scroll',()=>{pointer=null;},{passive:true,capture:true});
   let frame = 0, previous = 0, clock = 0;
   const isDark = () => (document.body.dataset.theme || document.documentElement.dataset.theme) === 'dark';
 
   // Region positions refer to the supplied 1751 × 898 café paintings.
   const regions = {
-    light: [[245,0,122,348],[478,0,74,137],[1104,0,154,225],[1274,0,174,159],[0,639,306,259],[1560,563,191,335]],
-    dark: [[95,0,185,170],[356,0,276,177],[1170,0,325,210],[1520,0,200,175],[0,664,300,234],[1545,754,206,144]]
+    light: [[0,0,132,93],[245,0,122,348],[478,0,74,137],[1104,0,154,225],[1274,0,174,159],[0,639,306,259],[1560,563,191,335],[0,380,130,203]],
+    dark: [[95,0,185,170],[356,0,276,177],[1170,0,325,210],[1520,0,200,175],[0,664,300,234],[1545,754,206,144],[89,205,150,139],[367,369,155,132]]
   };
   function draw(scene, time) {
     const {ctx, image, kind} = scene;
@@ -43,41 +70,58 @@
     // Small strip displacements taper to zero at the region boundaries. The
     // original painting stays underneath, so no transparent gaps can appear.
     regions[kind].forEach(([x,y,w,h], index) => {
+      const local=pointer && scene.pointerRect?.width ? sceneryPoint(pointer.x,pointer.y,scene.pointerRect) : null;
+      const target=leafRepulsion(local,[x,y,w,h]);
+      const offset=scene.offsets[index] || (scene.offsets[index]={x:0,y:0});
+      // Ease away and settle back without replacing the original breeze.
+      offset.x+=(target.x-offset.x)*.2; offset.y+=(target.y-offset.y)*.2;
       ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
       for (let row=0; row<h; row+=6) {
         const height = Math.min(6,h-row);
-        const sway = Math.sin(time*.75 + index + row/h) * 2.2 * Math.sin(Math.PI*row/h);
-        ctx.drawImage(image,x,y+row,w,height,x+sway,y+row,w,height);
+        const taper=Math.sin(Math.PI*row/h);
+        const gust=1+.35*Math.sin(time*.33+index);
+        const sway = Math.sin(time*1.1 + index + row/h*2) * 5.5 * gust * taper;
+        ctx.drawImage(image,x,y+row,w,height,x+sway+offset.x*taper,y+row+offset.y*taper,w,height);
       }
       ctx.restore();
     });
     // The sleeping cat breathes gently; paws stay planted on the stool.
     const cat = kind === 'light' ? [1446,587,174,76] : [1447,634,161,82];
     const [cx,cy,cw,ch] = cat;
-    const breath = (1 + Math.sin(time*1.25)) * 1.15;
+    const breath = (1 + Math.sin(time*1.25)) * 1.9;
     ctx.drawImage(image,cx,cy,cw,ch,cx,cy-breath,cw,ch+breath);
     const lamps = kind === 'light' ? [[408,161],[1317,226]] : [[333,204],[1642,670]];
     lamps.forEach(([x,y],i) => {
-      const glow = ctx.createRadialGradient(x,y,1,x,y,38);
-      glow.addColorStop(0,`rgba(255,204,109,${.12+.06*Math.sin(time*1.3+i)})`);
+      const glow = ctx.createRadialGradient(x,y,1,x,y,55);
+      glow.addColorStop(0,`rgba(255,204,109,${.22+.10*Math.sin(time*1.3+i)})`);
       glow.addColorStop(1,'rgba(255,204,109,0)');
-      ctx.fillStyle=glow; ctx.fillRect(x-38,y-38,76,76);
+      ctx.fillStyle=glow; ctx.fillRect(x-55,y-55,110,110);
     });
     // Occasional sleep marks, cup steam, and pixel dust / cherry petals.
     ctx.font='12px monospace'; ctx.fillStyle=kind==='light'?'#fff0cf':'#d3b6ee';
     ctx.globalAlpha=Math.max(0,Math.sin(time*.6));
     ctx.fillText('z',cx+cw*.48,cy-7-(time%5)*3); ctx.globalAlpha=1;
-    for(let i=0;i<9;i++) {
-      const x=480+((i*139+Math.sin(time*.4+i)*20)%800);
-      const y=80+((time*(kind==='dark'?13:4)+i*57)%430);
-      ctx.globalAlpha=.2+.2*Math.sin(time+i)**2;
-      ctx.fillStyle=kind==='dark'?'#efa8d1':'#fff5ce';
-      ctx.fillRect(x,y,kind==='dark'?5:2,kind==='dark'?3:2);
+    for(let i=0;i<24;i++) {
+      const x=180+((i*139+time*8+Math.sin(time*.65+i)*35)%1360);
+      const y=25+((time*(kind==='dark'?23:12)+i*57)%820);
+      ctx.globalAlpha=.25+.35*Math.sin(time*.7+i)**2;
+      ctx.fillStyle=kind==='dark'?'#efa8d1':i%4===0?'#b6cc67':'#fff5ce';
+      ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(time+i)*.7);
+      const size=kind==='dark'||i%4===0?6:3;
+      ctx.fillRect(0,0,size,3);ctx.fillRect(2,-2,3,size);ctx.restore();
     }
-    ctx.globalAlpha=.35;
+    if(kind==='dark') {
+      // Pixel stars twinkle at fixed positions; only their light changes.
+      for(let i=0;i<16;i++) {
+        const x=650+(i*97%615),y=30+(i*61%245);
+        ctx.globalAlpha=.15+.6*Math.max(0,Math.sin(time*.9+i));ctx.fillStyle='#f9dfff';
+        ctx.fillRect(x-3,y,7,2);ctx.fillRect(x,y-3,2,7);
+      }
+    }
+    ctx.globalAlpha=.5;
     const steamX=kind==='light'?653:626, steamY=kind==='light'?487:536;
     ctx.fillStyle=kind==='light'?'#fff0cf':'#dfbcea';
-    for(let i=0;i<3;i++) ctx.fillRect(steamX+Math.sin(time*1.2+i)*4,steamY-8-((time*8+i*8)%28),2,5);
+    for(let i=0;i<6;i++) ctx.fillRect(steamX+Math.sin(time*1.2+i*.5)*7,steamY-8-((time*12+i*8)%43),3,7);
     ctx.globalAlpha=1;
   }
   function fit(scene) {
@@ -85,6 +129,7 @@
     const w=host===document.body?innerWidth:host.clientWidth;
     const h=host===document.body?innerHeight:host.clientHeight;
     const scale=Math.max(w/1751,h/898);
+    scene.pointerRect=null;
     Object.assign(scene.canvas.style,{width:`${1751*scale}px`,height:`${898*scale}px`,left:`${(w-1751*scale)/2}px`,top:`${(h-898*scale)/2}px`});
   }
   function tick(now) {
@@ -114,7 +159,7 @@
       ctx.imageSmoothingEnabled=false;
       const image=new Image();
       image.onload=()=>{
-        const scene={host,canvas,ctx,image,kind,visible:true}; scenes.push(scene);
+        const scene={host,canvas,ctx,image,kind,visible:true,offsets:[]}; scenes.push(scene);
         draw(scene,0); fit(scene); layer.appendChild(canvas);
         if(host===document.body) host.classList.add('has-living-scene'); else host.classList.add('scene-host');
         schedule();
