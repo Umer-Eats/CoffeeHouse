@@ -104,3 +104,7 @@ Small canvas plants sway from their base and lantern sprites glow. Do not animat
 - Loading and errors must explain what is happening and how to recover.
 - Never invent classmates, enrollments, groups, grades, testimonials, or AI output.
 - Review both palettes, long names/messages, keyboard behavior, empty data, and phone layouts.
+
+### AI image attachments
+
+Use `public/ai-images.js` and `public/ai-images.css` for both assistants. Provide a visible attach button, thumbnail previews, individually labeled Remove buttons, and a live preparation/error status. Support image paste while a field in the assistant is focused without interfering with ordinary text paste. Show format/count limits and the provider privacy notice before sending. Disable submission during image preparation and requests; preserve attachments after errors so students can retry. Keep thumbnails contained without cropping worksheets, and keep filenames readable in both palettes.

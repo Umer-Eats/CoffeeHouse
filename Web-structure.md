@@ -4,7 +4,7 @@
 
 CoffeeHouse combines school communication with AI-assisted study in a cozy pixel-art café. Students discover the product without signing in, then use a Google account to choose their school and enter Student Hall. Baristi explains questions and produces cheat sheets; Brewer organizes supplied text into study notes.
 
-This document describes the implemented application, not a roadmap. There is no working event calendar, persistent project-group system, school enrollment verification, or file-upload integration.
+This document describes the implemented application, not a roadmap. There is no working event calendar, persistent project-group system, school enrollment verification, or general document-upload integration. Both AI assistants accept image attachments.
 
 ## Page map
 
@@ -84,7 +84,11 @@ Messages use `GET/POST /api/messages`. Mentioning `@baristi` requests an explana
 - `POST /api/ai/brewer`: summarizes pasted text or a channel feed and saves a study document.
 - `GET /api/brewer/docs`: lists the current user's generated documents.
 
-The Baristi conversation displayed in the workspace is in-memory for that page; saved cheat sheets and Brewer documents persist. No conversation or document is pre-populated. Sources are pasted text or channel messages, not uploaded files. Both assistants use Gemini; there is no NotebookLM integration in the current code.
+The Baristi conversation displayed in the workspace is in-memory for that page; saved cheat sheets and Brewer documents persist. No conversation or document is pre-populated. Sources include pasted text, channel messages, and uploaded or pasted images. Both assistants use Gemini; there is no NotebookLM integration in the current code.
+
+`public/ai-images.js` provides image selection, clipboard-paste handling, previews, and removal. Each assistant accepts up to two JPEG, PNG, or WebP files, at most 10 MB each before processing. The browser re-encodes them as JPEG, removes original metadata, and reduces them to at most 2000 pixels on the longest side and 1 MiB each. Images remain local until submission; image-only questions are supported. Failed requests retain attachments for retry. Plain text paste is unchanged.
+
+`image-input.js` validates count, base64, JPEG markers, dimensions, and processed size on the server; the JSON body limit is 3 MiB. `ai.js` forwards images as Gemini inline data. This is not malware scanning or a general file-storage service. Original images are not saved in the database; generated answers may contain information extracted from them. Saved cheat sheets and Brewer notes store generated text. The interface warns that submitted images go to Google Gemini and should not contain private information.
 
 AI availability requires valid server-side credentials and a model accessible to the account. Missing credentials and generation failures must be shown as errors, never replaced with fabricated answers. Important facts should be checked against course material.
 

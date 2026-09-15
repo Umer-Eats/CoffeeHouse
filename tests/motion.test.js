@@ -25,7 +25,7 @@ test('provider labels are absent from the AI UI', () => {
 
 // Exercise the real inline request handlers with deferred API promises. This
 // verifies waiting/success/error without making paid requests or editing users.
-function harness() {
+function harness(attachments = []) {
   class Element {
     constructor() { this.value=''; this.disabled=false; this.listeners={}; this.children=[]; this.dataset={}; this.style={}; }
     addEventListener(name,fn) { this.listeners[name]=fn; }
@@ -36,16 +36,33 @@ function harness() {
   }
   const elements = new Map();
   const element = id => { if (!elements.has(id)) elements.set(id,new Element()); return elements.get(id); };
-  const states=[]; let resolve, reject;
+  const states=[]; const requests=[]; const imageState={images:attachments}; let resolve, reject;
   const document = {getElementById:element, querySelectorAll:()=>[], createElement:()=>new Element(),body:new Element()};
   const context = vm.createContext({document,localStorage:{getItem:()=>null,setItem:()=>{}},Art:{initTheme(){},refreshAll(){}},
+    AIImages:{create:()=>({get:()=>imageState.images,ready:()=>true,setBusy(){},clear(){imageState.images=[];}})},
     CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},AIFormat:require('../public/ai-format.js'),location:{},esc:String,nowTime:()=>'',
-    api:url=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
-      ?new Promise((yes,no)=>{resolve=yes;reject=no;}):Promise.resolve([])});
+    api:(url,options)=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
+      ?new Promise((yes,no)=>{requests.push({url,options});resolve=yes;reject=no;}):Promise.resolve([])});
   const html=read('ai-assistant.html');
   const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
   vm.runInContext(scripts.at(-1)[1],context);
-  return {element,states,resolve:value=>resolve(value),reject:err=>reject(err)};
+  return {element,states,requests,imageState,resolve:value=>resolve(value),reject:err=>reject(err)};
+}
+for (const kind of ['barista','brewer']) {
+  for (const outcome of ['success','failure']) {
+    test(`${kind} submits images without text and ${outcome==='success'?'clears':'retains'} attachments on ${outcome}`, async () => {
+      const h=harness([{mimeType:'image/jpeg',data:'test-image',name:'worksheet.jpg'}]);
+      const trigger=h.element(kind==='barista'?'barForm':'brewBtn');
+      const run=trigger.listeners[kind==='barista'?'submit':'click']({preventDefault(){}});
+      assert.equal(h.requests.length,1);
+      const body=JSON.parse(JSON.stringify(h.requests[0].options.body));
+      assert.equal(body.text,'');
+      assert.deepEqual(body.images,[{mimeType:'image/jpeg',data:'test-image'}]);
+      if(outcome==='success') h.resolve({reply:'Answer',doc:'Notes'}); else h.reject(new Error('Unavailable'));
+      await run;
+      assert.equal(h.imageState.images.length,outcome==='success'?0:1);
+    });
+  }
 }
 for (const kind of ['barista','brewer']) {
   for (const outcome of ['success','failure']) {

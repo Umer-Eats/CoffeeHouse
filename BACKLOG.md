@@ -39,7 +39,7 @@ See [Web-structure.md](Web-structure.md) for current architecture and [Wizard-UI
 - [ ] Add privacy-conscious operational monitoring: request failures, job latency, and aggregate AI costs; avoid storing private prompt text in logs.
 - [ ] Add a health/readiness endpoint that reveals no secrets.
 - [ ] Support school SSO when a participating school needs it.
-- [ ] Add secure file/image uploads with size limits, authorization, malware handling, and retention controls.
+- [ ] Extend beyond the implemented AI image inputs with authorized document/channel attachments, malware handling, and explicit storage/retention controls.
 - [ ] Add a staff administration interface for verified roster and room management, with scoped permissions.
 - [ ] Evaluate alternate AI models by measured quality, cost, and latency instead of pinning a speculative upgrade to a model name.
 

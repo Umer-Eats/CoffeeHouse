@@ -11,6 +11,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
+const {validateImages, inputText} = require('./image-input');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'art.js'), 'utf8');
@@ -21,7 +22,12 @@ const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'settings.html'), 'ut
 const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'ai-assistant.html'), 'utf8');
 
 const app = express();
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '3mb' })); // Two 1MiB images plus base64 and source text.
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large') return res.status(413).json({error:'These images are too large to send. Please use smaller images.'});
+  if (err.type === 'entity.parse.failed') return res.status(400).json({error:'The request could not be read. Please try again.'});
+  next(err);
+});
 app.use(cookieParser());
 
 const PORT = process.env.PORT || 3000;
@@ -342,13 +348,14 @@ app.get('/api/groups', requireAuth, requireSchool, async (req, res) => {
 /* ---------------- AI assistants ---------------- */
 
 app.post('/api/ai/baristi', requireAuth, async (req, res) => {
-  const text = ((req.body || {}).text || '').trim();
-  if (!text) return res.status(400).json({ error: 'text is required.' });
   try {
-    const reply = await ai.baristaReply(text);
+    const text = inputText(req.body?.text, 12000, 'Question');
+    const images = validateImages(req.body?.images);
+    if (!text && !images.length) return res.status(400).json({error:'Add a question or an image.'});
+    const reply = await ai.baristaReply(text, images);
     res.json({ reply });
   } catch (err) {
-    res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
+    res.status(err.status || (err.code === 'NO_KEY' ? 503 : 502)).json({ error: err.message });
   }
 });
 
@@ -372,14 +379,17 @@ app.get('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
 });
 
 app.post('/api/ai/brewer', requireAuth, async (req, res) => {
-  const { source, text } = req.body || {};
-  if (!text || !text.trim()) return res.status(400).json({ error: 'No source text to brew.' });
   try {
-    const { doc, engine } = await ai.brewNotes(source || 'uploaded text', text);
-    const stored = await db.addBrewDoc(req.user.id, `Brew — ${(source || 'text').slice(0, 60)}`, doc, source || null);
+    const source = inputText(req.body?.source, 200, 'Source name');
+    const text = inputText(req.body?.text, 60000, 'Source text');
+    const images = validateImages(req.body?.images);
+    if (!text && !images.length) return res.status(400).json({error:'Add source text or an image to brew notes.'});
+    const label = source || (images.length ? 'Attached images' : 'Pasted text');
+    const { doc, engine } = await ai.brewNotes(label, text, images);
+    const stored = await db.addBrewDoc(req.user.id, `Brew — ${label.slice(0, 60)}`, doc, label);
     res.json({ doc, id: stored.id, engine });
   } catch (err) {
-    res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
+    res.status(err.status || (err.code === 'NO_KEY' ? 503 : 502)).json({ error: err.message });
   }
 });
 

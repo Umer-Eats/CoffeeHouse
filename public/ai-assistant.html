@@ -12,6 +12,7 @@
 <script src="/scenery.js" defer></script>
 <link rel="stylesheet" href="/vendor/katex/katex.min.css">
 <link rel="stylesheet" href="/ai-format.css">
+<link rel="stylesheet" href="/ai-images.css">
 </head>
 <body class="study-page">
 
@@ -52,6 +53,13 @@
         <div class="companion" data-companion="barista"></div>
         <div class="chat-flow" id="barChat"></div>
         <p class="study-tip">Ask in your own words. AI can make mistakes—check your class materials.</p>
+<div class="image-tools">
+          <input id="barImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <button id="barImageButton" type="button" class="btn">Attach images to Barista</button>
+          <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Images are sent to Google Gemini only when you submit. Avoid private information. Original images are not saved with notes.</p>
+          <div class="image-preview" id="barImagePreview"></div>
+          <p class="image-status" id="barImageStatus" role="status" aria-live="polite"></p>
+        </div>
         <form class="search-bar" id="barForm">
           <input id="barInput" aria-label="Question for Barista" autocomplete="off" placeholder="Ask Barista anything... try @baristi">
           <button class="btn" type="submit" id="barSend">ASK</button>
@@ -74,6 +82,13 @@
           <div class="brew-source-wrap">
             <textarea id="brewText" aria-label="Source text" placeholder="Paste the source text here, or pick a channel above to load its recent messages. Then hit BREW NOTES."></textarea>
           </div>
+        </div>
+<div class="image-tools">
+          <input id="brewImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <button id="brewImageButton" type="button" class="btn">Attach images to Brewer</button>
+          <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Images are sent to Google Gemini only when you submit. Avoid private information. Original images are not saved with notes.</p>
+          <div class="image-preview" id="brewImagePreview"></div>
+          <p class="image-status" id="brewImageStatus" role="status" aria-live="polite"></p>
         </div>
         <div class="brew-flow" id="brewFlow">
           <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text and returns a clean study doc.</div>
@@ -106,8 +121,11 @@
   <script src="/vendor/katex/katex.min.js"></script>
   <script src="/ai-format.js"></script>
   <script src="/companions.js"></script>
+  <script src="/ai-images.js"></script>
   <script>
     const $ = id => document.getElementById(id);
+    const barImages = AIImages.create('bar', 'baristi', 'barSend');
+    const brewImages = AIImages.create('brew', 'brewer', 'brewBtn');
 
     /* ---------- boot ---------- */
     async function boot() {
@@ -132,7 +150,7 @@
 
     /* ---------- Barista chat ---------- */
 
-    function addChat(msg, bot, thinking) {
+    function addChat(msg, bot, thinking, images = []) {
       const flow = $('barChat');
       flow.querySelector('.conversation-empty')?.remove();
       const row = document.createElement('div');
@@ -150,7 +168,13 @@
       if (bot && !thinking) { p.className = 'ai-content'; p.innerHTML = AIFormat.render(msg); }
       else p.textContent = msg;
       const time = document.createElement('span'); time.className = 'time'; time.textContent = nowTime();
-      bub.appendChild(who); bub.appendChild(p); bub.appendChild(time);
+      bub.appendChild(who); bub.appendChild(p);
+      if(images.length) {
+        const previews=document.createElement('div');previews.className='message-images';
+        images.forEach((image,index)=>{const img=document.createElement('img');img.src='data:image/jpeg;base64,'+image.data;img.alt='Submitted image '+(index+1);previews.appendChild(img);});
+        bub.appendChild(previews);
+      }
+      bub.appendChild(time);
       row.appendChild(bub);
       flow.appendChild(row);
       flow.scrollTop = flow.scrollHeight;
@@ -170,19 +194,23 @@
       e.preventDefault();
       const inp = $('barInput');
       const q = inp.value.trim();
-      if (!q || $('barSend').disabled) return;
+      const images = barImages.get();
+      if ((!q && !images.length) || $('barSend').disabled || !barImages.ready()) return;
       inp.value = '';
       $('barSend').disabled = true;
+      barImages.setBusy(true);
+      inp.disabled = true;
       CoffeeCompanions.setBusy('barista', true);
-      addChat(q, false);
+      addChat(q || 'Please explain these images.', false, false, images);
       const think = addChat('Pouring a fresh answer...', true, true);
       try {
-        const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q } });
+        const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q, images: images.map(({mimeType,data})=>({mimeType,data})) } });
         think.remove();
         addChat('@baristi ' + res.reply, true);
+        barImages.clear();
         if (/cheat\s*sheet/i.test(q)) {
           try {
-            const cs = await api('/api/ai/baristi/cheats', { method: 'POST', body: { topic: q } });
+            const cs = await api('/api/ai/baristi/cheats', { method: 'POST', body: { topic: q, content: res.reply } });
             loadCheats();
             addChat("I saved that cheat sheet to your rack: '" + cs.topic + "'. Click it to review.", true);
           } catch (err) { addChat('Your answer is ready, but the cheat sheet could not be saved: ' + err.message, true); }
@@ -190,8 +218,11 @@
       } catch (err) {
         think.remove();
         addChat('Barista hit a snag: ' + err.message, true);
+        inp.value = q;
       } finally {
         $('barSend').disabled = false;
+        inp.disabled = false;
+        barImages.setBusy(false);
         CoffeeCompanions.setBusy('barista', false);
       }
     });
@@ -255,21 +286,25 @@
     }
 
     async function brewNewNotes() {
-      if ($('brewBtn').disabled) return;
-      const source = $('brewSource').value.trim() || 'pasted text';
+      if ($('brewBtn').disabled || !brewImages.ready()) return;
+      const images = brewImages.get();
+      const source = $('brewSource').value.trim() || (images.length ? 'Attached images' : 'pasted text');
       const text = $('brewText').value.trim();
-      if (!text) { $('brewFlow').innerHTML = '<div class="hint">Paste some text first, or pick a channel above.</div>'; return; }
+      if (!text && !images.length) { $('brewFlow').innerHTML = '<div class="hint">Paste text, attach an image, or pick a channel above.</div>'; return; }
       $('brewBtn').disabled = true;
+      brewImages.setBusy(true);
       CoffeeCompanions.setBusy('brewer', true);
       $('brewBtn').textContent = 'BREWING...';
       try {
-        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text } });
+        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: images.map(({mimeType,data})=>({mimeType,data})) } });
         renderBrewDoc({ title: 'Fresh Brew', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
+        brewImages.clear();
         loadDocs();
       } catch (err) {
         $('brewFlow').innerHTML = '<div class="hint">Brew failed: ' + esc(err.message) + '</div>';
       } finally {
         $('brewBtn').disabled = false;
+        brewImages.setBusy(false);
         $('brewBtn').textContent = 'BREW NOTES';
         CoffeeCompanions.setBusy('brewer', false);
       }
