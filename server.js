@@ -277,17 +277,35 @@ const BOT_ALIASES = {
   '@brewer':  { email: 'brewer@coffeehouse.ai',  handler: () => Promise.reject(new Error('brewer handled inline')) }
 };
 
-app.get('/api/messages', requireAuth, requireSchool, async (req, res) => {
+async function checkMessageChannel(req, res, next) {
+  const channel = req.method === 'GET' ? req.query.channel : req.body?.channel;
+  if (typeof channel !== 'string' || !/^(channel:.+|dm:[1-9]\d*)$/.test(channel)) return res.status(400).json({error:'Invalid conversation.'});
+  if (channel.startsWith('dm:')) {
+    const id = Number(channel.slice(3));
+    if (!Number.isSafeInteger(id) || id === req.user.id) return res.status(400).json({error:'Choose another student.'});
+    try {
+      const partner = await db.getUser(id);
+      const school = partner && await db.getUserSchool(id);
+      if (!partner || partner.is_bot || !school || school.id !== req.school.id) return res.status(403).json({error:'Choose a student in your school.'});
+      req.dmPartner = id;
+    } catch (err) { return res.status(500).json({error:'Could not open this conversation.'}); }
+  }
+  next();
+}
+
+app.get('/api/messages', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
   const { channel } = req.query;
   if (!channel) return res.status(400).json({ error: 'channel is required.' });
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
     return res.status(400).json({ error: 'bad channel' });
   }
-  const messages = await db.channelMessages(req.school.id, channel);
+  const messages = req.dmPartner
+    ? await db.directMessages(req.school.id, req.user.id, req.dmPartner)
+    : await db.channelMessages(req.school.id, channel);
   res.json(messages.map(m => publicMessage(m, req.user.id)));
 });
 
-app.post('/api/messages', requireAuth, requireSchool, async (req, res) => {
+app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
   const { channel, text } = req.body || {};
   if (!channel || !text) return res.status(400).json({ error: 'channel and text are required.' });
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
@@ -295,6 +313,7 @@ app.post('/api/messages', requireAuth, requireSchool, async (req, res) => {
   }
   const msg = await db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
   res.json(publicMessage(msg, req.user.id));
+  if (req.dmPartner) return; // AI assistants belong in school rooms and AI Study, not private inboxes.
 
   /* fire the AI sidekicks when summoned */
   for (const [alias, cfg] of Object.entries(BOT_ALIASES)) {
@@ -331,22 +350,22 @@ app.get('/api/dms', requireAuth, requireSchool, async (req, res) => {
   const threads = await db.dmThreads(req.user.id, req.school.id);
   const out = [];
   for (const t of threads) {
-    const partnerId = Number(t.channel.split(':')[1]);
+    const partnerId = Number(t.partner_id);
     const partner = await db.getUser(partnerId);
+    const partnerSchool = partner && await db.getUserSchool(partnerId);
     const last = await db.get(
-      `SELECT * FROM messages WHERE school_id = ? AND channel = ? ORDER BY id DESC LIMIT 1`,
-      req.school.id, t.channel
+      `SELECT * FROM messages WHERE school_id = ? AND id = ?`,
+      req.school.id, t.last_id
     );
-    if (partner) {
+    if (partner && !partner.is_bot && partnerSchool?.id === req.school.id) {
       out.push({
         partner: publicUser(partner),
-        channel: t.channel,
+        channel: 'dm:' + partnerId,
         n: t.n,
         lastPreview: last ? last.text.slice(0, 40) : ''
       });
     }
   }
-  out.sort((a, b) => b.n - a.n);
   res.json(out);
 });
 

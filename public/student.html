@@ -156,8 +156,13 @@
     }
 
     async function loadDMs() {
-      DMS = await api('/api/dms');
-      renderLeft();
+      const next = await api('/api/dms');
+      if (JSON.stringify(next) !== JSON.stringify(DMS)) {
+        DMS = next;
+        const scroll = $('classList').scrollTop;
+        renderLeft();
+        $('classList').scrollTop = scroll;
+      }
     }
 
     async function loadGroups() {
@@ -343,7 +348,7 @@
         try {
           await api('/api/messages', { method: 'POST', body: { channel: current.key, text: txt } });
           await refreshMessages();
-          if (current.kind === 'dm') loadDMs();
+          await loadDMs();
         } catch (err) {
           inp.value = txt;
           $('hallStatus').textContent = 'Could not send: ' + err.message;
@@ -358,6 +363,7 @@
       setInterval(async () => {
         try {
           await refreshMessages();
+          await loadDMs();
         } catch (e) { /* channel may have changed */ }
       }, 3500);
       setInterval(() => api('/api/heartbeat', { method: 'POST' }).catch(() => {}), 30000);

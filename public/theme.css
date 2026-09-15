@@ -27,6 +27,8 @@ header>div{flex-wrap:wrap}header .me{display:flex;align-items:center;gap:10px;fo
 .hall-page .side-right>.panel:first-child #studentList{min-height:0}
 .hall-page .chat-head,.hall-page .composer,.hall-page .side-left>.tabs,.hall-page .side-art{flex-shrink:0}
 .hall-page .scroller{min-height:0}
+.hall-page #classList{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+@media(min-width:721px) and (max-width:1100px){.hall-page .side-left{height:65svh;min-height:480px}.hall-page #classList{min-height:0}}
 .hall-page .msg{flex-shrink:0}
 .side-left,.side-right,.side-rack,.chat,.workspace{min-width:0;background:var(--panel);border:2px solid var(--border);box-shadow:5px 5px 0 var(--shad)}
 .side-left{display:flex;flex-direction:column}.tabs{display:flex;gap:0}.tab{flex:1;border:0;border-bottom:3px solid transparent;background:var(--panel);color:var(--soft);font:22px "VT323",monospace;padding:13px 10px;min-height:46px}.tab.active{background:var(--panel2);color:var(--gold);border-bottom-color:var(--gold)}.tab small{display:block;font-size:17px;margin-top:3px}.scroller{padding:14px;flex:1;overflow:auto}.class-item{margin-bottom:10px}.class-btn{padding:10px;background:var(--panel2);display:flex;gap:10px;justify-content:space-between;color:var(--gold);font-size:20px;cursor:pointer}.chips-count{color:var(--soft)}.chan-list{display:flex;flex-direction:column;gap:6px;padding:12px 0}.chan{padding:10px 12px;border-left:3px solid transparent;cursor:pointer;min-height:44px}.chan:before{content:"# ";color:var(--gold)}.chan.active{background:var(--panel2);border-left-color:var(--gold)}.chan:hover,.dm-item:hover,.student-row:hover{background:var(--panel2)}

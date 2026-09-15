@@ -268,13 +268,29 @@ async function insertMessage(schoolId, channel, userId, text) {
 
 async function dmThreads(userId, schoolId) {
   return all(
-    `SELECT m.channel, MAX(m.id) AS last_id, COUNT(*) AS n
+    `SELECT CASE WHEN m.user_id = ? THEN CAST(substr(m.channel,4) AS INTEGER) ELSE m.user_id END AS partner_id,
+            MAX(m.id) AS last_id, COUNT(*) AS n
      FROM messages m
+     JOIN users u ON u.id = m.user_id
      WHERE m.school_id = ? AND m.channel LIKE 'dm:%'
-       AND (m.user_id = ? OR m.channel = 'dm:' || ?)
-     GROUP BY m.channel`,
-    schoolId, userId, userId
+       AND u.is_bot = 0
+       AND (m.user_id = ? OR m.channel = ?)
+     GROUP BY partner_id ORDER BY last_id DESC`,
+    userId, schoolId, userId, 'dm:' + userId
   );
+}
+
+async function directMessages(schoolId, userId, partnerId, limit = 200) {
+  const rows = await all(
+    `SELECT m.id, m.channel, m.text, m.created_at,
+            u.id AS user_id, u.name AS author, u.picture, u.is_bot
+     FROM messages m JOIN users u ON u.id = m.user_id
+     WHERE m.school_id = ? AND
+       ((m.user_id = ? AND m.channel = ?) OR (m.user_id = ? AND m.channel = ?))
+     ORDER BY m.id DESC LIMIT ?`,
+    schoolId, userId, 'dm:' + partnerId, partnerId, 'dm:' + userId, limit
+  );
+  return rows.reverse();
 }
 
 async function addBrewDoc(userId, title, body, src) {
@@ -329,6 +345,7 @@ module.exports = {
   channelMessages,
   insertMessage,
   dmThreads,
+  directMessages,
   addBrewDoc,
   listBrewDocs,
   deleteBrewDoc,
