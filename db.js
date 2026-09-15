@@ -308,7 +308,7 @@ async function dmThreads(userId, schoolId) {
 }
 
 async function listPersonalGroups(userId) {
-  return all(`SELECT g.id,g.name,g.school_id,'channel:personal:' || g.id AS channel
+  return all(`SELECT g.id,g.name,g.school_id,g.creator_id,'channel:personal:' || g.id AS channel
     FROM personal_groups g JOIN personal_group_members m ON m.group_id=g.id WHERE m.user_id=? ORDER BY g.created_at,g.id`,userId);
 }
 async function personalGroup(channel,userId) {
@@ -325,7 +325,20 @@ async function createPersonalGroup(userId,schoolId,name,memberIds) {
     {sql:'INSERT INTO personal_groups (id,name,school_id,creator_id) VALUES (?,?,?,?)',args:[id,name,schoolId,userId]},
     ...[userId,...ids].map(member=>({sql:'INSERT INTO personal_group_members (group_id,user_id) VALUES (?,?)',args:[id,member]}))
   ],'write');
-  return {id,name,channel:'channel:personal:'+id};
+  return {id,name,creator_id:userId,channel:'channel:personal:'+id};
+}
+async function updateGroupMembers(userId,groupId,memberIds) {
+  const group=await get('SELECT * FROM personal_groups WHERE id=? AND creator_id=?',groupId,userId);
+  if(!group)throw Object.assign(Error('Only the group creator can edit members.'),{status:403});
+  const ids=[...new Set(memberIds)];
+  if(ids.some(id=>!Number.isSafeInteger(id)||id<1||id===userId))throw Object.assign(Error('Invalid member selection.'),{status:400});
+  const users=ids.length?await all('SELECT id FROM users WHERE is_bot=0 AND id IN ('+ids.map(()=>'?').join(',')+')',...ids):[];
+  if(users.length!==ids.length)throw Object.assign(Error('One or more students are unavailable.'),{status:400});
+  await client.batch([
+    {sql:'DELETE FROM personal_group_members WHERE group_id=? AND user_id!=?',args:[groupId,userId]},
+    ...ids.map(id=>({sql:'INSERT INTO personal_group_members (group_id,user_id) VALUES (?,?)',args:[groupId,id]}))
+  ],'write');
+  return {...group,channel:'channel:personal:'+group.id};
 }
 
 async function unreadCounts(userId, schoolId) {
@@ -412,6 +425,7 @@ module.exports = {
   listPersonalGroups,
   personalGroup,
   createPersonalGroup,
+  updateGroupMembers,
   unreadCounts,
   markMessagesRead,
   directMessages,

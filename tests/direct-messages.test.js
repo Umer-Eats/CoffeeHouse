@@ -24,6 +24,12 @@ test('both participants see legacy and new DMs without seeing other conversation
     }
     assert.equal((await db.listPersonalGroups(outsider.id)).length,0);
     assert.equal(await db.personalGroup(group.channel,outsider.id),null);
+    await assert.rejects(db.updateGroupMembers(b.id,group.id,[c.id,outsider.id]));
+    await db.updateGroupMembers(a.id,group.id,[b.id,outsider.id]);
+    assert.equal(await db.personalGroup(group.channel,c.id),null);
+    assert.equal((await db.listPersonalGroups(c.id)).length,0);
+    assert.equal((await db.personalGroup(group.channel,outsider.id)).id,group.id);
+    await db.updateGroupMembers(a.id,group.id,[b.id,c.id]);
     await db.insertMessage(1,group.channel,a.id,'Private group message');
     assert.equal((await db.unreadCounts(outsider.id,1)).some(row=>row.channel===group.channel),false);
     await db.insertMessage(1,'dm:'+b.id,a.id,'A to B');

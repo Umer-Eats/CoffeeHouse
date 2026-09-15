@@ -460,6 +460,18 @@ app.post('/api/groups',requireAuth,requireSchool,async(req,res)=>{
   try{res.status(201).json(await db.createPersonalGroup(req.user.id,req.school.id,name.trim(),memberIds));}
   catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not create group. Please try again.'});}
 });
+app.get('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
+  try{
+    const group=await db.personalGroup('channel:personal:'+req.params.id,req.user.id);
+    if(!group||group.creator_id!==req.user.id)return res.status(403).json({error:'Only the group creator can edit members.'});
+    res.json(await db.all('SELECT u.id,u.name FROM users u JOIN personal_group_members m ON m.user_id=u.id WHERE m.group_id=? AND u.id!=? ORDER BY u.name',group.id,req.user.id));
+  }catch{res.status(500).json({error:'Could not load members.'});}
+});
+app.put('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
+  if(!Array.isArray(req.body?.memberIds))return res.status(400).json({error:'Choose members.'});
+  try{res.json(await db.updateGroupMembers(req.user.id,req.params.id,req.body.memberIds));}
+  catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not save members.'});}
+});
 
 /* ---------------- AI assistants ---------------- */
 

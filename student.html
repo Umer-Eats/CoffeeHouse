@@ -66,6 +66,7 @@
       <div class="chat-head">
         <h2 id="chatTitle">Choose a room</h2>
         <div class="meta" id="chatMeta">Loading your community…</div>
+        <button id="editMembers" type="button" class="btn" hidden>Edit Members</button>
       </div>
       <div class="msg-scroll" id="msgScroll" role="log" aria-label="Conversation"></div>
       <div class="composer">
@@ -130,6 +131,16 @@
     let STUDENTS = [], CLASSES = [], DMS = [], GROUPS = [];
     let current = { kind: 'channel', key: null };
     let lastSig = null;
+    const collapsedSections = new Set();
+    function roomSection(button,list,key){
+      const frame=document.createElement('div');frame.className='room-fold';
+      const inner=document.createElement('div');inner.className='room-fold-inner';inner.appendChild(list);frame.appendChild(inner);
+      button.setAttribute('role','button');button.tabIndex=0;
+      function state(){const closed=collapsedSections.has(key);frame.classList.toggle('is-collapsed',closed);inner.inert=closed;button.setAttribute('aria-expanded',String(!closed));}
+      state();
+      button.onclick=()=>{if(collapsedSections.has(key))collapsedSections.delete(key);else collapsedSections.add(key);state();};
+      return frame;
+    }
     let messageCounts = {};
     function countBadge(key) {
       return unreadBadge(messageCounts[key] || 0);
@@ -207,13 +218,21 @@
     async function loadGroups() {
       const groups = await api('/api/groups');
       if(JSON.stringify(groups)!==JSON.stringify(GROUPS)){
-        GROUPS=groups;renderGroups();
+        GROUPS=groups;
+        if(current.key?.startsWith('channel:personal:')&&!groups.some(group=>group.channel===current.key)){
+          current={kind:'channel',key:null};$('msgScroll').replaceChildren();renderChat('Choose a room','You no longer have access to that group.');
+          if(window.ChatFiles)ChatFiles.clear();
+          for(const key of Object.keys(messageCounts))if(key.startsWith('channel:personal:')&&!groups.some(group=>group.channel===key))delete messageCounts[key];
+        }
+        renderGroups();
         const position=$('classList').scrollTop;renderLeft();$('classList').scrollTop=position;
       } else renderGroups();
     }
     function openGroup(group) {
       current={kind:'channel',key:group.channel,title:group.name};
       renderChat(group.name,'Personal group · Members only');renderLeft();
+      $('editMembers').hidden=group.creator_id!==ME.id;
+      $('editMembers').onclick=()=>GroupPicker.edit(group);
       refreshMessages().catch(err=>{$('hallStatus').textContent=err.message;});
     }
 
@@ -233,6 +252,7 @@
     }
 
     function renderChat(title, meta) {
+      $('editMembers').hidden=true;
       for (const kind of ['barista','brewer']) {
         $(kind === 'barista' ? 'hallBarista' : 'hallBrewer').hidden = true;
         CoffeeCompanions.setBusy(kind, false);
@@ -340,20 +360,18 @@
             ch.insertAdjacentHTML('beforeend', countBadge(chan.key));
             chanList.appendChild(ch);
           });
-          btn.addEventListener('click', () => {
-            chanList.style.display = chanList.style.display === 'none' ? 'flex' : 'none';
-          });
-          chanList.style.display = 'flex';
-          item.appendChild(btn); item.appendChild(chanList);
+          item.appendChild(btn); item.appendChild(roomSection(btn,chanList,'school:'+c.code));
           box.appendChild(item);
         });
         if(GROUPS.length){
           const section=el('.class-item');
-          section.appendChild(el('.class-btn',null,'Personal Groups'));
+          const heading=el('.class-btn',null,'Personal Groups');
+          const list=el('.chan-list');
+          section.appendChild(heading);
           GROUPS.forEach(group=>{
             const button=document.createElement('button');button.type='button';button.className='chan'+(current.key===group.channel?' active':'');
-            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);section.appendChild(button);
-          });box.appendChild(section);
+            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);list.appendChild(button);
+          });section.appendChild(roomSection(heading,list,'personal'));box.appendChild(section);
         }
       } else {
         if (!DMS.length) box.appendChild(el('.empty', null, 'No direct messages yet.'));
@@ -405,7 +423,7 @@
     /* ---------- wiring ---------- */
     function wire() {
       GroupPicker.init(group=>{
-        GROUPS.push(group);
+        GROUPS=GROUPS.filter(item=>item.id!==group.id);GROUPS.push(group);
         document.querySelectorAll('.side-left .tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.tab==='classes'));
         renderGroups();openGroup(group);loadGroups().catch(()=>{});
       });

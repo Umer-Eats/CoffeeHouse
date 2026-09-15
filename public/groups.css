@@ -9,5 +9,12 @@
 #groupSelected{display:flex;flex-wrap:wrap;gap:8px;max-height:16svh;overflow:auto}
 #groupStatus,#groupSelectionCount{font-size:18px;margin:10px 0}
 #groupList .group-row{display:block;width:100%;text-align:left;color:var(--ink);background:transparent;border:0;font:inherit;cursor:pointer}
-.hall-page .class-item>button.chan{width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-left:3px solid transparent;font:inherit}
-.hall-page .class-item>button.chan.active,.hall-page .class-item>button.chan:hover{background:var(--panel2);border-left-color:var(--gold)}
+.hall-page .class-item button.chan{width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-left:3px solid transparent;font:inherit}
+.hall-page .class-item button.chan.active,.hall-page .class-item button.chan:hover{background:var(--panel2);border-left-color:var(--gold)}
+.hall-page .chat-head{position:relative;padding-right:180px}
+#editMembers{position:absolute;right:18px;top:18px}
+.room-fold{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows 220ms ease,opacity 220ms ease}
+.room-fold.is-collapsed{grid-template-rows:0fr;opacity:0}
+.room-fold-inner{min-height:0;overflow:hidden}
+@media(prefers-reduced-motion:reduce){.room-fold{transition:none}}
+@media(max-width:720px){.hall-page .chat-head{padding-right:18px}#editMembers{position:static;margin-top:10px}}
