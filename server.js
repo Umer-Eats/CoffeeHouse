@@ -11,6 +11,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
+const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
@@ -433,7 +434,7 @@ app.post('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
     if (!body) {
       body = await ai.baristaCheatSheet(topic);
     }
-    const sheet = await db.addCheatSheet(req.user.id, String(topic).slice(0, 200), body);
+    const sheet = await db.addCheatSheet(req.user.id, noteTitle(body, topic), body);
     res.json({ id: sheet.id, topic: sheet.topic, content: body });
   } catch (err) {
     res.status(err.code === 'NO_KEY' ? 503 : 502).json({ error: err.message });
@@ -441,7 +442,7 @@ app.post('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
 });
 
 app.get('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
-  res.json(await db.listCheatSheets(req.user.id));
+  res.json((await db.listCheatSheets(req.user.id)).map(sheet => ({...sheet,topic:noteTitle(sheet.content,sheet.topic)})));
 });
 
 app.post('/api/ai/brewer', requireAuth, async (req, res) => {
@@ -452,15 +453,15 @@ app.post('/api/ai/brewer', requireAuth, async (req, res) => {
     if (!text && !images.length) return res.status(400).json({error:'Add source text or an image to brew notes.'});
     const label = source || (images.length ? 'Attached images' : 'Pasted text');
     const { doc, engine } = await ai.brewNotes(label, text, images);
-    const stored = await db.addBrewDoc(req.user.id, `Brew — ${label.slice(0, 60)}`, doc, label);
-    res.json({ doc, id: stored.id, engine });
+    const stored = await db.addBrewDoc(req.user.id, noteTitle(doc, label), doc, label);
+    res.json({ doc, id: stored.id, title:stored.title, engine });
   } catch (err) {
     res.status(err.status || (err.code === 'NO_KEY' ? 503 : 502)).json({ error: err.message });
   }
 });
 
 app.get('/api/brewer/docs', requireAuth, async (req, res) => {
-  res.json(await db.listBrewDocs(req.user.id));
+  res.json((await db.listBrewDocs(req.user.id)).map(doc => ({...doc,title:noteTitle(doc.body,doc.title)})));
 });
 
 /* ---------------- pages ---------------- */

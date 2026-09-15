@@ -241,7 +241,7 @@
       cheats.forEach(c => {
         const item = document.createElement('button');
         item.type = 'button'; item.className = 'cheat-item';
-        item.innerHTML = `<b>&#128196; Cheat #${c.id}</b><br><small>${esc(c.topic)}</small>`;
+        item.innerHTML = `<b>${esc(c.topic)}</b><small>Barista cheat sheet</small>`;
         item.addEventListener('click', () => addChat('@baristi cheat sheet — ' + c.topic + ':\n\n' + c.content, true));
         list.appendChild(item);
         list.appendChild(SavedItems.actions(c, '/api/ai/baristi/cheats', loadCheats));
@@ -302,7 +302,7 @@
       $('brewBtn').textContent = 'BREWING...';
       try {
         const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: images.map(({mimeType,data})=>({mimeType,data})) } });
-        renderBrewDoc({ title: 'Fresh Brew', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
+        renderBrewDoc({ title: res.title || 'Study notes', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
         brewImages.clear();
         loadDocs();
       } catch (err) {
