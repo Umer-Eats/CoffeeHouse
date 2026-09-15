@@ -1,5 +1,17 @@
 /* Shared café motion. Same 450ms crossfade as the home page. */
 :root{--scene-fade:450ms}
+/* Shared square-edged café scrollbars, including the page viewport. */
+:root{--scroll-track:#2c1d16;--scroll-thumb:#ac8155;--scroll-hover:#f7cf89}
+body[data-theme=dark],html:has(body[data-theme=dark]){--scroll-track:#0a0a20;--scroll-thumb:#75659e;--scroll-hover:#c4b0ff}
+*{scrollbar-color:var(--scroll-thumb) var(--scroll-track);scrollbar-width:auto}
+@supports selector(::-webkit-scrollbar){
+  *{scrollbar-color:auto}
+  ::-webkit-scrollbar{width:14px;height:14px}
+  ::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:var(--scroll-track)}
+  ::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border:3px solid var(--scroll-track);border-radius:0}
+  ::-webkit-scrollbar-thumb:hover{background:var(--scroll-hover)}
+}
+@media(forced-colors:active){*{scrollbar-color:auto}::-webkit-scrollbar-thumb{background:ButtonText}::-webkit-scrollbar-track{background:Canvas}}
 body,header,.site-header,.room-banner,.panel,.card,.bubble,.tab,.btn,.composer,.chat-head,.side-left,.side-right,.side-rack,.workspace,.chat,.explain-card,.window-sign,input,select,textarea,.theme-toggle button{transition:background-color var(--scene-fade) ease,color var(--scene-fade) ease,border-color var(--scene-fade) ease,box-shadow var(--scene-fade) ease}
 .scene-host{overflow:hidden}
 .scene-host.cafe-window{isolation:isolate}
