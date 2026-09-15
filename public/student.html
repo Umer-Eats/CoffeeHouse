@@ -68,12 +68,15 @@
       </div>
       <div class="msg-scroll" id="msgScroll" role="log" aria-label="Conversation"></div>
       <div class="composer">
-        <div class="chat-files"><input id="chatFileInput" type="file" accept="application/pdf,image/png,image/jpeg" hidden><button id="chatFileButton" type="button" class="btn">Attach file</button><button id="chatFileRemove" type="button" class="btn" hidden>Remove file</button><span id="chatFileStatus" role="status"></span><small>PDF up to 1 MB, PNG or JPEG. Paste screenshots into the message field. Files are shared with this conversation.</small></div>
         <div id="hallBarista" class="companion" data-companion="barista" hidden></div>
         <div id="hallBrewer" class="companion" data-companion="brewer" hidden></div>
         <div class="quick">
+          <input id="chatFileInput" type="file" accept="application/pdf,image/png,image/jpeg" hidden>
+          <button id="chatFileButton" type="button">Attach file</button>
           <button type="button" data-quick=" @baristi ">ADD @baristi</button>
           <button type="button" data-quick=" @brewer ">ADD @brewer</button>
+          <button id="chatFileRemove" type="button" hidden>Remove file</button>
+          <span id="chatFileStatus" role="status"></span>
         </div>
         <p id="hallStatus" role="status"></p><form id="msgForm">
           <input id="msgInput" aria-label="Message" maxlength="4000" autocomplete="off" placeholder="Pour in a message... try @baristi 'explain photosynthesis'">
@@ -383,7 +386,7 @@
         });
       });
 
-      document.querySelectorAll('.quick button').forEach(q => {
+      document.querySelectorAll('.quick button[data-quick]').forEach(q => {
         q.addEventListener('click', () => {
           const inp = $('msgInput');
           inp.value += q.dataset.quick;

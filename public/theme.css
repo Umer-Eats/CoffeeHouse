@@ -27,6 +27,8 @@ header>div{flex-wrap:wrap}header .me{display:flex;align-items:center;gap:10px;fo
 .hall-page .side-right>.panel:first-child #studentList{min-height:0}
 .hall-page .chat-head,.hall-page .composer,.hall-page .side-left>.tabs,.hall-page .side-art{flex-shrink:0}
 .hall-page .scroller{min-height:0}
+.hall-page .quick{flex-wrap:wrap;align-items:center}
+.hall-page #chatFileStatus:not(:empty){flex-basis:100%;overflow-wrap:anywhere}
 .chat-files{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}.chat-files small{flex-basis:100%;font:14px/1.4 system-ui,sans-serif;color:var(--soft)}.chat-attachment{display:block;max-width:100%;max-height:260px;object-fit:contain;margin:8px 0}.attachment-link{display:block;text-decoration:underline;overflow-wrap:anywhere}
 .hall-page .msg-scroll{gap:10px;padding:14px}
 .hall-page .bubble{padding:8px 12px}
