@@ -398,6 +398,21 @@ app.get('/api/brewer/docs', requireAuth, async (req, res) => {
 });
 
 /* ---------------- pages ---------------- */
+for (const [route, remove] of [
+  ['/api/brewer/docs/:id', db.deleteBrewDoc],
+  ['/api/ai/baristi/cheats/:id', db.deleteCheatSheet]
+]) {
+  app.delete(route, requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({error:'Invalid saved item.'});
+    try {
+      await remove(req.user.id, id);
+      res.json({ok:true});
+    } catch (err) {
+      res.status(500).json({error:'Could not delete this item. Please try again.'});
+    }
+  });
+}
 
 async function guardPage(req, res, page) {
   await ensureDb();

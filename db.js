@@ -276,6 +276,14 @@ async function listBrewDocs(userId) {
   return all('SELECT * FROM brewed_docs WHERE user_id = ? ORDER BY id DESC', userId);
 }
 
+async function deleteBrewDoc(userId, id) {
+  return run('DELETE FROM brewed_docs WHERE id = ? AND user_id = ?', id, userId);
+}
+
+async function deleteCheatSheet(userId, id) {
+  return run('DELETE FROM cheat_sheets WHERE id = ? AND user_id = ?', id, userId);
+}
+
 async function addCheatSheet(userId, topic, content) {
   const info = await run(
     'INSERT INTO cheat_sheets (user_id, topic, content) VALUES (?, ?, ?)',
@@ -310,6 +318,8 @@ module.exports = {
   dmThreads,
   addBrewDoc,
   listBrewDocs,
+  deleteBrewDoc,
+  deleteCheatSheet,
   addCheatSheet,
   listCheatSheets
 };

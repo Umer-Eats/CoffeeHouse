@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="/vendor/katex/katex.min.css">
 <link rel="stylesheet" href="/ai-format.css">
 <link rel="stylesheet" href="/ai-images.css">
+<link rel="stylesheet" href="/saved-items.css">
+<script src="/saved-items.js" defer></script>
 </head>
 <body class="study-page">
 
@@ -240,6 +242,7 @@
         item.innerHTML = `<b>&#128196; Cheat #${c.id}</b><br><small>${esc(c.topic)}</small>`;
         item.addEventListener('click', () => addChat('@baristi cheat sheet — ' + c.topic + ':\n\n' + c.content, true));
         list.appendChild(item);
+        list.appendChild(SavedItems.actions(c, '/api/ai/baristi/cheats', loadCheats));
       });
     }
 
@@ -321,6 +324,7 @@
         row.innerHTML = `<div class="doc-ic">N${d.id}</div><div>${esc(d.title)}<small>${d.body.split('\n').length} lines &middot; ${esc(d.src || 'text')}</small></div>`;
         row.addEventListener('click', () => renderBrewDoc({ title: d.title, body: d.body, src: d.src, engine: 'saved' }));
         list.appendChild(row);
+        list.appendChild(SavedItems.actions(d, '/api/brewer/docs', loadDocs, true));
       });
     }
 
