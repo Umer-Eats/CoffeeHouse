@@ -233,7 +233,7 @@
       try { cheats = await api('/api/ai/baristi/cheats'); } catch (e) { $('cheatList').textContent = 'Could not load cheat sheets. Refresh to retry.'; return; }
       const list = $('cheatList');
       list.innerHTML = '';
-      if (!cheats.length) list.innerHTML = '<div class="empty" style="color:var(--soft);">No cheat sheets yet.</div>';
+      if (!cheats.length) list.innerHTML = '<div class="empty">No poured cheat sheets yet.</div>';
       cheats.forEach(c => {
         c.title = c.topic;
         c.body = c.content;
@@ -318,7 +318,7 @@
       try { BREW_DOCS = await api('/api/brewer/docs'); } catch (e) { $('docList').textContent = 'Could not load documents. Refresh to retry.'; return; }
       const list = $('docList');
       list.innerHTML = '';
-      if (!BREW_DOCS.length) list.innerHTML = '<div style="color:var(--soft); font-style:italic; font-size:16px;">No brewed documents yet.</div>';
+      if (!BREW_DOCS.length) list.innerHTML = '<div class="empty">No brewed documents yet.</div>';
       BREW_DOCS.forEach(d => {
         const row = document.createElement('button');
         row.type = 'button'; row.className = 'doc-row';
