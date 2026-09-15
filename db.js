@@ -104,6 +104,11 @@ async function init() {
   for (const name of SCHOOLS) {
     await client.execute({ sql: 'INSERT OR IGNORE INTO schools (name) VALUES (?)', args: [name] });
   }
+  // Remove schools not in the configured list
+  if (SCHOOLS.length) {
+    const placeholders = SCHOOLS.map(() => '?').join(',');
+    await client.execute({ sql: `DELETE FROM schools WHERE name NOT IN (${placeholders})`, args: SCHOOLS });
+  }
   for (const b of BOTS) {
     await client.execute({
       sql: 'INSERT OR IGNORE INTO users (firebase_uid, email, name, is_bot) VALUES (?, ?, ?, 1)',
