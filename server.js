@@ -57,17 +57,25 @@ function initFirebase() {
 
   const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
   const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const saB64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
   const defaultCred = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  console.log('Firebase init — WEB_CONFIG:', !!firebaseWebConfig, 'SA:', !!saRaw, 'PATH:', !!saPath, 'ADC:', !!defaultCred);
+  console.log('Firebase init — WEB_CONFIG:', !!firebaseWebConfig, 'SA:', !!saRaw, 'SA_B64:', !!saB64, 'PATH:', !!saPath, 'ADC:', !!defaultCred);
   try {
+    let saJson = null;
     if (saPath && fs.existsSync(saPath)) {
       console.log('Firebase: using service account path');
       firebaseAuth = getAuth(initializeApp({ credential: cert(require(saPath)) }));
+      return;
+    } else if (saB64) {
+      console.log('Firebase: decoding base64 service account');
+      saJson = JSON.parse(Buffer.from(saB64, 'base64').toString('utf8'));
     } else if (saRaw) {
       console.log('Firebase: parsing service account JSON...');
-      const saObj = JSON.parse(saRaw);
-      console.log('Firebase: SA parsed, key type:', typeof saObj.private_key, 'client_email:', saObj.client_email);
-      const app = initializeApp({ credential: cert(saObj) });
+      saJson = JSON.parse(saRaw);
+    }
+    if (saJson) {
+      console.log('Firebase: SA parsed, client_email:', saJson.client_email);
+      const app = initializeApp({ credential: cert(saJson) });
       console.log('Firebase: app initialized');
       firebaseAuth = getAuth(app);
       console.log('Firebase Admin: OK');
@@ -182,8 +190,11 @@ app.post('/api/auth/firebase', async (req, res) => {
     const school = await db.getUserSchool(user.id);
     res.json({ user: publicUser(user), school: school ? { id: school.id, name: school.name } : null });
   } catch (err) {
-    console.error('Firebase verify failed:', err.message);
-    res.status(401).json({ error: 'Invalid Firebase token.' });
+    console.error('Firebase verify failed:', err.message, err.code || '');
+    if (err.code === 'auth/argument-error') {
+      console.error('Hint: FIREBASE_SERVICE_ACCOUNT private_key may be malformed in Vercel env vars.');
+    }
+    res.status(401).json({ error: 'Invalid Firebase token.' + (process.env.VERCEL ? ' (' + (err.code || 'unknown') + ')' : '') });
   }
 });
 
