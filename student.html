@@ -419,7 +419,7 @@
           await loadDMs();
         } catch (e) { /* channel may have changed */ }
       }, 3500);
-      setInterval(() => api('/api/heartbeat', { method: 'POST' }).catch(() => {}), 30000);
+      setInterval(() => api('/api/heartbeat', { method: 'POST' }).catch(() => {}), 5000);
       api('/api/heartbeat', { method: 'POST' }).catch(() => {});
     }
 
