@@ -111,7 +111,10 @@
     let lastSig = null;
     let messageCounts = {};
     function countBadge(key) {
-      return '<span class="message-count" aria-label="' + (messageCounts[key] || 0) + ' messages">' + (messageCounts[key] || 0) + '</span>';
+      return unreadBadge(messageCounts[key] || 0);
+    }
+    function unreadBadge(count) {
+      return count > 0 ? '<span class="message-count" aria-label="' + count + ' unread messages">' + Math.min(99,count) + '</span>' : '';
     }
     async function refreshCounts() {
       const counts = await api('/api/message-counts');
@@ -215,7 +218,6 @@
       if (!current.key) return;
       const requested = current.key;
       const msgs = await api('/api/messages?channel=' + encodeURIComponent(requested));
-      try { await refreshCounts(); } catch { /* Counts must not block messages. */ }
       try {
         const pending = await api('/api/ai/pending?channel=' + encodeURIComponent(requested));
         if (requested === current.key) {
@@ -236,6 +238,13 @@
         msgs.forEach(m => appendMessage(m));
         scroll.scrollTop = scroll.scrollHeight;
       }
+      try {
+        const scroll = $('msgScroll');
+        if (msgs.length && document.visibilityState === 'visible' && document.hasFocus() && scroll.scrollHeight-scroll.scrollTop-scroll.clientHeight < 24) {
+          await api('/api/messages/read', {method:'POST',body:{channel:requested,lastId:msgs[msgs.length-1].id}});
+        }
+        await refreshCounts();
+      } catch { /* Read tracking must not block the conversation. */ }
     }
 
     function appendMessage(m) {
@@ -280,8 +289,8 @@
     function renderLeft() {
       const tab = document.querySelector('.side-left .tab.active').dataset.tab;
       const box = $('classList');
-      document.querySelector('[data-tab="classes"]').innerHTML = 'Rooms <span class="message-count">' + Object.entries(messageCounts).filter(([key]) => key.startsWith('channel:')).reduce((sum,[,n]) => sum+n,0) + '</span>';
-      document.querySelector('[data-tab="dms"]').innerHTML = 'Messages <span class="message-count">' + Object.entries(messageCounts).filter(([key]) => key.startsWith('dm:')).reduce((sum,[,n]) => sum+n,0) + '</span>';
+      document.querySelector('[data-tab="classes"]').innerHTML = 'Rooms' + unreadBadge(Object.entries(messageCounts).filter(([key]) => key.startsWith('channel:')).reduce((sum,[,n]) => sum+n,0));
+      document.querySelector('[data-tab="dms"]').innerHTML = 'Messages' + unreadBadge(Object.entries(messageCounts).filter(([key]) => key.startsWith('dm:')).reduce((sum,[,n]) => sum+n,0));
       box.innerHTML = '';
       if (tab === 'classes') {
         CLASSES.forEach(c => {

@@ -76,6 +76,13 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
+CREATE TABLE IF NOT EXISTS message_reads (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  school_id INTEGER NOT NULL,
+  channel TEXT NOT NULL,
+  last_id INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(user_id, school_id, channel)
+);
 CREATE TABLE IF NOT EXISTS ai_pending (
   message_id INTEGER PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
   school_id INTEGER NOT NULL,
@@ -287,6 +294,22 @@ async function dmThreads(userId, schoolId) {
   );
 }
 
+async function unreadCounts(userId, schoolId) {
+  return all(`SELECT incoming.conversation AS channel, COUNT(*) AS n FROM
+    (SELECT id, CASE WHEN channel LIKE 'dm:%' THEN 'dm:' || user_id ELSE channel END AS conversation
+     FROM messages WHERE school_id = ? AND user_id != ?
+     AND (channel LIKE 'channel:%' OR channel = ?)) incoming
+    LEFT JOIN message_reads r ON r.user_id = ? AND r.school_id = ? AND r.channel = incoming.conversation
+    WHERE incoming.id > COALESCE(r.last_id,0) GROUP BY incoming.conversation`,
+    schoolId, userId, 'dm:' + userId, userId, schoolId);
+}
+
+async function markMessagesRead(userId, schoolId, channel, lastId) {
+  return run(`INSERT INTO message_reads (user_id,school_id,channel,last_id) VALUES (?,?,?,?)
+    ON CONFLICT(user_id,school_id,channel) DO UPDATE SET last_id = MAX(last_id,excluded.last_id)`,
+    userId, schoolId, channel, lastId);
+}
+
 async function directMessages(schoolId, userId, partnerId, limit = 200) {
   const rows = await all(
     `SELECT m.id, m.channel, m.text, m.created_at,
@@ -352,6 +375,8 @@ module.exports = {
   channelMessages,
   insertMessage,
   dmThreads,
+  unreadCounts,
+  markMessagesRead,
   directMessages,
   addBrewDoc,
   listBrewDocs,

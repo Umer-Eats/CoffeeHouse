@@ -30,8 +30,9 @@ header>div{flex-wrap:wrap}header .me{display:flex;align-items:center;gap:10px;fo
 .hall-page .msg-scroll{gap:10px;padding:14px}
 .hall-page .bubble{padding:8px 12px}
 .hall-page .bubble .who{align-items:center;justify-content:space-between;gap:6px 20px;margin-bottom:3px}
-.hall-page .bubble .who .time{margin:0 0 0 auto;font-size:14px;white-space:nowrap}
-.message-count{display:inline-block;flex:none;min-width:22px;padding:1px 5px;background:var(--gold);color:var(--head);font:16px/1.2 "VT323",monospace;text-align:center;border:1px solid var(--border)}
+.hall-page .bubble .who .time{margin:0 0 0 auto;font:15px/1.35 "VT323",monospace;white-space:nowrap}
+.message-count{display:inline-block;flex:none;color:var(--gold);font:18px/1.2 "VT323",monospace;text-align:right}
+.hall-page .side-left .tab{display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-size:20px;padding:13px 6px;min-width:0}
 .chan .message-count,.dm-item .message-count{margin-left:auto}
 .hall-page .chan{display:flex;align-items:center;gap:5px}
 /* Let the living scenery show between messages without reducing text contrast. */

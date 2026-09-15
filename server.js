@@ -273,12 +273,14 @@ app.get('/api/channels', requireAuth, requireSchool, async (req, res) => {
 /* ---------------- messages ---------------- */
 app.get('/api/message-counts', requireAuth, requireSchool, async (req, res) => {
   try {
-    const rooms = await db.all("SELECT channel, COUNT(*) AS n FROM messages WHERE school_id = ? AND channel LIKE 'channel:%' GROUP BY channel", req.school.id);
-    const threads = await db.dmThreads(req.user.id, req.school.id);
-    const counts = Object.fromEntries(rooms.map(row => [row.channel, Number(row.n)]));
-    for (const thread of threads) {
-      const school = await db.getUserSchool(thread.partner_id);
-      if (school?.id === req.school.id) counts['dm:' + thread.partner_id] = Number(thread.n);
+    const rows = await db.unreadCounts(req.user.id, req.school.id);
+    const counts = {};
+    for (const row of rows) {
+      if (row.channel.startsWith('dm:')) {
+        const school = await db.getUserSchool(Number(row.channel.slice(3)));
+        if (school?.id !== req.school.id) continue;
+      }
+      counts[row.channel] = Number(row.n);
     }
     res.json(counts);
   } catch { res.status(500).json({error:'Could not load message counts.'}); }
@@ -304,6 +306,20 @@ async function checkMessageChannel(req, res, next) {
   }
   next();
 }
+
+app.post('/api/messages/read', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
+  const {channel,lastId} = req.body;
+  if (!Number.isSafeInteger(lastId) || lastId < 1) return res.status(400).json({error:'Invalid message.'});
+  try {
+    const row = await db.get('SELECT * FROM messages WHERE id = ? AND school_id = ?', lastId, req.school.id);
+    const belongs = row && (req.dmPartner
+      ? ((row.user_id === req.user.id && row.channel === channel) || (row.user_id === req.dmPartner && row.channel === 'dm:' + req.user.id))
+      : row.channel === channel);
+    if (!belongs) return res.status(404).json({error:'Message not found.'});
+    await db.markMessagesRead(req.user.id, req.school.id, channel, lastId);
+    res.json({ok:true});
+  } catch { res.status(500).json({error:'Could not update read status.'}); }
+});
 
 app.get('/api/messages', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
   const { channel } = req.query;

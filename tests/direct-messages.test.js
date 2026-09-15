@@ -28,6 +28,16 @@ test('both participants see legacy and new DMs without seeing other conversation
     assert.equal(threads[0].partner_id,c.id);
     assert.equal(threads[1].partner_id,a.id);
     assert.equal(threads[1].n,2);
+    const before = await db.unreadCounts(b.id,1);
+    assert.equal(before.find(row=>row.channel==='dm:'+a.id).n,1);
+    const latest = (await db.directMessages(1,b.id,a.id)).at(-1).id;
+    await db.markMessagesRead(b.id,1,'dm:'+a.id,latest);
+    assert.equal((await db.unreadCounts(b.id,1)).some(row=>row.channel==='dm:'+a.id),false);
+    assert.equal((await db.unreadCounts(b.id,1)).find(row=>row.channel==='dm:'+c.id).n,1);
+    await db.insertMessage(1,'dm:'+b.id,a.id,'New unread');
+    assert.equal((await db.unreadCounts(b.id,1)).find(row=>row.channel==='dm:'+a.id).n,1);
+    await db.markMessagesRead(b.id,1,'dm:'+a.id,1);
+    assert.equal((await db.unreadCounts(b.id,1)).find(row=>row.channel==='dm:'+a.id).n,1);
     // Shared activity is scoped to the school and room, and concurrent requests
     // remain visible until the last request completes.
     const first=await db.insertMessage(1,'channel:hall:general',a.id,'@barista explain');
