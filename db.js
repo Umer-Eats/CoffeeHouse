@@ -145,6 +145,14 @@ async function upsertUser(profile) {
     );
     return get('SELECT * FROM users WHERE id = ?', existing.id);
   }
+  const emailMatch = await get('SELECT * FROM users WHERE email = ?', profile.email);
+  if (emailMatch) {
+    await run(
+      'UPDATE users SET firebase_uid = ?, name = ?, picture = COALESCE(?, picture) WHERE id = ?',
+      profile.sub, profile.name, profile.picture || null, emailMatch.id
+    );
+    return get('SELECT * FROM users WHERE id = ?', emailMatch.id);
+  }
   const info = await run(
     'INSERT INTO users (firebase_uid, email, name, picture) VALUES (?, ?, ?, ?)',
     profile.sub, profile.email, profile.name, profile.picture || null

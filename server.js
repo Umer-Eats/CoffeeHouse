@@ -191,10 +191,7 @@ app.post('/api/auth/firebase', async (req, res) => {
     res.json({ user: publicUser(user), school: school ? { id: school.id, name: school.name } : null });
   } catch (err) {
     console.error('Firebase verify failed:', err.message, err.code || '');
-    if (err.code === 'auth/argument-error') {
-      console.error('Hint: FIREBASE_SERVICE_ACCOUNT private_key may be malformed in Vercel env vars.');
-    }
-    res.status(401).json({ error: 'Invalid Firebase token.' + (process.env.VERCEL ? ' (' + (err.code || 'unknown') + ')' : '') });
+    res.status(401).json({ error: 'Sign-in failed: ' + err.message });
   }
 });
 
