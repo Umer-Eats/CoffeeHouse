@@ -31,15 +31,15 @@ window.SavedItems = {
   download(doc) {
     const content = document.createElement('div');
     content.innerHTML = AIFormat.render(doc.body);
-    // Use native MathML offline, without external KaTeX fonts or scripts.
     content.querySelectorAll('.katex-html').forEach(node => node.remove());
     const html = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<title>' + esc(doc.title) + '</title><style>body{max-width:850px;margin:40px auto;padding:0 24px;font:18px/1.65 system-ui,sans-serif;color:#28221c}pre{overflow:auto;background:#f5f2ed;padding:16px}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:8px}math[display="block"]{overflow:auto;margin:1em 0}a{color:#59411f}blockquote{border-left:3px solid #b99a74;padding-left:16px}@media print{body{margin:0;max-width:none}}</style>' +
-      '<body><h1>' + esc(doc.title) + '</h1><p>Source: ' + esc(doc.src || 'Study notes') + '</p>' + content.innerHTML + '<hr><small>Saved from CoffeeHouse. AI can make mistakes—check your class materials.</small></body></html>';
-    const url = URL.createObjectURL(new Blob([html], {type:'text/html;charset=utf-8'}));
-    const link = document.createElement('a'); link.href = url;
-    link.download = (String(doc.title || 'Brewer notes').replace(/[^a-zA-Z0-9 _-]/g, '').trim().slice(0,80) || 'Brewer notes') + '.html';
-    document.body.appendChild(link); link.click(); link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+      '<title>' + esc(doc.title) + '</title><style>@page{margin:0.75in}body{max-width:7in;margin:0 auto;padding:0;font:12pt/1.5 Georgia,serif;color:#222}h1{font-size:18pt;margin:0 0 6pt}p.src{color:#666;font-size:10pt;margin:0 0 12pt}hr{border:none;border-top:1px solid #ccc;margin:12pt 0}pre{white-space:pre-wrap;font:10pt/1.4 monospace;background:#f7f5f0;padding:10px;border:1px solid #ddd}table{border-collapse:collapse;width:100%}td,th{border:1px solid #aaa;padding:5px 8px;font-size:10pt}blockquote{border-left:3px solid #b99a74;padding-left:12px;color:#555}small{color:#888;font-size:9pt}a{color:#59411f}</style>' +
+      '<body><h1>' + esc(doc.title) + '</h1><p class="src">Source: ' + esc(doc.src || 'Study notes') + ' &middot; Saved from CoffeeHouse</p>' +
+      content.innerHTML + '<hr><small>AI can make mistakes \u2014 check your class materials.</small></body></html>';
+    const win = window.open('', '_blank');
+    if (!win) { alert('Please allow pop-ups to download PDF.'); return; }
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.print(); }, 400);
   }
 };

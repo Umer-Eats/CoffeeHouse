@@ -235,12 +235,15 @@
       list.innerHTML = '';
       if (!cheats.length) list.innerHTML = '<div class="empty" style="color:var(--soft);">No cheat sheets yet.</div>';
       cheats.forEach(c => {
+        c.title = c.topic;
+        c.body = c.content;
+        c.src = 'Cheat sheet';
         const item = document.createElement('button');
         item.type = 'button'; item.className = 'cheat-item';
         item.innerHTML = `<b>&#128196; Cheat #${c.id}</b><br><small>${esc(c.topic)}</small>`;
         item.addEventListener('click', () => addChat('@baristi cheat sheet — ' + c.topic + ':\n\n' + c.content, true));
         list.appendChild(item);
-        list.appendChild(SavedItems.actions(c, '/api/ai/baristi/cheats', loadCheats));
+        list.appendChild(SavedItems.actions(c, '/api/ai/baristi/cheats', loadCheats, true));
       });
     }
 
