@@ -1,5 +1,8 @@
 /* Shared café motion. Same 450ms crossfade as the home page. */
 :root{--scene-fade:450ms}
+/* Equal selection areas without changing each page's colors, padding or shape. */
+.theme-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.theme-toggle>button{min-width:0;justify-content:center;white-space:nowrap}
 .login-button:active,.primary-button:active,.login-button[aria-busy=true],.primary-button[aria-busy=true]{transform:translate(2px,3px);box-shadow:inset 3px 3px 0 #0005!important;filter:brightness(.88)}
 .login-button[aria-busy=true],.primary-button[aria-busy=true]{cursor:wait}
 /* Shared square-edged café scrollbars, including the page viewport. */
