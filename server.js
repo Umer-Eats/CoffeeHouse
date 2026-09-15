@@ -11,6 +11,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
+const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 
@@ -331,7 +332,24 @@ app.get('/api/messages', requireAuth, requireSchool, checkMessageChannel, async 
   const messages = req.dmPartner
     ? await db.directMessages(req.school.id, req.user.id, req.dmPartner)
     : await db.channelMessages(req.school.id, channel);
-  res.json(messages.map(m => publicMessage(m, req.user.id)));
+  const out = [];
+  const files = messages.length ? await db.all('SELECT message_id,name,mime_type FROM message_attachments WHERE message_id IN ('+messages.map(()=>'?').join(',')+')',...messages.map(m=>m.id)) : [];
+  const byMessage = new Map(files.map(file=>[file.message_id,file]));
+  for (const m of messages) {
+    const attachment = byMessage.get(m.id);
+    out.push({...publicMessage(m,req.user.id),attachment:attachment ? {name:attachment.name,mimeType:attachment.mime_type,url:'/api/attachments/'+m.id} : null});
+  }
+  res.json(out);
+});
+
+app.get('/api/attachments/:id',requireAuth,requireSchool,async(req,res)=>{
+  const row=await db.get('SELECT m.school_id,m.channel,m.user_id,a.* FROM message_attachments a JOIN messages m ON m.id=a.message_id WHERE m.id=?',req.params.id);
+  if(!row || row.school_id!==req.school.id || (row.channel.startsWith('dm:') && row.user_id!==req.user.id && row.channel!=='dm:'+req.user.id)) return res.status(404).json({error:'File not found.'});
+  res.set('Cache-Control','private, no-store');
+  res.set('X-Content-Type-Options','nosniff');
+  res.set('Content-Security-Policy',"sandbox; default-src 'none'");
+  res.set('Content-Disposition',(row.mime_type==='application/pdf'?'attachment':'inline')+"; filename*=UTF-8''"+encodeURIComponent(row.name));
+  res.type(row.mime_type).send(Buffer.from(row.data,'base64'));
 });
 
 app.get('/api/ai/pending', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
@@ -343,11 +361,14 @@ app.get('/api/ai/pending', requireAuth, requireSchool, checkMessageChannel, asyn
 
 app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
   const { channel, text } = req.body || {};
-  if (!channel || !text) return res.status(400).json({ error: 'channel and text are required.' });
+  let attachment;
+  try { attachment=validateAttachment(req.body?.attachment); } catch(err) {return res.status(400).json({error:err.message});}
+  if (!channel || typeof text!=='string' || (!text.trim() && !attachment)) return res.status(400).json({ error: 'Add a message or file.' });
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
     return res.status(400).json({ error: 'unknown channel type' });
   }
   const msg = await db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
+  if(attachment) await db.run('INSERT INTO message_attachments (message_id,name,mime_type,data) VALUES (?,?,?,?)',msg.id,attachment.name,attachment.mimeType,attachment.data);
   if (req.dmPartner) return res.json(publicMessage(msg, req.user.id));
 
   /* fire the AI sidekicks when summoned */

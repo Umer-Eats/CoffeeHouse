@@ -76,6 +76,10 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
+CREATE TABLE IF NOT EXISTS message_attachments (
+  message_id INTEGER PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
+  name TEXT NOT NULL, mime_type TEXT NOT NULL, data TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS message_reads (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   school_id INTEGER NOT NULL,

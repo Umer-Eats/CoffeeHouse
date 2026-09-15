@@ -74,5 +74,5 @@
     return {get:()=>images.map(image=>({...image})),ready:()=>!processing,
       setBusy(value){busy=value;render();},clear(){images=[];status.textContent='';render();}};
   }
-  window.AIImages={create};
+  window.AIImages={create,prepare};
 })();

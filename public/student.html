@@ -68,6 +68,7 @@
       </div>
       <div class="msg-scroll" id="msgScroll" role="log" aria-label="Conversation"></div>
       <div class="composer">
+        <div class="chat-files"><input id="chatFileInput" type="file" accept="application/pdf,image/png,image/jpeg" hidden><button id="chatFileButton" type="button" class="btn">Attach file</button><button id="chatFileRemove" type="button" class="btn" hidden>Remove file</button><span id="chatFileStatus" role="status"></span><small>PDF up to 1 MB, PNG or JPEG. Paste screenshots into the message field. Files are shared with this conversation.</small></div>
         <div id="hallBarista" class="companion" data-companion="barista" hidden></div>
         <div id="hallBrewer" class="companion" data-companion="brewer" hidden></div>
         <div class="quick">
@@ -101,6 +102,8 @@
   <script src="/vendor/katex/katex.min.js"></script>
   <script src="/ai-format.js"></script>
   <script src="/companions.js"></script>
+  <script src="/ai-images.js"></script>
+  <script src="/chat-files.js"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -229,7 +232,7 @@
         }
       } catch { /* Keep conversation available if activity polling fails. */ }
       if (requested !== current.key) return;
-      const sig = msgs.map(m => m.id).join(',');
+      const sig = msgs.map(m => m.id + ':' + !!m.attachment).join(',');
       if (sig !== lastSig) {
         lastSig = sig;
         const scroll = $('msgScroll');
@@ -280,6 +283,11 @@
       time.textContent = fmtTime(m.time);
       whoRow.appendChild(time);
       bub.appendChild(whoRow); bub.appendChild(p);
+      if(m.attachment){
+        const link=document.createElement('a');link.href=m.attachment.url;link.textContent='Download '+m.attachment.name;link.className='attachment-link';link.setAttribute('download',m.attachment.name);
+        if(m.attachment.mimeType==='image/jpeg'){const preview=document.createElement('img');preview.src=m.attachment.url;preview.alt=m.attachment.name;preview.className='chat-attachment';preview.loading='lazy';bub.appendChild(preview);}
+        bub.appendChild(link);
+      }
       row.appendChild(bub);
       scroll.appendChild(row);
       scroll.scrollTop = scroll.scrollHeight;
@@ -387,16 +395,19 @@
         e.preventDefault();
         const inp = $('msgInput');
         const txt = inp.value.trim();
-        if (!txt || !current.key) return;
+        const attachment=ChatFiles.get();
+        if ((!txt && !attachment) || !current.key || !ChatFiles.ready()) return;
         const send = $('msgForm').querySelector('button');
         if (send.disabled) return;
         const kind = current.kind === 'channel' ? (/@barist[ai]\b/i.test(txt) ? 'barista' : /@brewer\b/i.test(txt) ? 'brewer' : null) : null;
         const companion = kind ? $(kind === 'barista' ? 'hallBarista' : 'hallBrewer') : null;
         send.disabled = true;
+        ChatFiles.setBusy(true);
         if (companion) { companion.hidden = false; CoffeeCompanions.setBusy(kind, true); }
         inp.value = '';
         try {
-          await api('/api/messages', { method: 'POST', body: { channel: current.key, text: txt } });
+          await api('/api/messages', { method: 'POST', body: { channel: current.key, text: txt, attachment } });
+          ChatFiles.clear();
           await refreshMessages();
           await loadDMs();
         } catch (err) {
@@ -404,6 +415,7 @@
           $('hallStatus').textContent = 'Could not send: ' + err.message;
         } finally {
           send.disabled = false;
+          ChatFiles.setBusy(false);
           if (companion) { CoffeeCompanions.setBusy(kind, false); companion.hidden = true; }
         }
       });
