@@ -189,6 +189,10 @@
     }
 
     function renderChat(title, meta) {
+      for (const kind of ['barista','brewer']) {
+        $(kind === 'barista' ? 'hallBarista' : 'hallBrewer').hidden = true;
+        CoffeeCompanions.setBusy(kind, false);
+      }
       $('chatTitle').textContent = title;
       if (meta) $('chatMeta').textContent = meta;
       lastSig = null;
@@ -199,6 +203,16 @@
       if (!current.key) return;
       const requested = current.key;
       const msgs = await api('/api/messages?channel=' + encodeURIComponent(requested));
+      try {
+        const pending = await api('/api/ai/pending?channel=' + encodeURIComponent(requested));
+        if (requested === current.key) {
+          for (const kind of ['barista','brewer']) {
+            const busy = pending.some(item => item.kind === kind);
+            $(kind === 'barista' ? 'hallBarista' : 'hallBrewer').hidden = !busy;
+            CoffeeCompanions.setBusy(kind, busy);
+          }
+        }
+      } catch { /* Keep conversation available if activity polling fails. */ }
       if (requested !== current.key) return;
       const sig = msgs.map(m => m.id).join(',');
       if (sig !== lastSig) {
@@ -214,13 +228,17 @@
     function appendMessage(m) {
       const scroll = $('msgScroll');
       const isMe = m.me;
+      const botKind = m.bot ? (/brewer/i.test(m.author) ? 'brewer' : 'barista') : null;
       const row = document.createElement('div');
       row.className = 'msg' + (isMe ? ' me' : '');
       if (!isMe) {
         const av = document.createElement('span');
         av.className = 'avatar';
         av.style.background = colorFor(m.author);
-        av.innerHTML = m.picture ? `<img src="${esc(m.picture)}">` : esc(initials(m.author));
+        if (botKind) {
+          av.className = 'avatar bot-character companion';
+          av.innerHTML = CoffeeCompanions.portrait(botKind);
+        } else av.innerHTML = m.picture ? `<img src="${esc(m.picture)}">` : esc(initials(m.author));
         row.appendChild(av);
       }
       const bub = document.createElement('div');
@@ -229,11 +247,7 @@
       bub.className = 'bubble' + (isBaristi || isBrewer ? ' bot-bubble' : '');
       const whoRow = document.createElement('div');
       whoRow.className = 'who';
-      whoRow.innerHTML =
-        (isBaristi ? '<span class="barista-chip">BARISTI AI</span>' : '') +
-        (isBrewer ? '<span class="brewer-chip">BREWER AI</span>' : '') +
-        esc(isMe ? 'You' : m.author) +
-        '<span class="sparkle">&#10022;</span>';
+      whoRow.textContent = botKind ? (botKind === 'brewer' ? 'Brewer' : 'Barista') : (isMe ? 'You' : m.author);
       const p = document.createElement(m.bot ? 'div' : 'p');
       if (m.bot) { p.className = 'ai-content'; p.innerHTML = AIFormat.render(m.text); }
       else p.innerHTML = esc(m.text)

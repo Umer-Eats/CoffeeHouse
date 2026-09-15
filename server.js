@@ -305,6 +305,13 @@ app.get('/api/messages', requireAuth, requireSchool, checkMessageChannel, async 
   res.json(messages.map(m => publicMessage(m, req.user.id)));
 });
 
+app.get('/api/ai/pending', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
+  if (req.dmPartner) return res.json([]);
+  try {
+    res.json(await db.all("SELECT DISTINCT kind FROM ai_pending WHERE school_id = ? AND channel = ? AND started_at > datetime('now','-2 minutes')", req.school.id, req.query.channel));
+  } catch { res.status(500).json({error:'Could not load AI activity.'}); }
+});
+
 app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async (req, res) => {
   const { channel, text } = req.body || {};
   if (!channel || !text) return res.status(400).json({ error: 'channel and text are required.' });
@@ -319,6 +326,7 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
     if (new RegExp(alias === '@baristi' ? '@barist[ai]\\b' : '@brewer\\b', 'i').test(text)) {
       const bot = await db.findBotByEmail(cfg.email);
       if (!bot) continue;
+      await db.run('INSERT INTO ai_pending (message_id, school_id, channel, kind) VALUES (?, ?, ?, ?)', msg.id, req.school.id, channel, alias === '@brewer' ? 'brewer' : 'barista');
       // Keep the serverless request alive until the reply has been persisted.
           try {
             let reply;
@@ -336,6 +344,8 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
             console.error('Bot reply failed:', err.message);
             await db.insertMessage(req.school.id, channel, bot.id,
               `${alias} I couldn't finish that response. The AI service may be busy or unavailable. Please try mentioning me again in a moment.`);
+          } finally {
+            await db.run('DELETE FROM ai_pending WHERE message_id = ?', msg.id);
           }
       break;
     }

@@ -31,6 +31,8 @@ body>.living-scene::after{content:"";position:absolute;inset:0;background:#1c142
 .companion{display:flex;align-items:center;gap:18px;padding:12px 22px;border-bottom:1px solid var(--border);background:var(--panel2);min-height:108px}
 .companion-art{width:72px;height:84px;overflow:visible;flex:none;shape-rendering:crispEdges}
 .companion h2{font-size:25px;color:var(--gold)}
+.msg .bot-character{width:52px;height:62px;min-height:0;padding:2px;overflow:visible;justify-content:center;border:2px solid var(--border);background:var(--panel2)!important}
+.msg .bot-character .companion-art{width:44px;height:54px}
 .companion-status{font-size:19px;color:var(--soft)}
 .companion .character-body{transform-origin:18px 37px;animation:companion-idle 4s steps(2,end) infinite}
 .character-eyes{transform-origin:17px 18px;animation:companion-blink 6s steps(1,end) infinite}

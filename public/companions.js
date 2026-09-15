@@ -15,6 +15,7 @@
     host.innerHTML = `${portrait(kind)}<div><h2>${name}</h2><p class="companion-status" role="status" aria-live="polite">${kind === 'barista' ? 'Ready for your next question.' : 'Ready to brew your notes.'}</p></div><span class="brew-bubbles" aria-hidden="true">▪ ▪ ▪</span>`;
   });
   window.CoffeeCompanions = {
+    portrait,
     setBusy(kind, busy) {
       document.querySelectorAll(`[data-companion="${kind}"]`).forEach(host => {
         host.classList.toggle('is-busy', busy);

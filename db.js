@@ -76,6 +76,13 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
+CREATE TABLE IF NOT EXISTS ai_pending (
+  message_id INTEGER PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
+  school_id INTEGER NOT NULL,
+  channel TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  started_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 /* ---------------- explicitly configured communities and service identities ---------------- */

@@ -28,5 +28,18 @@ test('both participants see legacy and new DMs without seeing other conversation
     assert.equal(threads[0].partner_id,c.id);
     assert.equal(threads[1].partner_id,a.id);
     assert.equal(threads[1].n,2);
+    // Shared activity is scoped to the school and room, and concurrent requests
+    // remain visible until the last request completes.
+    const first=await db.insertMessage(1,'channel:hall:general',a.id,'@barista explain');
+    const second=await db.insertMessage(1,'channel:hall:general',b.id,'@barista help');
+    for(const msg of [first,second]) await db.run('INSERT INTO ai_pending (message_id,school_id,channel,kind) VALUES (?,1,?,?)',msg.id,'channel:hall:general','barista');
+    const pending=(school,channel)=>db.all("SELECT DISTINCT kind FROM ai_pending WHERE school_id = ? AND channel = ? AND started_at > datetime('now','-2 minutes')",school,channel);
+    assert.equal((await pending(1,'channel:hall:general')).length,1);
+    assert.equal((await pending(2,'channel:hall:general')).length,0);
+    assert.equal((await pending(1,'channel:hall:other')).length,0);
+    await db.run('DELETE FROM ai_pending WHERE message_id = ?',first.id);
+    assert.equal((await pending(1,'channel:hall:general')).length,1);
+    await db.run("UPDATE ai_pending SET started_at = datetime('now','-3 minutes')");
+    assert.equal((await pending(1,'channel:hall:general')).length,0);
   } finally { db.client.close(); }
 });
