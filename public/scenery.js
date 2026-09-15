@@ -1,21 +1,8 @@
 /* Animate the existing painting in source-image coordinates, keeping UI separate. */
 'use strict';
 // Pure geometry shared by the renderer and interaction regression tests.
-function sceneryPoint(clientX, clientY, rect) {
-  return {x:(clientX-rect.left)*1751/rect.width,y:(clientY-rect.top)*898/rect.height};
-}
-function leafRepulsion(pointer, region) {
-  if (!pointer) return {x:0,y:0};
-  const [x,y,w,h] = region;
-  const nearestX=Math.max(x,Math.min(pointer.x,x+w));
-  const nearestY=Math.max(y,Math.min(pointer.y,y+h));
-  const distance=Math.hypot(pointer.x-nearestX,pointer.y-nearestY);
-  if(distance>75) return {x:0,y:0};
-  const dx=x+w/2-pointer.x, dy=y+h/2-pointer.y;
-  const length=Math.hypot(dx,dy)||1;
-  const force=18*(1-distance/75);
-  return {x:(dx===0 && dy===0?1:dx/length)*force,y:dy/length*force*.45};
-}
+function sceneryPoint() { return {x:0,y:0}; }
+function leafRepulsion() { return {x:0,y:0}; }
 (function () {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let paused = false;
@@ -43,17 +30,6 @@ function leafRepulsion(pointer, region) {
   document.body.appendChild(toggle);
   updateControl();
   const scenes = [];
-  let pointer = null;
-  // Listen passively: the decorative canvas never captures clicks or scrolling.
-  document.addEventListener('pointermove', event => {
-    if(event.pointerType==='touch' || paused || reduced.matches) { pointer=null; return; }
-    if(event.target.closest('button,a,input,textarea,select,dialog,.welcome,.window-sign,.panel,.card,.workspace,.chat,.side-left,.room-banner,header')) { pointer=null; return; }
-    pointer={x:event.clientX,y:event.clientY};
-    scenes.forEach(scene=>{scene.pointerRect=scene.canvas.getBoundingClientRect();});
-  }, {passive:true});
-  document.addEventListener('pointerleave',()=>{pointer=null;});
-  addEventListener('blur',()=>{pointer=null;});
-  addEventListener('scroll',()=>{pointer=null;},{passive:true,capture:true});
   let frame = 0, previous = 0, clock = 0;
   const isDark = () => (document.body.dataset.theme || document.documentElement.dataset.theme) === 'dark';
 
@@ -70,11 +46,8 @@ function leafRepulsion(pointer, region) {
     // Small strip displacements taper to zero at the region boundaries. The
     // original painting stays underneath, so no transparent gaps can appear.
     regions[kind].forEach(([x,y,w,h], index) => {
-      const local=pointer && scene.pointerRect?.width ? sceneryPoint(pointer.x,pointer.y,scene.pointerRect) : null;
-      const target=leafRepulsion(local,[x,y,w,h]);
       const offset=scene.offsets[index] || (scene.offsets[index]={x:0,y:0});
-      // Ease away and settle back without replacing the original breeze.
-      offset.x+=(target.x-offset.x)*.2; offset.y+=(target.y-offset.y)*.2;
+      offset.x+=-offset.x*.2; offset.y+=-offset.y*.2;
       ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
       for (let row=0; row<h; row+=6) {
         const height = Math.min(6,h-row);
@@ -129,7 +102,6 @@ function leafRepulsion(pointer, region) {
     const w=host===document.body?innerWidth:host.clientWidth;
     const h=host===document.body?innerHeight:host.clientHeight;
     const scale=Math.max(w/1751,h/898);
-    scene.pointerRect=null;
     Object.assign(scene.canvas.style,{width:`${1751*scale}px`,height:`${898*scale}px`,left:`${(w-1751*scale)/2}px`,top:`${(h-898*scale)/2}px`});
   }
   function tick(now) {
