@@ -1,0 +1,20 @@
+/* Reading surfaces use a clear text face; the surrounding café stays pixel art. */
+.ai-content{font:17px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif;white-space:normal;overflow-wrap:anywhere;min-width:0;max-width:100%}
+.ai-content p,.bubble .ai-content p,.doc-card .ai-content p{white-space:normal;font:inherit;color:inherit;margin:.65em 0}
+.ai-content>:first-child{margin-top:0}.ai-content>:last-child{margin-bottom:0}
+.ai-content h1,.ai-content h2,.ai-content h3,.ai-content h4,.ai-content h5,.ai-content h6{font-family:inherit;font-size:1.12em;line-height:1.4;color:inherit;margin:1.25em 0 .5em}
+.ai-content h1{font-size:1.4em}.ai-content h2{font-size:1.25em}
+.ai-content ul,.ai-content ol{padding-left:1.5em;margin:.75em 0}.ai-content li{margin:.55em 0}
+.ai-content strong{font-weight:700}.ai-content em{font-style:italic}
+.ai-content hr{border:0;border-top:1px solid var(--border);margin:1.2em 0}
+.ai-content a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.ai-content blockquote{margin:1em 0;padding:.2em 1em;border-left:3px solid var(--gold)}
+.ai-content pre{padding:14px;background:var(--line);color:var(--ink);overflow:auto;white-space:pre;max-width:100%;border:1px solid var(--border)}
+.ai-content code{font: .9em/1.5 ui-monospace,Consolas,monospace}
+.ai-content table{display:block;max-width:100%;overflow:auto;border-collapse:collapse;margin:1em 0}
+.ai-content th,.ai-content td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.ai-content .math-display{display:block;max-width:100%;overflow-x:auto;padding:6px 2px;margin:.7em 0}
+.ai-content .katex-display{margin:0;text-align:left}.ai-content .katex{font-size:1.08em}
+.ai-content .math-unavailable{font-size:.9em;font-style:italic}
+.bubble:has(.ai-content){max-width:100%}
+@media(max-width:540px){.ai-content{font-size:16px}.msg:has(.ai-content){max-width:100%}}

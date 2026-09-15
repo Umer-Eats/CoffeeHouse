@@ -409,6 +409,9 @@ app.get('/art.js', (req, res) => res.type('application/javascript').send(ART_JS)
 app.get('/app.js', (req, res) => res.type('application/javascript').send(APP_JS));
 
 app.use(express.static(path.join(__dirname, 'public')));
+// Serve pinned local rendering libraries and KaTeX fonts; no CDN dependency.
+app.use('/vendor/katex', express.static(path.join(__dirname, 'node_modules/katex/dist')));
+app.use('/vendor/markdown-it', express.static(path.join(__dirname, 'node_modules/markdown-it/dist')));
 
 /* ---------------- export for Vercel serverless / start locally ---------------- */
 

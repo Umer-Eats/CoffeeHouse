@@ -39,7 +39,7 @@ function harness() {
   const states=[]; let resolve, reject;
   const document = {getElementById:element, querySelectorAll:()=>[], createElement:()=>new Element(),body:new Element()};
   const context = vm.createContext({document,localStorage:{getItem:()=>null,setItem:()=>{}},Art:{initTheme(){},refreshAll(){}},
-    CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},location:{},esc:String,nowTime:()=>'',
+    CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},AIFormat:require('../public/ai-format.js'),location:{},esc:String,nowTime:()=>'',
     api:url=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
       ?new Promise((yes,no)=>{resolve=yes;reject=no;}):Promise.resolve([])});
   const html=read('ai-assistant.html');

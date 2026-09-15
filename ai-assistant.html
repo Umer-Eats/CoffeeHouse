@@ -10,6 +10,8 @@
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
 <link rel="stylesheet" href="/motion.css">
 <script src="/scenery.js" defer></script>
+<link rel="stylesheet" href="/vendor/katex/katex.min.css">
+<link rel="stylesheet" href="/ai-format.css">
 </head>
 <body class="study-page">
 
@@ -100,6 +102,9 @@
 
   <script src="art.js"></script>
   <script src="/app.js"></script>
+  <script src="/vendor/markdown-it/browser/markdown-it.umd.min.js"></script>
+  <script src="/vendor/katex/katex.min.js"></script>
+  <script src="/ai-format.js"></script>
   <script src="/companions.js"></script>
   <script>
     const $ = id => document.getElementById(id);
@@ -141,7 +146,9 @@
       bub.className = 'bubble' + (bot ? ' bot' : '') + (thinking ? ' thinking' : '');
       const who = document.createElement('div'); who.className = 'who';
       who.textContent = bot ? 'BARISTA' : 'You';
-      const p = document.createElement('p'); p.textContent = msg;
+      const p = document.createElement(bot && !thinking ? 'div' : 'p');
+      if (bot && !thinking) { p.className = 'ai-content'; p.innerHTML = AIFormat.render(msg); }
+      else p.textContent = msg;
       const time = document.createElement('span'); time.className = 'time'; time.textContent = nowTime();
       bub.appendChild(who); bub.appendChild(p); bub.appendChild(time);
       row.appendChild(bub);
@@ -241,7 +248,7 @@
       card.innerHTML = `
         <h3>&#127807; ${esc(doc.title)} <span class="stamp">BREWED</span></h3>
         <hr>
-        <p>${esc(doc.body)}</p>
+        <div class="ai-content">${AIFormat.render(doc.body)}</div>
         <div class="src">source: ${esc(doc.src || 'pasted text')}</div>
       `;
       flow.appendChild(card);

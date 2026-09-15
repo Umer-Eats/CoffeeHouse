@@ -23,6 +23,10 @@ const BARISTI_SYSTEM =
   'You help high school students explain any subject clearly, step by step, ' +
   'with friendly one-line summaries, memory aids and tiny examples. ' +
   'Keep answers concise (under 220 words), well-structured, and accurate. ' +
+  'Write for a student seeing the topic for the first time. Explain symbols in ordinary words before using them. ' +
+  'Give the plain-language rule first, then a formula only when useful. Use short paragraphs and simple Markdown headings or lists. ' +
+  'For equations use $...$ inline or $$...$$ on separate lines; do not put equations in code blocks. ' +
+  'Use a small worked example, and define notation such as delta x as the width of each interval. ' +
   'If asked to make a cheat sheet, produce a compact bulleted cheat sheet. ' +
   'Stay on-topic and never provide harmful content.';
 
@@ -36,6 +40,8 @@ const BREWER_SYSTEM =
   '3. Three likely quiz questions with one-line answers.\n' +
   '4. Open questions still unanswered in the source.\n' +
   'Keep it under 400 words, precise and skimmable.';
+const READABLE_NOTES = ' Explain every new symbol in everyday language. Use readable Markdown headings and lists. ' +
+  'Put useful equations in $...$ or $$...$$ and explain what they mean in words. Never assume the reader knows the notation.';
 
 /* ---- Helpers ---- */
 
@@ -82,7 +88,7 @@ async function brewNotes(source, text) {
   const doc = await generate(
     brewerGenAI, BREWER_MODEL,
     'Source name: ' + label + '\n\nSource text:\n' + body.slice(0, 60000),
-    BREWER_SYSTEM
+    BREWER_SYSTEM + READABLE_NOTES
   );
 
   return { doc, engine: 'gemini' };

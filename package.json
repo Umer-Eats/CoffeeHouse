@@ -18,7 +18,9 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "firebase-admin": "^14.2.0"
+    "firebase-admin": "^14.2.0",
+    "katex": "^0.18.7",
+    "markdown-it": "^15.0.2"
   },
   "overrides": {
     "jose": "4.15.9"

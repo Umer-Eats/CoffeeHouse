@@ -24,7 +24,6 @@ See [Web-structure.md](Web-structure.md) for current architecture and [Wizard-UI
 - [ ] **Create real rooms and project groups.** Persist channels, groups, memberships, and invitations. Restrict management by school role; support archival without destroying message history.
 - [ ] **Improve the message composer.** Multiline input, Shift+Enter, a visible character count, safe draft persistence, and duplicate-send protection.
 - [ ] **Add message ownership actions.** Author edit/delete with clear rules, moderation overrides, and a recoverable audit trail where appropriate.
-- [ ] **Format study output safely.** Render structured notes, lists, equations, and code blocks with sanitization. Keep untrusted source text separate from instructions.
 - [ ] **Add source references.** Link notes to the source passages or channel messages that support them; explain when an AI answer has no supporting source.
 - [ ] **Add unread state and notifications.** Persist last-read positions, show room/DM badges, and offer opt-in notifications with quiet hours.
 - [ ] **Review accessibility end to end.** Keyboard-only and screen-reader tests, contrast in both palettes, focus after actions, live announcements, zoom, and 320px layouts. Motion pause and reduced-motion support already exist.

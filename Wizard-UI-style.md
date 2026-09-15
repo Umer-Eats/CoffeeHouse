@@ -33,6 +33,8 @@ Use the CSS variables rather than scattering new colors through components. Bari
 
 Use Pixelify Sans for brand, page titles, and section headings. Use VT323 for readable body copy, controls, message text, and metadata. Both retain the pixel identity without making long messages difficult to read. Monospace is the fallback.
 
+AI answer bodies are the readability exception: use the system sans-serif stack at 17px (16px on phones), with 1.7 line height. `public/ai-format.js` renders Markdown and KaTeX equations; `public/ai-format.css` styles headings, lists, code, and notes. Keep pixel fonts on the surrounding interface. Equations include accessible MathML and scroll inside the answer when too wide. Never enable raw HTML or trusted math commands in generated content. Ordinary student messages remain plain text.
+
 Body text is approximately 21–24px; metadata 15–19px; section headings 21–28px; page headings 32–72px depending on the page and viewport. Do not use tiny all-caps text for paragraphs.
 
 Use a 4px spacing rhythm. Typical gaps are 12, 16, 24, and 32px. Content containers stop near 1320–1440px. Do not position functional content at coordinates copied from a reference image.
