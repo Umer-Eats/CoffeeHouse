@@ -37,6 +37,7 @@ function nowTime() {
 function fmtTime(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return nowTime();
+  // Ensure we're showing local time, not UTC
   let h = d.getHours(), m = d.getMinutes();
   const ap = h >= 12 ? 'pm' : 'am';
   h = h % 12 || 12;
