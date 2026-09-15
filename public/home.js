@@ -102,7 +102,7 @@
     loginBtn.innerHTML = '<svg aria-hidden="true"><use href="#user"/></svg><span>' + esc(me.user.name) + '</span>';
     loginBtn.addEventListener('click', () => {
       if (me.school) {
-        location.href = '/student.html';
+        enterStudentHall();
       } else {
         openSchoolPicker(me.user);
       }
@@ -110,7 +110,9 @@
   }
 
   async function signInWithGoogle() {
+    if (googleLogin.disabled) return;
     googleLogin.disabled = true;
+    googleLogin.setAttribute('aria-busy', 'true');
     googleLogin.textContent = 'Signing in...';
     loginStatus.textContent = '';
     try {
@@ -122,6 +124,7 @@
         firebase.auth().signOut();
         loginStatus.textContent = 'Only Pines Charter accounts can sign in.';
         googleLogin.disabled = false;
+        googleLogin.removeAttribute('aria-busy');
         googleLogin.textContent = 'Continue with Google';
         return;
       }
@@ -131,6 +134,7 @@
     } catch (err) {
       loginStatus.textContent = 'Sign-in failed: ' + err.message;
       googleLogin.disabled = false;
+      googleLogin.removeAttribute('aria-busy');
       googleLogin.textContent = 'Continue with Google';
     }
   }
@@ -149,9 +153,17 @@
     }
   });
 
+  function enterStudentHall() {
+    loginBtn.disabled = true;
+    loginBtn.setAttribute('aria-busy', 'true');
+    loginBtn.querySelector('span').textContent = 'Entering Student Hall…';
+    loginStatus.textContent = 'Signed in. Opening Student Hall…';
+    location.assign('/student.html');
+  }
+
   function afterLogin(data) {
     if (data.school) {
-      location.href = '/student.html';
+      enterStudentHall();
     } else {
       closeDialog(accountDialog);
       openSchoolPicker(data.user);
@@ -179,16 +191,25 @@
 
   schoolForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const button = schoolForm.querySelector('button');
+    if (button.disabled) return;
     const password = $('#schoolPassword').value.trim();
     if (!password) { loginStatus.textContent = 'Please enter the community password.'; return; }
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'Joining…';
+    loginStatus.textContent = 'Joining your community…';
     try {
       await api('/api/school/join', {
         method: 'POST',
         body: { schoolId: Number($('#schoolSelect').value), password },
       });
-      location.href = '/student.html';
+      enterStudentHall();
     } catch (err) {
       loginStatus.textContent = 'Could not join: ' + err.message;
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.textContent = 'Join your community';
     }
   });
 

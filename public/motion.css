@@ -1,5 +1,7 @@
 /* Shared café motion. Same 450ms crossfade as the home page. */
 :root{--scene-fade:450ms}
+.login-button:active,.primary-button:active,.login-button[aria-busy=true],.primary-button[aria-busy=true]{transform:translate(2px,3px);box-shadow:inset 3px 3px 0 #0005!important;filter:brightness(.88)}
+.login-button[aria-busy=true],.primary-button[aria-busy=true]{cursor:wait}
 /* Shared square-edged café scrollbars, including the page viewport. */
 :root{--scroll-track:#2c1d16;--scroll-thumb:#ac8155;--scroll-hover:#f7cf89}
 body[data-theme=dark],html:has(body[data-theme=dark]){--scroll-track:#0a0a20;--scroll-thumb:#75659e;--scroll-hover:#c4b0ff}
