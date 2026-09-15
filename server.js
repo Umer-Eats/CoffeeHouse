@@ -226,9 +226,11 @@ app.get('/api/schools', requireAuth, async (req, res) => {
 });
 
 app.post('/api/school/join', requireAuth, async (req, res) => {
-  const schoolId = Number((req.body || {}).schoolId);
-  const school = await db.get('SELECT * FROM schools WHERE id = ?', schoolId);
+  const { schoolId, password } = req.body || {};
+  const id = Number(schoolId);
+  const school = await db.get('SELECT * FROM schools WHERE id = ?', id);
   if (!school) return res.status(400).json({ error: 'Unknown school.' });
+  if (password !== 'iluvmatcha') return res.status(403).json({ error: 'Incorrect community password.' });
   await db.setUserSchool(req.user.id, school.id);
   res.json({ school: { id: school.id, name: school.name } });
 });

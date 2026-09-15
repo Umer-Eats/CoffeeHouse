@@ -165,7 +165,7 @@
     loginStatus.textContent = '';
     openDialog(accountDialog);
     $('#accountHint').textContent =
-      'Welcome, ' + (user.name || 'student') + '! Pick the school you attend.';
+      'Welcome, ' + (user.name || 'student') + '! Pick your community and enter the password.';
     try {
       const schools = await api('/api/schools');
       $('#schoolSelect').innerHTML = schools
@@ -179,10 +179,12 @@
 
   schoolForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const password = $('#schoolPassword').value.trim();
+    if (!password) { loginStatus.textContent = 'Please enter the community password.'; return; }
     try {
       await api('/api/school/join', {
         method: 'POST',
-        body: { schoolId: Number($('#schoolSelect').value) },
+        body: { schoolId: Number($('#schoolSelect').value), password },
       });
       location.href = '/student.html';
     } catch (err) {

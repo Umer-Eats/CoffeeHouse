@@ -57,6 +57,7 @@
       <div class="cur-school">Current: <b id="curSchool">loading...</b></div>
       <div class="row">
         <select id="schoolSelect" aria-label="School community"></select>
+        <input id="schoolPassword" type="password" placeholder="Community password" style="max-width:200px">
         <button class="btn matcha" id="changeSchool">CHANGE COMMUNITY</button>
       </div>
       <div class="note">You belong to one school community at a time. Joining another school moves you instantly — your chats are per-school.</div>
@@ -102,11 +103,14 @@
       const st = $('schoolStatus');
       st.className = 'note';
       st.textContent = '';
+      const password = $('schoolPassword').value.trim();
+      if (!password) { st.className = 'note err'; st.textContent = 'Please enter the community password.'; $('changeSchool').disabled = false; return; }
       try {
-        const res = await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value) } });
+        const res = await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value), password } });
         $('curSchool').textContent = res.school.name;
         st.className = 'note ok';
         st.textContent = 'Community updated to ' + res.school.name + '. You are now sorted into that school\'s halls.';
+        $('schoolPassword').value = '';
       } catch (err) {
         st.className = 'note err';
         st.textContent = 'Failed: ' + err.message;
