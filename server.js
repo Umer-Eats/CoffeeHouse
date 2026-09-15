@@ -169,6 +169,8 @@ app.post('/api/auth/firebase', async (req, res) => {
   try {
     const decoded = await firebaseAuth.verifyIdToken(idToken);
     if (!decoded.email) return res.status(403).json({ error: 'This account has no email address.' });
+    const allowed = decoded.email.endsWith('@pinescharter.net') || decoded.email === 'umerqure475@gmail.com';
+    if (!allowed) return res.status(403).json({ error: 'Only Pines Charter accounts can sign in.' });
     const user = await db.upsertUser({
       sub: decoded.uid,
       email: decoded.email,

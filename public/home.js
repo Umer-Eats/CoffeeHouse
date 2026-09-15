@@ -116,6 +116,15 @@
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await firebase.auth().signInWithPopup(provider);
+      const email = result.user.email || '';
+      const allowed = email.endsWith('@pinescharter.net') || email === 'umerqure475@gmail.com';
+      if (!allowed) {
+        firebase.auth().signOut();
+        loginStatus.textContent = 'Only Pines Charter accounts can sign in.';
+        googleLogin.disabled = false;
+        googleLogin.textContent = 'Continue with Google';
+        return;
+      }
       const idToken = await result.user.getIdToken();
       const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
       afterLogin(data);
