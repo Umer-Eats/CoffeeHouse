@@ -312,16 +312,14 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
     return res.status(400).json({ error: 'unknown channel type' });
   }
   const msg = await db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
-  res.json(publicMessage(msg, req.user.id));
-  if (req.dmPartner) return; // AI assistants belong in school rooms and AI Study, not private inboxes.
+  if (req.dmPartner) return res.json(publicMessage(msg, req.user.id));
 
   /* fire the AI sidekicks when summoned */
   for (const [alias, cfg] of Object.entries(BOT_ALIASES)) {
-    if (new RegExp(alias, 'i').test(text)) {
+    if (new RegExp(alias === '@baristi' ? '@barist[ai]\\b' : '@brewer\\b', 'i').test(text)) {
       const bot = await db.findBotByEmail(cfg.email);
       if (!bot) continue;
-      setTimeout(() => {
-        (async () => {
+      // Keep the serverless request alive until the reply has been persisted.
           try {
             let reply;
             if (alias === '@brewer') {
@@ -337,13 +335,12 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
           } catch (err) {
             console.error('Bot reply failed:', err.message);
             await db.insertMessage(req.school.id, channel, bot.id,
-              `${alias} I couldn't brew that right now — ${err.message}`);
+              `${alias} I couldn't finish that response. The AI service may be busy or unavailable. Please try mentioning me again in a moment.`);
           }
-        })();
-      }, 600);
       break;
     }
   }
+  res.json(publicMessage(msg, req.user.id));
 });
 
 app.get('/api/dms', requireAuth, requireSchool, async (req, res) => {

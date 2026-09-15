@@ -29,6 +29,7 @@ test('Barista and Brewer pass inline images to the model alongside text',async()
     require(name){
       if(name==='dotenv') return {config(){}};
       if(name==='@google/generative-ai') return {GoogleGenerativeAI:class {getGenerativeModel(){return {generateContent:async request=>{requests.push(request);return {response:{text:()=> 'Analysis from test double'}};}};}}};
+      if (name === './ai-retry') return require('../ai-retry');
       throw new Error('Unexpected dependency');
     }});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../ai.js'),'utf8'),context);

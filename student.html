@@ -68,6 +68,8 @@
       </div>
       <div class="msg-scroll" id="msgScroll" role="log" aria-label="Conversation"></div>
       <div class="composer">
+        <div id="hallBarista" class="companion" data-companion="barista" hidden></div>
+        <div id="hallBrewer" class="companion" data-companion="brewer" hidden></div>
         <div class="quick">
           <button type="button" data-quick=" @baristi ">ADD @baristi</button>
           <button type="button" data-quick=" @brewer ">ADD @brewer</button>
@@ -98,6 +100,7 @@
   <script src="/vendor/markdown-it/browser/markdown-it.umd.min.js"></script>
   <script src="/vendor/katex/katex.min.js"></script>
   <script src="/ai-format.js"></script>
+  <script src="/companions.js"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -344,6 +347,12 @@
         const inp = $('msgInput');
         const txt = inp.value.trim();
         if (!txt || !current.key) return;
+        const send = $('msgForm').querySelector('button');
+        if (send.disabled) return;
+        const kind = current.kind === 'channel' ? (/@barist[ai]\b/i.test(txt) ? 'barista' : /@brewer\b/i.test(txt) ? 'brewer' : null) : null;
+        const companion = kind ? $(kind === 'barista' ? 'hallBarista' : 'hallBrewer') : null;
+        send.disabled = true;
+        if (companion) { companion.hidden = false; CoffeeCompanions.setBusy(kind, true); }
         inp.value = '';
         try {
           await api('/api/messages', { method: 'POST', body: { channel: current.key, text: txt } });
@@ -352,6 +361,9 @@
         } catch (err) {
           inp.value = txt;
           $('hallStatus').textContent = 'Could not send: ' + err.message;
+        } finally {
+          send.disabled = false;
+          if (companion) { CoffeeCompanions.setBusy(kind, false); companion.hidden = true; }
         }
       });
 
