@@ -76,6 +76,15 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
+CREATE TABLE IF NOT EXISTS personal_groups (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, school_id INTEGER NOT NULL REFERENCES schools(id),
+  creator_id INTEGER NOT NULL REFERENCES users(id), created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS personal_group_members (
+  group_id TEXT NOT NULL REFERENCES personal_groups(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY(group_id,user_id)
+);
 CREATE TABLE IF NOT EXISTS message_attachments (
   message_id INTEGER PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
   name TEXT NOT NULL, mime_type TEXT NOT NULL, data TEXT NOT NULL
@@ -298,11 +307,32 @@ async function dmThreads(userId, schoolId) {
   );
 }
 
+async function listPersonalGroups(userId) {
+  return all(`SELECT g.id,g.name,g.school_id,'channel:personal:' || g.id AS channel
+    FROM personal_groups g JOIN personal_group_members m ON m.group_id=g.id WHERE m.user_id=? ORDER BY g.created_at,g.id`,userId);
+}
+async function personalGroup(channel,userId) {
+  return get(`SELECT g.* FROM personal_groups g JOIN personal_group_members m ON m.group_id=g.id
+    WHERE g.id=? AND m.user_id=?`,channel.slice('channel:personal:'.length),userId);
+}
+async function createPersonalGroup(userId,schoolId,name,memberIds) {
+  const ids=[...new Set(memberIds)];
+  if(!name || name.length>80 || ids.length<2 || ids.includes(userId) || ids.some(id=>!Number.isSafeInteger(id)||id<1)) throw Object.assign(Error('Choose at least two other students and a name of 1–80 characters.'),{status:400});
+  const users=await all('SELECT id FROM users WHERE is_bot=0 AND id IN ('+ids.map(()=>'?').join(',')+')',...ids);
+  if(users.length!==ids.length)throw Object.assign(Error('One or more students are unavailable.'),{status:400});
+  const id=crypto.randomUUID();
+  await client.batch([
+    {sql:'INSERT INTO personal_groups (id,name,school_id,creator_id) VALUES (?,?,?,?)',args:[id,name,schoolId,userId]},
+    ...[userId,...ids].map(member=>({sql:'INSERT INTO personal_group_members (group_id,user_id) VALUES (?,?)',args:[id,member]}))
+  ],'write');
+  return {id,name,channel:'channel:personal:'+id};
+}
+
 async function unreadCounts(userId, schoolId) {
   return all(`SELECT incoming.conversation AS channel, COUNT(*) AS n FROM
     (SELECT id, CASE WHEN channel LIKE 'dm:%' THEN 'dm:' || user_id ELSE channel END AS conversation
      FROM messages WHERE school_id = ? AND user_id != ?
-     AND (channel LIKE 'channel:%' OR channel = ?)) incoming
+     AND ((channel LIKE 'channel:%' AND channel NOT LIKE 'channel:personal:%') OR channel = ?)) incoming
     LEFT JOIN message_reads r ON r.user_id = ? AND r.school_id = ? AND r.channel = incoming.conversation
     WHERE incoming.id > COALESCE(r.last_id,0) GROUP BY incoming.conversation`,
     schoolId, userId, 'dm:' + userId, userId, schoolId);
@@ -379,6 +409,9 @@ module.exports = {
   channelMessages,
   insertMessage,
   dmThreads,
+  listPersonalGroups,
+  personalGroup,
+  createPersonalGroup,
   unreadCounts,
   markMessagesRead,
   directMessages,

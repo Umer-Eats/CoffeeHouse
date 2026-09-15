@@ -1,0 +1,13 @@
+#groupDialog{width:min(620px,calc(100% - 32px));max-height:85svh;padding:28px;color:var(--ink);background:var(--panel);border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad);border-radius:0;overflow:auto}
+#groupDialog::backdrop{background:#080612bf}
+#groupClose{position:absolute;right:10px;top:10px}
+#groupDialog h2{padding-right:48px;margin-bottom:20px}
+#groupSearch,#groupName{width:100%;margin:10px 0}
+#groupResults{max-height:32svh;overflow:auto;overscroll-behavior:contain;margin:12px 0}
+.group-option{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer}
+.group-option input{accent-color:var(--gold);width:20px;height:20px}
+#groupSelected{display:flex;flex-wrap:wrap;gap:8px;max-height:16svh;overflow:auto}
+#groupStatus,#groupSelectionCount{font-size:18px;margin:10px 0}
+#groupList .group-row{display:block;width:100%;text-align:left;color:var(--ink);background:transparent;border:0;font:inherit;cursor:pointer}
+.hall-page .class-item>button.chan{width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-left:3px solid transparent;font:inherit}
+.hall-page .class-item>button.chan.active,.hall-page .class-item>button.chan:hover{background:var(--panel2);border-left-color:var(--gold)}

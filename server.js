@@ -284,6 +284,11 @@ app.get('/api/message-counts', requireAuth, requireSchool, async (req, res) => {
       }
       counts[row.channel] = Number(row.n);
     }
+    for (const group of await db.listPersonalGroups(req.user.id)) {
+      const row=await db.get(`SELECT COUNT(*) AS n FROM messages WHERE school_id=? AND channel=? AND user_id!=?
+        AND id>COALESCE((SELECT last_id FROM message_reads WHERE user_id=? AND school_id=? AND channel=?),0)`,group.school_id,group.channel,req.user.id,req.user.id,group.school_id,group.channel);
+      if(row.n) counts[group.channel]=Number(row.n);
+    }
     res.json(counts);
   } catch { res.status(500).json({error:'Could not load message counts.'}); }
 });
@@ -296,6 +301,15 @@ const BOT_ALIASES = {
 async function checkMessageChannel(req, res, next) {
   const channel = req.method === 'GET' ? req.query.channel : req.body?.channel;
   if (typeof channel !== 'string' || !/^(channel:.+|dm:[1-9]\d*)$/.test(channel)) return res.status(400).json({error:'Invalid conversation.'});
+  if(channel.startsWith('channel:personal:')) {
+    try {
+      const group=await db.personalGroup(channel,req.user.id);
+      if(!group)return res.status(404).json({error:'Conversation not found.'});
+      req.school={...req.school,id:group.school_id};
+    }catch{return res.status(500).json({error:'Could not open group.'});}
+  } else if(channel.startsWith('channel:') && !CLASSES.some(c=>c.channels.some(ch=>channelKey(c.code,ch.slug)===channel))) {
+    return res.status(404).json({error:'Conversation not found.'});
+  }
   if (channel.startsWith('dm:')) {
     const id = Number(channel.slice(3));
     if (!Number.isSafeInteger(id) || id === req.user.id) return res.status(400).json({error:'Choose another student.'});
@@ -344,7 +358,10 @@ app.get('/api/messages', requireAuth, requireSchool, checkMessageChannel, async 
 
 app.get('/api/attachments/:id',requireAuth,requireSchool,async(req,res)=>{
   const row=await db.get('SELECT m.school_id,m.channel,m.user_id,a.* FROM message_attachments a JOIN messages m ON m.id=a.message_id WHERE m.id=?',req.params.id);
-  if(!row || row.school_id!==req.school.id || (row.channel.startsWith('dm:') && row.user_id!==req.user.id && row.channel!=='dm:'+req.user.id)) return res.status(404).json({error:'File not found.'});
+  if(!row)return res.status(404).json({error:'File not found.'});
+  if(row.channel.startsWith('channel:personal:')) {
+    if(!await db.personalGroup(row.channel,req.user.id))return res.status(404).json({error:'File not found.'});
+  }else if(row.school_id!==req.school.id || (row.channel.startsWith('dm:') && row.user_id!==req.user.id && row.channel!=='dm:'+req.user.id)) return res.status(404).json({error:'File not found.'});
   res.set('Cache-Control','private, no-store');
   res.set('X-Content-Type-Options','nosniff');
   res.set('Content-Security-Policy',"sandbox; default-src 'none'");
@@ -429,8 +446,19 @@ app.get('/api/dms', requireAuth, requireSchool, async (req, res) => {
 /* ---------------- project groups ---------------- */
 
 app.get('/api/groups', requireAuth, requireSchool, async (req, res) => {
-  // No persisted group feature exists yet; never invent teams or memberships.
-  res.json([]);
+  res.json(await db.listPersonalGroups(req.user.id));
+});
+app.get('/api/groups/students',requireAuth,requireSchool,async(req,res)=>{
+  const query=typeof req.query.q==='string'?req.query.q.slice(0,100):'';
+  const after=Math.max(0,Number(req.query.after)||0);
+  const students=await db.all('SELECT id,name FROM users WHERE is_bot=0 AND id!=? AND id>? AND instr(lower(name),lower(?))>0 ORDER BY id LIMIT 101',req.user.id,after,query);
+  res.json({students:students.slice(0,100),more:students.length>100});
+});
+app.post('/api/groups',requireAuth,requireSchool,async(req,res)=>{
+  const {name,memberIds}=req.body||{};
+  if(typeof name!=='string'||!Array.isArray(memberIds))return res.status(400).json({error:'Choose students and a group name.'});
+  try{res.status(201).json(await db.createPersonalGroup(req.user.id,req.school.id,name.trim(),memberIds));}
+  catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not create group. Please try again.'});}
 });
 
 /* ---------------- AI assistants ---------------- */

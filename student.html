@@ -13,6 +13,7 @@
 <script src="/scenery.js" defer></script>
 <link rel="stylesheet" href="/vendor/katex/katex.min.css">
 <link rel="stylesheet" href="/ai-format.css">
+<link rel="stylesheet" href="/groups.css">
 </head>
 <body class="hall-page">
 
@@ -94,11 +95,25 @@
       <div class="panel">
         <h3>PROJECT GROUPS</h3>
         <div id="groupList"></div>
+        <button id="createGroup" class="btn matcha" type="button">Create Group</button>
       </div>
     </aside>
 
   </div>
 
+  <dialog id="groupDialog" aria-labelledby="groupTitle">
+    <button id="groupClose" class="btn" type="button" aria-label="Close group creation">×</button>
+    <h2 id="groupTitle">Create Group</h2>
+    <div id="groupPickStep">
+      <label for="groupSearch">Find students</label><input id="groupSearch" type="search" placeholder="Search by name…" autocomplete="off">
+      <div id="groupResults"></div><button id="groupMore" type="button" class="btn" hidden>Load more</button>
+      <div id="groupSelected" aria-label="Selected students"></div><p id="groupSelectionCount"></p>
+      <button id="groupAdd" type="button" class="btn" disabled>Add Group</button>
+    </div>
+    <form id="groupNameStep" hidden><label for="groupName">Name your group</label><input id="groupName" maxlength="80" required autocomplete="off"><button id="groupBack" class="btn" type="button">Back</button><button id="groupSave" class="btn matcha" type="submit">Create Group</button></form>
+    <p id="groupStatus" role="status" aria-live="polite"></p>
+  </dialog>
+  <script src="/groups.js"></script>
   <script src="art.js"></script>
   <script src="/app.js"></script>
   <script src="/vendor/markdown-it/browser/markdown-it.umd.min.js"></script>
@@ -190,8 +205,16 @@
     }
 
     async function loadGroups() {
-      GROUPS = await api('/api/groups');
-      renderGroups();
+      const groups = await api('/api/groups');
+      if(JSON.stringify(groups)!==JSON.stringify(GROUPS)){
+        GROUPS=groups;renderGroups();
+        const position=$('classList').scrollTop;renderLeft();$('classList').scrollTop=position;
+      } else renderGroups();
+    }
+    function openGroup(group) {
+      current={kind:'channel',key:group.channel,title:group.name};
+      renderChat(group.name,'Personal group · Members only');renderLeft();
+      refreshMessages().catch(err=>{$('hallStatus').textContent=err.message;});
     }
 
     /* ---------- navigation ---------- */
@@ -324,6 +347,14 @@
           item.appendChild(btn); item.appendChild(chanList);
           box.appendChild(item);
         });
+        if(GROUPS.length){
+          const section=el('.class-item');
+          section.appendChild(el('.class-btn',null,'Personal Groups'));
+          GROUPS.forEach(group=>{
+            const button=document.createElement('button');button.type='button';button.className='chan'+(current.key===group.channel?' active':'');
+            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);section.appendChild(button);
+          });box.appendChild(section);
+        }
       } else {
         if (!DMS.length) box.appendChild(el('.empty', null, 'No direct messages yet.'));
         DMS.forEach(d => {
@@ -364,20 +395,20 @@
     function renderGroups() {
       const box = $('groupList');
       box.innerHTML = '';
-      if (!GROUPS.length) { box.appendChild(el('.empty', null, 'Project groups are not available yet. Use your school rooms to coordinate.')); return; }
+      if (!GROUPS.length) { box.appendChild(el('.empty', null, 'Create a private group to study together.')); return; }
       GROUPS.forEach(g => {
-        const row = el('.group-row');
-        row.innerHTML = `
-          <div class="avatar-stack">${g.members.map(m => avatarHTML(m, '')).join('')}</div>
-          <div class="g-name">${esc(g.name)}</div>
-          <div class="g-meta">${esc(g.meta)}</div>
-        `;
+        const row = document.createElement('button');row.type='button';row.className='group-row';row.textContent=g.name;row.onclick=()=>openGroup(g);
         box.appendChild(row);
       });
     }
 
     /* ---------- wiring ---------- */
     function wire() {
+      GroupPicker.init(group=>{
+        GROUPS.push(group);
+        document.querySelectorAll('.side-left .tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.tab==='classes'));
+        renderGroups();openGroup(group);loadGroups().catch(()=>{});
+      });
       document.querySelectorAll('.side-left .tab').forEach(t => {
         t.addEventListener('click', () => {
           document.querySelectorAll('.side-left .tab').forEach(x => x.classList.remove('active'));
@@ -430,6 +461,7 @@
     function startPolling() {
       setInterval(async () => {
         try {
+          await loadGroups();
           await refreshMessages();
           await loadDMs();
         } catch (e) { /* channel may have changed */ }

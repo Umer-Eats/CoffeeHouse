@@ -14,6 +14,18 @@ test('both participants see legacy and new DMs without seeing other conversation
     const users=[];
     for(const name of ['A','B','C']) users.push(await db.upsertUser({sub:name,email:name+'@example.test',name}));
     const [a,b,c]=users;
+    const outsider=await db.upsertUser({sub:'outsider',email:'outsider@example.test',name:'Outsider'});
+    await assert.rejects(db.createPersonalGroup(a.id,1,'Too small',[b.id]));
+    await assert.rejects(db.createPersonalGroup(a.id,1,'Invalid student',[b.id,999999]));
+    const group=await db.createPersonalGroup(a.id,1,'Biology team',[b.id,c.id]);
+    for(const user of [a,b,c]){
+      assert.equal((await db.listPersonalGroups(user.id))[0].name,'Biology team');
+      assert.equal((await db.personalGroup(group.channel,user.id)).id,group.id);
+    }
+    assert.equal((await db.listPersonalGroups(outsider.id)).length,0);
+    assert.equal(await db.personalGroup(group.channel,outsider.id),null);
+    await db.insertMessage(1,group.channel,a.id,'Private group message');
+    assert.equal((await db.unreadCounts(outsider.id,1)).some(row=>row.channel===group.channel),false);
     await db.insertMessage(1,'dm:'+b.id,a.id,'A to B');
     await db.insertMessage(1,'dm:'+a.id,b.id,'B replies');
     await db.insertMessage(1,'dm:'+b.id,c.id,'C private');
