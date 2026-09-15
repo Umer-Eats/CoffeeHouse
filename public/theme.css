@@ -27,6 +27,13 @@ header>div{flex-wrap:wrap}header .me{display:flex;align-items:center;gap:10px;fo
 .hall-page .side-right>.panel:first-child #studentList{min-height:0}
 .hall-page .chat-head,.hall-page .composer,.hall-page .side-left>.tabs,.hall-page .side-art{flex-shrink:0}
 .hall-page .scroller{min-height:0}
+.hall-page .msg-scroll{gap:10px;padding:14px}
+.hall-page .bubble{padding:8px 12px}
+.hall-page .bubble .who{align-items:center;justify-content:space-between;gap:6px 20px;margin-bottom:3px}
+.hall-page .bubble .who .time{margin:0 0 0 auto;font-size:14px;white-space:nowrap}
+.message-count{display:inline-block;flex:none;min-width:22px;padding:1px 5px;background:var(--gold);color:var(--head);font:16px/1.2 "VT323",monospace;text-align:center;border:1px solid var(--border)}
+.chan .message-count,.dm-item .message-count{margin-left:auto}
+.hall-page .chan{display:flex;align-items:center;gap:5px}
 /* Let the living scenery show between messages without reducing text contrast. */
 .hall-page .chat,.hall-page .msg-scroll{background:transparent}
 .hall-page .chat-head,.hall-page .composer{background:var(--panel)}

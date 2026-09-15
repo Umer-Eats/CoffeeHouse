@@ -109,6 +109,18 @@
     let STUDENTS = [], CLASSES = [], DMS = [], GROUPS = [];
     let current = { kind: 'channel', key: null };
     let lastSig = null;
+    let messageCounts = {};
+    function countBadge(key) {
+      return '<span class="message-count" aria-label="' + (messageCounts[key] || 0) + ' messages">' + (messageCounts[key] || 0) + '</span>';
+    }
+    async function refreshCounts() {
+      const counts = await api('/api/message-counts');
+      if (JSON.stringify(counts) === JSON.stringify(messageCounts)) return;
+      messageCounts = counts;
+      const position = $('classList').scrollTop;
+      renderLeft();
+      $('classList').scrollTop = position;
+    }
     let botPing = false;
 
     const el = (cls, attrs, html) => {
@@ -203,6 +215,7 @@
       if (!current.key) return;
       const requested = current.key;
       const msgs = await api('/api/messages?channel=' + encodeURIComponent(requested));
+      try { await refreshCounts(); } catch { /* Counts must not block messages. */ }
       try {
         const pending = await api('/api/ai/pending?channel=' + encodeURIComponent(requested));
         if (requested === current.key) {
@@ -256,7 +269,8 @@
       const time = document.createElement('span');
       time.className = 'time';
       time.textContent = fmtTime(m.time);
-      bub.appendChild(whoRow); bub.appendChild(p); bub.appendChild(time);
+      whoRow.appendChild(time);
+      bub.appendChild(whoRow); bub.appendChild(p);
       row.appendChild(bub);
       scroll.appendChild(row);
       scroll.scrollTop = scroll.scrollHeight;
@@ -266,6 +280,8 @@
     function renderLeft() {
       const tab = document.querySelector('.side-left .tab.active').dataset.tab;
       const box = $('classList');
+      document.querySelector('[data-tab="classes"]').innerHTML = 'Rooms <span class="message-count">' + Object.entries(messageCounts).filter(([key]) => key.startsWith('channel:')).reduce((sum,[,n]) => sum+n,0) + '</span>';
+      document.querySelector('[data-tab="dms"]').innerHTML = 'Messages <span class="message-count">' + Object.entries(messageCounts).filter(([key]) => key.startsWith('dm:')).reduce((sum,[,n]) => sum+n,0) + '</span>';
       box.innerHTML = '';
       if (tab === 'classes') {
         CLASSES.forEach(c => {
@@ -278,6 +294,7 @@
           c.channels.forEach(chan => {
             const ch = el('.chan' + (current.kind === 'channel' && current.key === chan.key ? ' active' : ''), {}, esc(chan.title));
             ch.addEventListener('click', () => openChannel(c, chan));
+            ch.insertAdjacentHTML('beforeend', countBadge(chan.key));
             chanList.appendChild(ch);
           });
           btn.addEventListener('click', () => {
@@ -296,6 +313,7 @@
             <div>${esc(d.partner.name)}<small>${esc(d.lastPreview) || 'new conversation'}</small></div>
           `;
           row.addEventListener('click', () => openDM(d.partner));
+          row.insertAdjacentHTML('beforeend', countBadge(d.channel));
           box.appendChild(row);
         });
       }

@@ -271,6 +271,18 @@ app.get('/api/channels', requireAuth, requireSchool, async (req, res) => {
 });
 
 /* ---------------- messages ---------------- */
+app.get('/api/message-counts', requireAuth, requireSchool, async (req, res) => {
+  try {
+    const rooms = await db.all("SELECT channel, COUNT(*) AS n FROM messages WHERE school_id = ? AND channel LIKE 'channel:%' GROUP BY channel", req.school.id);
+    const threads = await db.dmThreads(req.user.id, req.school.id);
+    const counts = Object.fromEntries(rooms.map(row => [row.channel, Number(row.n)]));
+    for (const thread of threads) {
+      const school = await db.getUserSchool(thread.partner_id);
+      if (school?.id === req.school.id) counts['dm:' + thread.partner_id] = Number(thread.n);
+    }
+    res.json(counts);
+  } catch { res.status(500).json({error:'Could not load message counts.'}); }
+});
 
 const BOT_ALIASES = {
   '@baristi': { email: 'baristi@coffeehouse.ai', handler: (q) => ai.baristaReply(q) },
