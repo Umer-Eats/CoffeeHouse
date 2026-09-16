@@ -36,8 +36,17 @@ function nowTime() {
 
 function fmtTime(iso) {
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return nowTime();
-  // Ensure we're showing local time, not UTC
+  if (isNaN(d.getTime())) {
+    // Fallback: try parsing SQLite "YYYY-MM-DD HH:MM:SS" format manually
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{1,2}):(\d{2})$/);
+    if (m) {
+      let h = parseInt(m[4]), mi = parseInt(m[5]);
+      const ap = h >= 12 ? 'pm' : 'am';
+      h = h % 12 || 12;
+      return `${h}:${String(mi).padStart(2, '0')} ${ap}`;
+    }
+    return nowTime();
+  }
   let h = d.getHours(), m = d.getMinutes();
   const ap = h >= 12 ? 'pm' : 'am';
   h = h % 12 || 12;
