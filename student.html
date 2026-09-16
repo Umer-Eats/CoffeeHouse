@@ -361,7 +361,6 @@
           const item = el('.class-item');
           const btn = el('.class-btn', {}, `
             <span>${esc(c.name)}</span>
-            <span class="chips-count">${c.channels.length}</span>
           `);
           const chanList = el('.chan-list');
           c.channels.forEach(chan => {
