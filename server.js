@@ -95,7 +95,7 @@ initFirebase();
 
 // Shared discussion rooms, not invented school course enrollments.
 const CLASSES = [
-  { code: 'HALL', name: 'School community', channels: [
+  { code: 'HALL', name: 'School Community', channels: [
     { slug: 'general', title: 'General' },
     { slug: 'homework', title: 'Homework help' },
     { slug: 'study', title: 'Study together' }

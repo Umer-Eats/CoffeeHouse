@@ -360,7 +360,7 @@
         CLASSES.forEach(c => {
           const item = el('.class-item');
           const btn = el('.class-btn', {}, `
-            <span>${esc(c.code)} &#8212; ${esc(c.name)}</span>
+            <span>${esc(c.name)}</span>
             <span class="chips-count">${c.channels.length}</span>
           `);
           const chanList = el('.chan-list');
