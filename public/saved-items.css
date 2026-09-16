@@ -1,3 +1,5 @@
 .saved-actions{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
+/* Keep headings visible while each saved-item collection scrolls independently. */
+.study-page #cheatList,.study-page #docList{max-height:clamp(180px,35svh,360px);min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:4px 8px 4px 4px;align-content:start}
 .saved-actions .btn{font-size:16px;padding:6px 10px}
 .saved-actions [role=status]{flex-basis:100%;font:14px/1.4 system-ui,sans-serif;color:var(--soft)}
