@@ -256,7 +256,7 @@
 
     async function openDM(partner) {
       current = { kind: 'dm', key: 'dm:' + partner.id, title: partner.name };
-      renderChat(partner.name, 'Direct message &middot; 1:1');
+      renderChat(partner.name, 'Direct message');
       renderLeft();
       await refreshMessages();
     }
@@ -476,11 +476,15 @@
         const kind = current.kind === 'channel' ? (/@barist[ai]\b/i.test(txt) ? 'barista' : /@brewer\b/i.test(txt) ? 'brewer' : null) : null;
         const companion = kind ? $(kind === 'barista' ? 'hallBarista' : 'hallBrewer') : null;
         send.disabled = true;
+        const sendingChannel=current.key;
+        $('hallStatus').textContent=['channel:HALL:general','channel:HALL:homework','channel:HALL:study'].includes(sendingChannel)?'Checking message…':'Sending…';
+        send.textContent='SENDING…';
         ChatFiles.setBusy(true);
         if (companion) { companion.hidden = false; CoffeeCompanions.setBusy(kind, true); }
         inp.value = '';
         try {
-          await api('/api/messages', { method: 'POST', body: { channel: current.key, text: txt, attachment } });
+          await api('/api/messages', { method: 'POST', body: { channel: sendingChannel, text: txt, attachment } });
+          $('hallStatus').textContent='';
           ChatFiles.clear();
           await refreshMessages();
           await loadDMs();
@@ -489,6 +493,7 @@
           $('hallStatus').textContent = 'Could not send: ' + err.message;
         } finally {
           send.disabled = false;
+          send.textContent='SEND';
           ChatFiles.setBusy(false);
           if (companion) { CoffeeCompanions.setBusy(kind, false); companion.hidden = true; }
         }

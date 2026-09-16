@@ -74,6 +74,12 @@ Student Hall loads current identity, channels, students, direct-message threads,
 
 Messages use `GET/POST /api/messages`. Mentioning `@baristi` requests an explanation; `@brewer` summarizes recent channel text. These replies are inserted under the bot identity and appear on polling.
 
+### School-room content checks
+
+`moderation.js` reviews new messages before any message or attachment is saved in exactly `channel:HALL:general`, `channel:HALL:homework`, and `channel:HALL:study`. Text, filenames, image content (including text in screenshots), and PDFs are submitted to Gemini for a structured check for violence, sexual content, explicit content, and vulgar language. Bot-generated replies in these rooms are checked too. DMs and Personal Groups bypass the classifier entirely. Existing messages are not retroactively reviewed.
+
+The check uses `MODERATION_API_KEY` / `MODERATION_MODEL` when supplied, otherwise the existing Barista/Brewer configuration. A prohibited-content result returns HTTP 422. Missing configuration, provider failure, incomplete or malformed results, or an attachment that cannot be fully reviewed return HTTP 503 without publishing anything. The interface preserves the draft and attachment for correction or retry. This adds a provider request and latency to school-room sends. Classification is probabilistic: false positives and missed violations remain possible; this is not a human reporting/moderation system or a malware scanner. Automated tests use a stubbed classifier and never submit private messages or real student files to a provider.
+
 `GET /api/groups` now returns an empty list because the application has no group persistence or management API. The previous invented teams and automatic assignment of real students were removed.
 
 ## AI study

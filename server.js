@@ -11,6 +11,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
+const {moderateMessage} = require('./moderation');
 const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
@@ -381,10 +382,13 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
   let attachment;
   try { attachment=validateAttachment(req.body?.attachment); } catch(err) {return res.status(400).json({error:err.message});}
   if (!channel || typeof text!=='string' || (!text.trim() && !attachment)) return res.status(400).json({ error: 'Add a message or file.' });
+  if (text.length>4000) return res.status(400).json({error:'Messages must be 4,000 characters or fewer.'});
   if (!channel.startsWith('channel:') && !channel.startsWith('dm:')) {
     return res.status(400).json({ error: 'unknown channel type' });
   }
-  const msg = await db.insertMessage(req.school.id, channel, req.user.id, String(text).slice(0, 4000));
+  try { await moderateMessage(channel,text,attachment); }
+  catch (err) { return res.status(err.status || 503).json({error:err.message,code:err.code}); }
+  const msg = await db.insertMessage(req.school.id, channel, req.user.id, text);
   if(attachment) await db.run('INSERT INTO message_attachments (message_id,name,mime_type,data) VALUES (?,?,?,?)',msg.id,attachment.name,attachment.mimeType,attachment.data);
   if (req.dmPartner) return res.json(publicMessage(msg, req.user.id));
 
@@ -406,6 +410,7 @@ app.post('/api/messages', requireAuth, requireSchool, checkMessageChannel, async
               reply = await cfg.handler(text);
             }
             const full = `${alias} ${reply}`;
+            await moderateMessage(channel,full.slice(0,4000));
             await db.insertMessage(req.school.id, channel, bot.id, full.slice(0, 4000));
           } catch (err) {
             console.error('Bot reply failed:', err.message);
