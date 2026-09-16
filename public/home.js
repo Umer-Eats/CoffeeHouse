@@ -154,9 +154,6 @@
   });
 
   function enterStudentHall() {
-    loginBtn.disabled = true;
-    loginBtn.setAttribute('aria-busy', 'true');
-    loginBtn.querySelector('span').textContent = 'Entering Student Hall…';
     loginStatus.textContent = 'Signed in. Opening Student Hall…';
     location.assign('/student.html');
   }
