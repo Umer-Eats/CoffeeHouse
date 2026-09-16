@@ -35,8 +35,12 @@ function nowTime() {
 }
 
 function fmtTime(iso) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return nowTime();
+  // SQLite datetime('now') is UTC but omits the timezone suffix.
+  // Normalize before parsing; getHours/getMinutes then use the viewer's timezone.
+  const value = String(iso || '').trim();
+  const sqlite = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(:\d{2}(?:\.\d+)?)?$/.exec(value);
+  const d = new Date(sqlite ? sqlite[1] + 'T' + sqlite[2] + (sqlite[3] || ':00') + 'Z' : value);
+  if (isNaN(d.getTime())) return 'Unknown time';
   let h = d.getHours(), m = d.getMinutes();
   const ap = h >= 12 ? 'pm' : 'am';
   h = h % 12 || 12;
