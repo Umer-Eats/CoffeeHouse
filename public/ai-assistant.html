@@ -137,6 +137,8 @@
       try { await api('/api/me'); } catch (e) { location.href = '/'; return; }
       // Provider configuration stays server-side; the header names the companions.
       loadChannels();
+      setInterval(() => { if(document.visibilityState === 'visible') loadChannels(); }, 3500);
+      document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadChannels(); });
       loadCheats();
       loadDocs();
     }
@@ -250,18 +252,38 @@
 
     /* ---------- Brewer ---------- */
     let BREW_DOCS = [];
+    let channelLoading = false, channelSignature = '';
+    let channelLabels = new Map();
 
     async function loadChannels() {
+      if(channelLoading) return;
+      channelLoading = true;
       try {
-        const data = await api('/api/channels');
+        const [data, groups] = await Promise.all([api('/api/channels'), api('/api/groups')]);
+        const entries = data.classes.flatMap(c => c.channels.map(ch => ({key:ch.key,label:c.code+' #'+ch.title})));
+        groups.forEach(group => entries.push({key:group.channel,label:'Personal Groups · '+group.name}));
+        const signature = JSON.stringify(entries);
+        if(signature === channelSignature) return;
+        channelSignature = signature;
+        channelLabels = new Map(entries.map(entry => [entry.key,entry.label]));
         const sel = $('brewChannel');
-        data.classes.forEach(c => c.channels.forEach(ch => {
+        const previous = sel.value;
+        sel.replaceChildren();
+        const placeholder = document.createElement('option');
+        placeholder.value='';placeholder.textContent='— paste text below —';sel.appendChild(placeholder);
+        entries.forEach(entry => {
           const o = document.createElement('option');
-          o.value = ch.key;
-          o.textContent = `${c.code} #${ch.title}`;
+          o.value = entry.key;
+          o.textContent = entry.label;
           sel.appendChild(o);
-        }));
-      } catch (e) {}
+        });
+        sel.value = channelLabels.has(previous) ? previous : '';
+        if(previous && !channelLabels.has(previous)) {
+          $('brewSource').value='';$('brewText').value='';
+          $('brewFlow').textContent='That conversation is no longer available. Choose another source.';
+        }
+      } catch (e) { /* Keep the last successful list during temporary failures. */ }
+      finally { channelLoading=false; }
     }
 
     $('brewChannel').addEventListener('change', async () => {
@@ -271,7 +293,7 @@
       const msgs = await api('/api/messages?channel=' + encodeURIComponent(key));
       if ($('brewChannel').value !== key) return;
       const text = msgs.map(m => (m.author + ': ' + m.text)).join('\n');
-      $('brewSource').value = key.replace('channel:', '').replace(':', ' #');
+      $('brewSource').value = channelLabels.get(key) || key;
       $('brewText').value = text;
       } catch (err) { $('brewFlow').textContent = 'Could not load this channel: ' + err.message; }
     });
