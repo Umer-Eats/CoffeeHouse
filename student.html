@@ -115,6 +115,7 @@
     <p id="groupStatus" role="status" aria-live="polite"></p>
   </dialog>
   <script src="/groups.js"></script>
+  <script src="/group-members.js"></script>
   <script src="art.js"></script>
   <script src="/app.js"></script>
   <script src="/vendor/markdown-it/browser/markdown-it.umd.min.js"></script>
@@ -231,8 +232,17 @@
     function openGroup(group) {
       current={kind:'channel',key:group.channel,title:group.name};
       renderChat(group.name,'Personal group · Members only');renderLeft();
-      $('editMembers').hidden=group.creator_id!==ME.id;
-      $('editMembers').onclick=()=>GroupPicker.edit(group);
+      $('editMembers').hidden=false;
+      $('editMembers').textContent=group.creator_id===ME.id?'Edit Members':'View Members';
+      $('editMembers').onclick=()=>group.creator_id===ME.id?GroupPicker.edit(group):GroupMembers.open(group,async()=>{
+        GROUPS=GROUPS.filter(item=>item.id!==group.id);
+        delete messageCounts[group.channel];
+        if(current.key===group.channel){
+          current={kind:'channel',key:null};$('msgScroll').replaceChildren();
+          renderChat('Choose a room','You have left the group.');ChatFiles.clear();
+        }
+        renderGroups();renderLeft();await refreshCounts();
+      });
       refreshMessages().catch(err=>{$('hallStatus').textContent=err.message;});
     }
 

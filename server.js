@@ -463,8 +463,8 @@ app.post('/api/groups',requireAuth,requireSchool,async(req,res)=>{
 app.get('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
   try{
     const group=await db.personalGroup('channel:personal:'+req.params.id,req.user.id);
-    if(!group||group.creator_id!==req.user.id)return res.status(403).json({error:'Only the group creator can edit members.'});
-    res.json(await db.all('SELECT u.id,u.name FROM users u JOIN personal_group_members m ON m.user_id=u.id WHERE m.group_id=? AND u.id!=? ORDER BY u.name',group.id,req.user.id));
+    if(!group)return res.status(404).json({error:'Group not found.'});
+    res.json(await db.all('SELECT u.id,u.name FROM users u JOIN personal_group_members m ON m.user_id=u.id WHERE m.group_id=? ORDER BY u.name',group.id));
   }catch{res.status(500).json({error:'Could not load members.'});}
 });
 app.put('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
@@ -475,6 +475,10 @@ app.put('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
 app.delete('/api/groups/:id',requireAuth,requireSchool,async(req,res)=>{
   try{await db.deletePersonalGroup(req.user.id,req.params.id);res.json({ok:true});}
   catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not delete group. Please try again.'});}
+});
+app.post('/api/groups/:id/leave',requireAuth,requireSchool,async(req,res)=>{
+  try{await db.leavePersonalGroup(req.user.id,req.params.id);res.json({ok:true});}
+  catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not leave group. Please try again.'});}
 });
 
 /* ---------------- AI assistants ---------------- */

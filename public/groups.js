@@ -48,7 +48,7 @@ window.GroupPicker={init(onCreated){
     editing=group;selected.clear();$('groupTitle').textContent='Edit Members';$('groupAdd').textContent='Save Members';$('groupSearch').value='';$('groupPickStep').hidden=false;$('groupNameStep').hidden=true;$('groupResults').replaceChildren();$('groupSelected').replaceChildren();$('groupAdd').disabled=true;
     dialog.showModal();$('groupStatus').textContent='Loading members…';
     const request=++version;
-    try{const members=await api('/api/groups/'+encodeURIComponent(group.id)+'/members');if(request!==version)return;members.forEach(member=>selected.set(member.id,member.name));selection();search();}
+    try{const members=await api('/api/groups/'+encodeURIComponent(group.id)+'/members');if(request!==version)return;members.filter(member=>member.id!==group.creator_id).forEach(member=>selected.set(member.id,member.name));selection();search();}
     catch(err){if(request===version)$('groupStatus').textContent=err.message;}
   };
   $('groupBack').onclick=()=>{$('groupPickStep').hidden=false;$('groupNameStep').hidden=true;$('groupSearch').focus();};

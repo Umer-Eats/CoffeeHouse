@@ -70,6 +70,12 @@ test('both participants see legacy and new DMs without seeing other conversation
     await db.run("UPDATE ai_pending SET started_at = datetime('now','-3 minutes')");
     assert.equal((await pending(1,'channel:hall:general')).length,0);
     await assert.rejects(db.deletePersonalGroup(b.id,group.id));
+    await assert.rejects(db.leavePersonalGroup(a.id,group.id),{status:403});
+    await db.leavePersonalGroup(c.id,group.id);
+    assert.equal(await db.personalGroup(group.channel,c.id),null);
+    assert.equal((await db.listPersonalGroups(c.id)).length,0);
+    assert.equal((await db.personalGroup(group.channel,b.id)).id,group.id);
+    await assert.rejects(db.leavePersonalGroup(c.id,group.id),{status:404});
     const attachmentMessage=await db.insertMessage(1,group.channel,a.id,'Group file');
     await db.run('INSERT INTO message_attachments (message_id,name,mime_type,data) VALUES (?,?,?,?)',attachmentMessage.id,'test.pdf','application/pdf','test-only');
     await db.deletePersonalGroup(a.id,group.id);

@@ -1,5 +1,7 @@
 #groupDialog{width:min(620px,calc(100% - 32px));max-height:85svh;padding:28px;color:var(--ink);background:var(--panel);border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad);border-radius:0;overflow:auto}
 #groupDialog::backdrop{background:#080612bf}
+.member-dialog{position:relative;width:min(540px,calc(100% - 32px));max-height:85svh;overflow:auto;padding:28px;background:var(--panel);color:var(--ink);border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad)}
+.member-dialog::backdrop{background:#080612bf}.member-close{position:absolute;right:10px;top:10px}.member-dialog h2{padding-right:46px;overflow-wrap:anywhere}.member-list{max-height:50svh;overflow:auto;margin:18px 0}.member-dialog [role=status]{margin:12px 0}
 #groupClose{position:absolute;right:10px;top:10px}
 #groupDialog h2{padding-right:48px;margin-bottom:20px}
 #groupSearch,#groupName{width:100%;margin:10px 0}

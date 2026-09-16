@@ -340,6 +340,12 @@ async function updateGroupMembers(userId,groupId,memberIds) {
   ],'write');
   return {...group,channel:'channel:personal:'+group.id};
 }
+async function leavePersonalGroup(userId,groupId) {
+  const group=await personalGroup('channel:personal:'+groupId,userId);
+  if(!group)throw Object.assign(Error('Group not found.'),{status:404});
+  if(group.creator_id===userId)throw Object.assign(Error('The creator must manage or delete the group instead.'),{status:403});
+  await run('DELETE FROM personal_group_members WHERE group_id=? AND user_id=?',groupId,userId);
+}
 async function deletePersonalGroup(userId,groupId) {
   const group=await get('SELECT * FROM personal_groups WHERE id=? AND creator_id=?',groupId,userId);
   if(!group)throw Object.assign(Error('Only the group creator can delete this group.'),{status:403});
@@ -439,6 +445,7 @@ module.exports = {
   personalGroup,
   createPersonalGroup,
   updateGroupMembers,
+  leavePersonalGroup,
   deletePersonalGroup,
   unreadCounts,
   markMessagesRead,
