@@ -472,6 +472,10 @@ app.put('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
   try{res.json(await db.updateGroupMembers(req.user.id,req.params.id,req.body.memberIds));}
   catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not save members.'});}
 });
+app.delete('/api/groups/:id',requireAuth,requireSchool,async(req,res)=>{
+  try{await db.deletePersonalGroup(req.user.id,req.params.id);res.json({ok:true});}
+  catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not delete group. Please try again.'});}
+});
 
 /* ---------------- AI assistants ---------------- */
 

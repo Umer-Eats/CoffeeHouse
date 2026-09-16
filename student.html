@@ -226,7 +226,7 @@
         }
         renderGroups();
         const position=$('classList').scrollTop;renderLeft();$('classList').scrollTop=position;
-      } else renderGroups();
+      } else if(!$('groupList').children.length) renderGroups();
     }
     function openGroup(group) {
       current={kind:'channel',key:group.channel,title:group.name};
@@ -412,12 +412,25 @@
 
     function renderGroups() {
       const box = $('groupList');
+      const position=box.scrollTop;
       box.innerHTML = '';
       if (!GROUPS.length) { box.appendChild(el('.empty', null, 'Create a private group to study together.')); return; }
       GROUPS.forEach(g => {
         const row = document.createElement('button');row.type='button';row.className='group-row';row.textContent=g.name;row.onclick=()=>openGroup(g);
-        box.appendChild(row);
+        const entry=document.createElement('div');entry.className='project-group-entry';entry.appendChild(row);
+        if(g.creator_id===ME.id){
+          const remove=document.createElement('button');remove.type='button';remove.className='group-delete';remove.textContent='×';remove.setAttribute('aria-label','Delete '+g.name);
+          remove.onclick=async()=>{
+            if(!confirm('Delete “'+g.name+'” for everyone? Its messages and files will be permanently removed. This cannot be undone.'))return;
+            remove.disabled=true;
+            try{await api('/api/groups/'+encodeURIComponent(g.id),{method:'DELETE'});await loadGroups();await refreshCounts();$('hallStatus').textContent='Group deleted.';}
+            catch(err){$('hallStatus').textContent=err.message;remove.disabled=false;}
+          };
+          entry.appendChild(remove);
+        }
+        box.appendChild(entry);
       });
+      box.scrollTop=position;
     }
 
     /* ---------- wiring ---------- */

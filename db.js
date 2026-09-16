@@ -340,6 +340,19 @@ async function updateGroupMembers(userId,groupId,memberIds) {
   ],'write');
   return {...group,channel:'channel:personal:'+group.id};
 }
+async function deletePersonalGroup(userId,groupId) {
+  const group=await get('SELECT * FROM personal_groups WHERE id=? AND creator_id=?',groupId,userId);
+  if(!group)throw Object.assign(Error('Only the group creator can delete this group.'),{status:403});
+  const channel='channel:personal:'+groupId;
+  await client.batch([
+    {sql:'DELETE FROM message_attachments WHERE message_id IN (SELECT id FROM messages WHERE school_id=? AND channel=?)',args:[group.school_id,channel]},
+    {sql:'DELETE FROM ai_pending WHERE school_id=? AND channel=?',args:[group.school_id,channel]},
+    {sql:'DELETE FROM message_reads WHERE school_id=? AND channel=?',args:[group.school_id,channel]},
+    {sql:'DELETE FROM messages WHERE school_id=? AND channel=?',args:[group.school_id,channel]},
+    {sql:'DELETE FROM personal_group_members WHERE group_id=?',args:[groupId]},
+    {sql:'DELETE FROM personal_groups WHERE id=? AND creator_id=?',args:[groupId,userId]}
+  ],'write');
+}
 
 async function unreadCounts(userId, schoolId) {
   return all(`SELECT incoming.conversation AS channel, COUNT(*) AS n FROM
@@ -426,6 +439,7 @@ module.exports = {
   personalGroup,
   createPersonalGroup,
   updateGroupMembers,
+  deletePersonalGroup,
   unreadCounts,
   markMessagesRead,
   directMessages,

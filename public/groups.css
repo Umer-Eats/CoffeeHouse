@@ -9,6 +9,14 @@
 #groupSelected{display:flex;flex-wrap:wrap;gap:8px;max-height:16svh;overflow:auto}
 #groupStatus,#groupSelectionCount{font-size:18px;margin:10px 0}
 #groupList .group-row{display:block;width:100%;text-align:left;color:var(--ink);background:transparent;border:0;font:inherit;cursor:pointer}
+.hall-page .side-right>.panel:last-child{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#groupList{min-height:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;flex:1 1 auto;margin-bottom:12px}
+#createGroup{flex-shrink:0;align-self:flex-start}
+.project-group-entry{display:flex;align-items:center;gap:8px}
+#groupList .group-row{min-width:0;overflow-wrap:anywhere;flex:1}
+.group-delete{flex:none;width:32px;min-height:32px;border:1px solid var(--border);color:var(--ink);background:var(--panel2);font:24px "VT323",monospace;cursor:pointer}
+.group-delete:hover{background:var(--danger)}
+.hall-page #classList{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .hall-page .class-item button.chan{width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-left:3px solid transparent;font:inherit}
 .hall-page .class-item button.chan.active,.hall-page .class-item button.chan:hover{background:var(--panel2);border-left-color:var(--gold)}
 .hall-page .chat-head{position:relative;padding-right:180px}
