@@ -120,7 +120,7 @@ function publicMessage(m, meId) {
     picture: m.picture,
     bot: !!m.is_bot,
     me: m.user_id === meId,
-    time: m.created_at
+    time: m.created_at || ''
   };
 }
 
