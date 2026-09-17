@@ -1,6 +1,9 @@
-.hall-page>header{gap:12px}
+.hall-page>header{gap:24px}
+.notepad-page-header{justify-content:flex-start;gap:24px}
+.notepad-page-header>div:last-child{margin-left:auto}
 .hall-page #meBox{flex:1;min-width:180px}
-#notepadButton{flex:none}
+#notepadButton{flex:none;margin-left:12px}
+@media(max-width:720px){.hall-page>header,.notepad-page-header{gap:12px}#notepadButton{margin-left:0}}
 .notepad-window{position:fixed;display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--panel);color:var(--ink);border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad);min-width:0;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);isolation:isolate}
 .notepad-handle{display:flex;flex:none;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);padding:4px 6px;cursor:move;touch-action:none;user-select:none}
 .notepad-caption{font-family:"Pixelify Sans",monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
