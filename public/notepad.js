@@ -99,6 +99,7 @@
       if(editor.deleting)return;
       if(await save(editor)){frame.destroy();windows.delete(note.id);launch.focus();}
     });
+    frame.el.classList.add('notepad-editor');frame.label.hidden=true;
     const title=node('input','notepad-title');title.type='text';title.maxLength=120;title.placeholder='Note title';title.setAttribute('aria-label','Note title');title.value=note.title;
     const body=node('textarea','notepad-body');body.maxLength=100000;body.placeholder='Write a quick note or to-do list…';body.setAttribute('aria-label','Note text');body.value=note.body;
     const footer=node('div','notepad-footer'),status=node('span','','Saved'),retry=button('Retry save');status.setAttribute('role','status');retry.hidden=true;footer.append(status,retry);
