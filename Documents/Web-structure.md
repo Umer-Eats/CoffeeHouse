@@ -8,6 +8,8 @@ This document describes the implemented application, not a roadmap. There is no 
 
 ## Page map
 
+Student Hall also includes a private NOTEPAD workspace. Its library and individual note windows can be dragged and resized on every edge. Each note has a title and scrollable body, saves automatically after typing pauses, and can be deleted with confirmation. Authenticated `/api/notes` CRUD routes store notes in `quick_notes`, scoped to the signed-in user; revision checks prevent stale tabs from overwriting newer edits. Failed saves remain open with a retry control.
+
 | Route | Access | Purpose |
 | --- | --- | --- |
 | / | Public | Café home, navigation, sign-in |

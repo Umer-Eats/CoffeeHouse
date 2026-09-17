@@ -1,0 +1,19 @@
+.hall-page>header{gap:12px}
+.hall-page #meBox{flex:1;min-width:180px}
+#notepadButton{flex:none}
+.notepad-window{position:fixed;display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--panel);color:var(--ink);border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad);min-width:0;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);isolation:isolate}
+.notepad-handle{display:flex;flex:none;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);padding:4px 6px;cursor:move;touch-action:none;user-select:none}
+.notepad-caption{font-family:"Pixelify Sans",monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+.notepad-handle .btn{padding:2px 9px;min-height:30px;flex:none;box-shadow:none}
+.notepad-title{width:100%;flex:none;padding:8px!important}
+.notepad-body{width:100%;flex:1;min-height:0;resize:none;overflow:auto;overscroll-behavior:contain;font:17px/1.5 system-ui,sans-serif;scrollbar-gutter:stable}
+.notepad-list{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.notepad-row{display:flex;align-items:center;gap:8px;margin:0 5px 10px 0}
+.notepad-open{flex:1;min-width:0;justify-content:flex-start;text-align:left;overflow-wrap:anywhere}
+.notepad-footer{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:none;max-height:90px;overflow:auto;font:14px/1.4 system-ui,sans-serif}
+.notepad-library-status,.notepad-empty{font-size:18px}.notepad-library-status:empty{display:none}
+.notepad-grip{position:absolute;z-index:2;touch-action:none}
+.grip-n,.grip-s{left:8px;right:8px;height:8px;cursor:ns-resize}.grip-n{top:-4px}.grip-s{bottom:-4px}
+.grip-e,.grip-w{top:8px;bottom:8px;width:8px;cursor:ew-resize}.grip-e{right:-4px}.grip-w{left:-4px}
+.grip-ne,.grip-nw,.grip-se,.grip-sw{width:12px;height:12px}.grip-ne{right:-4px;top:-4px;cursor:nesw-resize}.grip-nw{left:-4px;top:-4px;cursor:nwse-resize}.grip-se{right:-4px;bottom:-4px;cursor:nwse-resize;border-right:3px solid var(--gold);border-bottom:3px solid var(--gold)}.grip-sw{left:-4px;bottom:-4px;cursor:nesw-resize}
+@media(max-width:720px){.hall-page #meBox{flex-basis:100%}.notepad-window{gap:6px;padding:8px}.notepad-window .btn{font-size:18px}}

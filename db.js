@@ -76,6 +76,15 @@ CREATE TABLE IF NOT EXISTS online (
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(school_id, channel, id);
+CREATE TABLE IF NOT EXISTS quick_notes (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL DEFAULT '',
+  revision INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_quick_notes_owner ON quick_notes(user_id, updated_at);
 CREATE TABLE IF NOT EXISTS personal_groups (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, school_id INTEGER NOT NULL REFERENCES schools(id),
   creator_id INTEGER NOT NULL REFERENCES users(id), created_at TEXT NOT NULL DEFAULT (datetime('now'))

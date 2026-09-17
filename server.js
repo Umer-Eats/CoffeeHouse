@@ -11,6 +11,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const db = require('./db');
 const ai = require('./ai');
+const notes = require('./quick-notes').quickNotes(db);
 const {moderateMessage} = require('./moderation');
 const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
@@ -539,6 +540,18 @@ app.get('/api/brewer/docs', requireAuth, async (req, res) => {
 });
 
 /* ---------------- pages ---------------- */
+app.get('/api/notes',requireAuth,async(req,res)=>{
+  try{res.json(await notes.list(req.user.id));}catch{res.status(500).json({error:'Could not load your notes. Please retry.'});}
+});
+app.post('/api/notes',requireAuth,async(req,res)=>{
+  try{res.status(201).json(await notes.create(req.user.id));}catch{res.status(500).json({error:'Could not create a note. Please retry.'});}
+});
+app.put('/api/notes/:id',requireAuth,async(req,res)=>{
+  try{res.json(await notes.save(req.user.id,req.params.id,req.body));}catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not save your note. Please retry.'});}
+});
+app.delete('/api/notes/:id',requireAuth,async(req,res)=>{
+  try{await notes.remove(req.user.id,req.params.id);res.json({ok:true});}catch{res.status(500).json({error:'Could not delete your note. Please retry.'});}
+});
 for (const [route, remove] of [
   ['/api/brewer/docs/:id', db.deleteBrewDoc],
   ['/api/ai/baristi/cheats/:id', db.deleteCheatSheet]
