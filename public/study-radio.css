@@ -1,8 +1,9 @@
+.room-banner-radio{display:grid;grid-template-columns:minmax(0,1fr) 360px minmax(64px,.4fr)}
+.room-banner-radio>svg{justify-self:end}
 .room-banner-radio .room-banner-copy{flex:1;min-width:0}
-.study-radio{flex:0 1 400px;width:400px;min-width:200px;margin:0}
+.study-radio{flex:0 1 360px;width:360px;min-width:200px;margin:0}
 .study-radio iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:2px solid var(--border);background:#000;box-shadow:3px 3px 0 var(--shad)}
 .study-radio figcaption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font:18px "VT323",monospace;color:var(--gold)}
 .study-radio a{text-decoration:underline;text-underline-offset:3px}
 .study-radio a:hover{color:var(--ink)}
-.study-radio-fallback{color:var(--soft)}
-@media(max-width:1000px){.room-banner-radio{flex-wrap:wrap}.room-banner-radio .room-banner-copy{flex-basis:calc(100% - 90px)}.room-banner-radio>svg{order:1}.room-banner-radio .study-radio{order:2;flex:0 1 400px;width:100%;max-width:100%;margin-inline:auto}}
+@media(max-width:1000px){.room-banner-radio{display:flex;flex-wrap:wrap}.room-banner-radio .room-banner-copy{flex-basis:calc(100% - 90px)}.room-banner-radio>svg{order:1}.room-banner-radio .study-radio{order:2;flex:0 1 360px;width:100%;max-width:100%;margin-inline:auto}}
