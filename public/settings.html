@@ -45,7 +45,7 @@
 
 
     <div class="card pixel-border">
-      <h2>Your account</h2><p class="note">Your identity is provided by Google.</p>
+      <h2>Your account</h2><p class="note">Sign in with Google and choose the name other students see.</p>
       <div class="profile">
         <span class="avatar" id="meAvatar"></span>
         <div>
@@ -53,6 +53,14 @@
           <div class="p-email" id="meEmail">...</div>
         </div>
       </div>
+      <form id="displayNameForm" style="margin-top:28px">
+        <label for="displayName">Display name</label>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap">
+          <input id="displayName" name="displayName" type="text" maxlength="50" required autocomplete="nickname" aria-describedby="displayNameStatus">
+          <button class="btn matcha" id="saveDisplayName" type="submit">SAVE NAME</button>
+        </div>
+        <p class="note" id="displayNameStatus" role="status">This name is visible to other students.</p>
+      </form>
     </div>
 
     <div class="card pixel-border">
@@ -94,6 +102,7 @@
       av.style.background = colorFor(me.user.name);
       av.innerHTML = me.user.picture ? `<img src="${esc(me.user.picture)}">` : esc(initials(me.user.name));
       $('meName').textContent = me.user.name;
+      $('displayName').value = me.user.name;
       $('meEmail').textContent = me.user.email;
       $('curSchool').textContent = me.school.name;
 
@@ -102,6 +111,20 @@
         `<option value="${s.id}" ${s.id === me.school.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
     }
 
+    $('displayNameForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('saveDisplayName').disabled=true;
+      $('displayNameStatus').textContent='Saving…';
+      try{
+        const result=await api('/api/me/display-name',{method:'PUT',body:{name:$('displayName').value}});
+        $('displayName').value=result.name;
+        $('meName').textContent=result.name;
+        $('meAvatar').style.background=colorFor(result.name);
+        if(!$('meAvatar').querySelector('img'))$('meAvatar').textContent=initials(result.name);
+        $('displayNameStatus').textContent='Saved. Other students will see this name.';
+      }catch(err){$('displayNameStatus').textContent=err.message;}
+      finally{$('saveDisplayName').disabled=false;}
+    });
     $('changeSchool').addEventListener('click', async () => {
       $('changeSchool').disabled = true;
       const st = $('schoolStatus');

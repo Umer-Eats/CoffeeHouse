@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS user_display_names (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS schools (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT UNIQUE NOT NULL
@@ -181,7 +185,7 @@ async function upsertUser(profile) {
   const existing = await get('SELECT * FROM users WHERE firebase_uid = ?', profile.sub);
   if (existing) {
     await run(
-      'UPDATE users SET email = ?, name = ?, picture = COALESCE(?, picture) WHERE id = ?',
+      'UPDATE users SET email = ?, name = COALESCE((SELECT name FROM user_display_names WHERE user_id=users.id), ?), picture = COALESCE(?, picture) WHERE id = ?',
       profile.email, profile.name, profile.picture || null, existing.id
     );
     return get('SELECT * FROM users WHERE id = ?', existing.id);
@@ -189,7 +193,7 @@ async function upsertUser(profile) {
   const emailMatch = await get('SELECT * FROM users WHERE email = ?', profile.email);
   if (emailMatch) {
     await run(
-      'UPDATE users SET firebase_uid = ?, name = ?, picture = COALESCE(?, picture) WHERE id = ?',
+      'UPDATE users SET firebase_uid = ?, name = COALESCE((SELECT name FROM user_display_names WHERE user_id=users.id), ?), picture = COALESCE(?, picture) WHERE id = ?',
       profile.sub, profile.name, profile.picture || null, emailMatch.id
     );
     return get('SELECT * FROM users WHERE id = ?', emailMatch.id);

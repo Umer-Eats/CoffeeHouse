@@ -225,6 +225,17 @@ app.post('/api/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
+app.put('/api/me/display-name', requireAuth, async (req, res) => {
+  const name=typeof req.body?.name==='string'?req.body.name.trim().replace(/\s+/g,' '):'';
+  if(!name||name.length>50||/[\u0000-\u001f\u007f]/.test(name))return res.status(400).json({error:'Enter a display name between 1 and 50 characters.'});
+  try{
+    await db.client.batch([
+      {sql:'INSERT INTO user_display_names(user_id,name) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET name=excluded.name',args:[req.user.id,name]},
+      {sql:'UPDATE users SET name=? WHERE id=?',args:[name,req.user.id]}
+    ],'write');
+    res.json({name});
+  }catch{res.status(500).json({error:'Could not save your display name. Please try again.'});}
+});
 app.get('/api/me', requireAuth, async (req, res) => {
   const school = await db.getUserSchool(req.user.id);
   res.json({ user: publicUser(req.user), school: school ? { id: school.id, name: school.name } : null });

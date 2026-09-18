@@ -215,7 +215,7 @@
 
     async function loadStudents() {
       STUDENTS = await api('/api/students');
-      renderStudents('');
+      renderStudents($('studentSearch').value);
     }
 
     async function loadDMs() {
@@ -300,7 +300,7 @@
         }
       } catch { /* Keep conversation available if activity polling fails. */ }
       if (requested !== current.key) return;
-      const sig = msgs.map(m => m.id + ':' + !!m.attachment).join(',');
+      const sig = JSON.stringify(msgs);
       if (sig !== lastSig) {
         lastSig = sig;
         const scroll = $('msgScroll');
@@ -500,6 +500,7 @@
           ChatFiles.clear();
           await refreshMessages();
           await loadDMs();
+          await loadStudents();
         } catch (err) {
           inp.value = txt;
           $('hallStatus').textContent = 'Could not send: ' + err.message;
