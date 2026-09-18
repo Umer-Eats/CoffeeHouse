@@ -4,7 +4,7 @@
   if(!frame)return;
   // Session storage survives reloads and page navigation, without competing tabs.
   const key='coffeehouse.radio.v1';
-  const playlist='PLYs708nM2aGMhTE4jTvFMVKR04SfmdJMb';
+  const playlist='PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7';
   let saved=null,player,ready=false,playing=false,settled=false;
   try{
     const value=JSON.parse(sessionStorage.getItem(key));

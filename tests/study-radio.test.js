@@ -5,13 +5,13 @@ const fs=require('node:fs');
 const script=fs.readFileSync(require('node:path').join(__dirname,'../public/study-radio.js'),'utf8');
 function boot(saved){
   let stored=saved,events,tick,loaded,cued;
-  const frame={src:'https://www.youtube-nocookie.com/embed/EjrZsN4Eb5Q?list=PLYs708nM2aGMhTE4jTvFMVKR04SfmdJMb'};
-  const player={setLoop(){},setVolume(v){this.volume=v;},mute(){this.muted=true;},unMute(){this.muted=false;},loadPlaylist(v){loaded=v;},cuePlaylist(v){cued=v;},getVideoUrl:()=> 'https://www.youtube.com/watch?v=EjrZsN4Eb5Q',getPlaylistIndex:()=>3,getCurrentTime:()=>123,getVolume:()=>42,isMuted:()=>true};
+  const frame={src:'https://www.youtube-nocookie.com/embed/lSLwapzJNaE?list=PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7'};
+  const player={setLoop(){},setVolume(v){this.volume=v;},mute(){this.muted=true;},unMute(){this.muted=false;},loadPlaylist(v){loaded=v;},cuePlaylist(v){cued=v;},getVideoUrl:()=> 'https://www.youtube.com/watch?v=lSLwapzJNaE',getPlaylistIndex:()=>3,getCurrentTime:()=>123,getVolume:()=>42,isMuted:()=>true};
   const context={URL,sessionStorage:{getItem:()=>stored,setItem:(k,v)=>stored=v},location:{origin:'https://www.coffee-house.app'},document:{querySelector:()=>frame,addEventListener(){}},window:{YT:{Player:true},addEventListener(){}},YT:{Player:function(f,opts){events=opts.events;return player;}},setInterval(fn){tick=fn;}};
   vm.runInNewContext(script,context);events.onReady({target:player});
   return {player,events,tick,stored:()=>stored,loaded:()=>loaded,cued:()=>cued};
 }
-const saved=playing=>JSON.stringify({playlist:'PLYs708nM2aGMhTE4jTvFMVKR04SfmdJMb',video:'EjrZsN4Eb5Q',index:3,time:123,volume:42,muted:true,playing});
+const saved=playing=>JSON.stringify({playlist:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',video:'lSLwapzJNaE',index:3,time:123,volume:42,muted:true,playing});
 test('restores playing track, offset, volume and mute',()=>{
   const app=boot(saved(true));assert.equal(app.loaded().index,3);assert.equal(app.loaded().startSeconds,123);assert.equal(app.player.volume,42);assert.equal(app.player.muted,true);
 });
