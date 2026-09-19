@@ -25,7 +25,7 @@
     if(!ready||button.dataset.station===station)return;
     station=button.dataset.station;playlist=stations[station].list;settled=false;playing=true;
     try{sessionStorage.setItem(key+'.station',station);sessionStorage.removeItem(key);}catch{}
-    showStation();player.loadPlaylist({listType:'playlist',list:playlist,index:0,startSeconds:0});player.setLoop(true);
+    showStation();player.loadPlaylist({list:playlist,index:0,startSeconds:0});player.setLoop(true);
   }));
   function syncControls(){
     const active=[1,3].includes(player.getPlayerState());
@@ -54,6 +54,7 @@
   source.searchParams.set('enablejsapi','1');
   source.searchParams.set('origin',location.origin);
   source.searchParams.set('list',playlist);
+  source.searchParams.set('controls','0');
   if(station!=='jazz')source.pathname='/embed/videoseries';
   if(saved){
     source.pathname='/embed/'+saved.video;
@@ -79,7 +80,7 @@
           player.setVolume(saved.volume);
           if(saved.muted)player.mute();else player.unMute();
           playing=saved.playing===true;
-          const options={listType:'playlist',list:playlist,index:saved.index,startSeconds:saved.time};
+          const options={list:playlist,index:saved.index,startSeconds:saved.time};
           if(playing)player.loadPlaylist(options);else player.cuePlaylist(options);
         }
       },

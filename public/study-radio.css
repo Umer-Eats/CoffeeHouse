@@ -11,6 +11,7 @@
 .radio-controls .btn:disabled{opacity:.5;cursor:wait;transform:none}
 .study-radio figcaption{grid-column:1}
 .study-radio iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:2px solid var(--border);background:#000;box-shadow:3px 3px 0 var(--shad)}
+.study-radio iframe{pointer-events:none}
 .study-radio figcaption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font:18px "VT323",monospace;color:var(--gold)}
 .study-radio a{text-decoration:underline;text-underline-offset:3px}
 .study-radio a:hover{color:var(--ink)}
