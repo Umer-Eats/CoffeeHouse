@@ -9,16 +9,31 @@ function boot(saved){
   const controls=['previous','next','toggle','up','down'].map(action=>({dataset:{radio:action},setAttribute(){},addEventListener(type,fn){this.click=fn;}}));
   const player={setLoop(){},setVolume(v){this.volume=v;},mute(){this.muted=true;},unMute(){this.muted=false;},loadPlaylist(v){loaded=v;},cuePlaylist(v){cued=v;},getVideoUrl:()=> 'https://www.youtube.com/watch?v=lSLwapzJNaE',getPlaylistIndex:()=>3,getCurrentTime:()=>123,getVolume:()=>42,isMuted:()=>true};
   const context={URL,sessionStorage:{getItem:()=>stored,setItem:(k,v)=>stored=v},location:{origin:'https://www.coffee-house.app'},document:{querySelector:()=>frame,addEventListener(){}},window:{YT:{Player:true},addEventListener(){}},YT:{Player:function(f,opts){events=opts.events;return player;}},setInterval(fn){tick=fn;}};
-  context.document.querySelectorAll=()=>controls;
+  const stationButtons=['jazz','hiphop','indie'].map(station=>({dataset:{station},setAttribute(){},addEventListener(type,fn){this.click=fn;}}));
+  context.document.querySelectorAll=selector=>selector==='[data-station]'?stationButtons:controls;
+  const credit={};
+  context.document.querySelector=selector=>selector==='.study-radio iframe'?frame:credit;
+  const choices={};
+  context.sessionStorage.getItem=k=>k.endsWith('.station')?choices.station:stored;
+  context.sessionStorage.setItem=(k,v)=>{if(k.endsWith('.station'))choices.station=v;else stored=v;};
+  context.sessionStorage.removeItem=()=>stored=null;
   player.getPlayerState=()=>player.state||2;
   player.previousVideo=()=>player.previous=true;
   player.nextVideo=()=>player.next=true;
   player.playVideo=()=>player.state=1;
   player.pauseVideo=()=>player.state=2;
   vm.runInNewContext(script,context);events.onReady({target:player});
-  return {player,events,tick,controls,stored:()=>stored,loaded:()=>loaded,cued:()=>cued};
+  return {player,events,tick,controls,stationButtons,credit,choices,stored:()=>stored,loaded:()=>loaded,cued:()=>cued};
 }
 const saved=playing=>JSON.stringify({playlist:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',video:'lSLwapzJNaE',index:3,time:123,volume:42,muted:true,playing});
+test('genre buttons switch playlists, credit and saved selection',()=>{
+  const app=boot(saved(false));
+  app.stationButtons[2].click();
+  assert.equal(app.loaded().list,'PLhT4JwDPPf89IGvy-7JcK5U6tibi6IBvl');
+  assert.equal(app.credit.textContent,'@napsea');assert.equal(app.choices.station,'indie');assert.equal(app.stored(),null);
+  app.stationButtons[1].click();assert.equal(app.loaded().list,'PL-oM23jv3aFJFCSy3WMirbB_xLVnyehrF');assert.equal(app.credit.href,'https://www.youtube.com/@DJ___NBA');
+  app.stationButtons[0].click();assert.equal(app.credit.textContent,'@ICYFOG');
+});
 test('controls skip tracks, toggle playback and clamp player-only volume',()=>{
   const app=boot(null),p=app.player;
   const click=action=>app.controls.find(b=>b.dataset.radio===action).click();

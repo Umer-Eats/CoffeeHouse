@@ -4,9 +4,29 @@
   if(!frame)return;
   // Session storage survives reloads and page navigation, without competing tabs.
   const key='coffeehouse.radio.v1';
-  const playlist='PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7';
+  const stations={
+    jazz:{list:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',credit:'@ICYFOG'},
+    hiphop:{list:'PL-oM23jv3aFJFCSy3WMirbB_xLVnyehrF',credit:'@DJ___NBA'},
+    indie:{list:'PLhT4JwDPPf89IGvy-7JcK5U6tibi6IBvl',credit:'@napsea'}
+  };
+  let station='jazz';
+  try{const choice=sessionStorage.getItem(key+'.station');if(Object.hasOwn(stations,choice))station=choice;}catch{}
+  let playlist=stations[station].list;
+  const stationButtons=Array.from(document.querySelectorAll('[data-station]'));
+  const credit=document.querySelector('.study-radio figcaption a');
+  function showStation(){
+    if(credit){credit.textContent=stations[station].credit;credit.href='https://www.youtube.com/'+stations[station].credit;}
+    stationButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.station===station)));
+  }
+  showStation();
   let saved=null,player,ready=false,playing=false,settled=false;
   const controls=Array.from(document.querySelectorAll('[data-radio]'));
+  stationButtons.forEach(button=>button.addEventListener('click',()=>{
+    if(!ready||button.dataset.station===station)return;
+    station=button.dataset.station;playlist=stations[station].list;settled=false;playing=true;
+    try{sessionStorage.setItem(key+'.station',station);sessionStorage.removeItem(key);}catch{}
+    showStation();player.loadPlaylist({listType:'playlist',list:playlist,index:0,startSeconds:0});player.setLoop(true);
+  }));
   function syncControls(){
     const active=[1,3].includes(player.getPlayerState());
     const toggle=controls.find(button=>button.dataset.radio==='toggle');
@@ -33,6 +53,8 @@
   const source=new URL(frame.src);
   source.searchParams.set('enablejsapi','1');
   source.searchParams.set('origin',location.origin);
+  source.searchParams.set('list',playlist);
+  if(station!=='jazz')source.pathname='/embed/videoseries';
   if(saved){
     source.pathname='/embed/'+saved.video;
     source.searchParams.set('start',String(Math.floor(saved.time)));
@@ -52,6 +74,7 @@
       onReady(event){
         player=event.target;ready=true;player.setLoop(true);
         controls.forEach(button=>button.disabled=false);
+        stationButtons.forEach(button=>button.disabled=false);
         if(saved){
           player.setVolume(saved.volume);
           if(saved.muted)player.mute();else player.unMute();
