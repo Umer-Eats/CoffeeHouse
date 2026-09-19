@@ -21,11 +21,18 @@
   showStation();
   let saved=null,player,ready=false,playing=false,settled=false;
   const controls=Array.from(document.querySelectorAll('[data-radio]'));
-  stationButtons.forEach(button=>button.addEventListener('click',()=>{
+stationButtons.forEach(button=>button.addEventListener('click',()=>{
     if(!ready||button.dataset.station===station)return;
     station=button.dataset.station;playlist=stations[station].list;settled=false;playing=true;
     try{sessionStorage.setItem(key+'.station',station);sessionStorage.removeItem(key);}catch{}
-    showStation();player.loadPlaylist({list:playlist,index:0,startSeconds:0});player.setLoop(true);
+    showStation();
+    // Replace iframe src so the entire YouTube API loads per playlist
+    const source=new URL(frame.src);
+    source.searchParams.set('list',playlist);
+    source.searchParams.delete('start');
+    frame.src=source.href;
+    player=null;ready=false;
+    if(window.YT?.Player)initialize();
   }));
   function syncControls(){
     const active=[1,3].includes(player.getPlayerState());
