@@ -175,7 +175,7 @@
       span.textContent = 'Selected: ' + brewPdfFile.name + ' (' + Math.round(brewPdfFile.size / 1024 / 1024) + ' MB) ';
       const btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'btn'; btn.textContent = '\u00d7'; btn.title = 'Remove PDF';
-      btn.style.cssText = 'padding:2px 8px;font-size:14px;background:var(--danger);color:#fff;min-width:auto;';
+      btn.style.cssText = 'padding:2px 6px;font-size:14px;line-height:1;background:var(--danger);color:#fff;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;';
       btn.addEventListener('click', () => { brewPdfFile = null; $('brewPdfInput').value = ''; renderPdfStatus(); $('brewPdfPreview').innerHTML = ''; });
       status.appendChild(span);
       status.appendChild(btn);

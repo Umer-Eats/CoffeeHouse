@@ -17,7 +17,7 @@ const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 const {resolveAttachments} = require('./blob-helpers');
-const {handleUpload} = require('@vercel/blob/client');
+const {generateClientTokenFromReadWriteToken} = require('@vercel/blob/client');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
@@ -504,23 +504,21 @@ app.post('/api/groups/:id/leave',requireAuth,requireSchool,async(req,res)=>{
 
 app.post('/api/blob/upload', requireAuth, async (req, res) => {
   try {
-    const body = req.body;
-    const result = await handleUpload({
-      request: req,
-      body,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      onBeforeGenerateToken: async (pathname, clientPayload, multipart) => {
-        // Only allow images and PDFs, limit to 50 MB
-        const ext = (pathname.split('.').pop() || '').toLowerCase();
-        const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
-        if (!allowed.includes(ext)) throw new Error('File type not allowed.');
-        return {
-          maximumSizeInBytes: 50 * 1024 * 1024,
-          allowedContentTypes: ['image/jpeg','image/png','image/webp','image/gif','application/pdf'],
-        };
-      },
+    const { type, payload } = req.body || {};
+    if (type !== 'blob.generate-client-token') {
+      return res.status(400).json({ error: 'Invalid upload event type.' });
+    }
+    const { pathname } = payload || {};
+    if (!pathname) return res.status(400).json({ error: 'Missing pathname.' });
+    const ext = (pathname.split('.').pop() || '').toLowerCase();
+    const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
+    if (!allowed.includes(ext)) return res.status(400).json({ error: 'File type not allowed.' });
+    const clientToken = await generateClientTokenFromReadWriteToken({
+      pathname,
+      maximumSizeInBytes: 50 * 1024 * 1024,
+      allowedContentTypes: ['image/jpeg','image/png','image/webp','image/gif','application/pdf'],
     });
-    res.json(result);
+    res.json({ clientToken });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
