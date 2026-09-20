@@ -55,7 +55,7 @@ async function generate(genAI, model, prompt, system = null, images = []) {
     'Analyze diagrams, handwriting, and visible text. Say when details are unclear; do not invent unreadable content. ';
   const req = {contents:[{role:'user',parts}]};
   if (system) req.systemInstruction = system + (images.length ? imageGuidance : '');
-  const result = await withRetry(() => genAI.getGenerativeModel({ model }).generateContent(req, {timeout:15000}));
+  const result = await withRetry(() => genAI.getGenerativeModel({ model }).generateContent(req, {timeout: images.length ? 60000 : 15000}));
   const text = result.response.text();
   if (!text) throw new Error('AI returned an empty response.');
   return text.trim();
