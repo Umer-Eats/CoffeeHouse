@@ -118,7 +118,7 @@
           <input id="brewPdfInput" type="file" accept="application/pdf" hidden>
           <button id="brewPdfButton" type="button" class="btn">Attach PDF to Brewer</button>
           <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
-          <p class="pdf-hint">Upload a PDF study guide (up to 3 MB). PDF text will be used for notes. Original PDF is not saved.</p>
+          <p class="pdf-hint">Upload a PDF study guide (up to 20 MB). PDF text will be used for notes. Original PDF is not saved.</p>
           <div class="image-preview" id="brewImagePreview"></div>
           <p class="image-status" id="brewImageStatus" role="status" aria-live="polite"></p>
           <div class="pdf-preview" id="brewPdfPreview"></div>
@@ -158,12 +158,13 @@
   <script src="/ai-format.js"></script>
   <script src="/companions.js"></script>
   <script src="/ai-images.js"></script>
+<script src="/blob-upload.js"></script>
   <script>
     const $ = id => document.getElementById(id);
     const barImages = AIImages.create('bar', 'baristi', 'barSend');
     const brewImages = AIImages.create('brew', 'brewer', 'brewBtn');
 
-    const MAX_PDF_SIZE = 3 * 1024 * 1024; // 3 MB (base64 inflation + Vercel payload limit ~4.5 MB)
+    const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20 MB (blob uploads bypass serverless limit)
     let brewPdfFile = null;
 
     $('brewPdfButton').addEventListener('click', () => $('brewPdfInput').click());
@@ -269,7 +270,12 @@
       addChat(q || 'Please explain these images.', false, false, images);
       const think = addChat('Pouring a fresh answer...', true, true);
       try {
-        const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q, images: images.map(({mimeType,data})=>({mimeType,data})) } });
+        const attachments = [];
+        for (const img of images) {
+          const uploaded = await VercelBlob.uploadBase64(img, { prefix: 'coffeehouse-barista' });
+          attachments.push({ mimeType: img.mimeType, url: uploaded.url });
+        }
+        const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q, images: attachments } });
         think.remove();
         addChat('@baristi ' + res.reply, true);
         barImages.clear();
@@ -382,17 +388,16 @@
       CoffeeCompanions.setBusy('brewer', true);
       $('brewBtn').textContent = 'BREWING...';
       try {
-        const pdfData = brewPdfFile ? [{
-          mimeType: 'application/pdf',
-          data: await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(brewPdfFile);
-          })
-        }] : [];
-        const allImages = [...images, ...pdfData];
-        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: allImages.map(({mimeType,data})=>({mimeType,data})) } });
+        const attachments = [];
+        for (const img of images) {
+          const uploaded = await VercelBlob.uploadBase64(img, { prefix: 'coffeehouse-brewer' });
+          attachments.push({ mimeType: img.mimeType, url: uploaded.url });
+        }
+        if (brewPdfFile) {
+          const uploaded = await VercelBlob.upload(brewPdfFile, { prefix: 'coffeehouse-brewer' });
+          attachments.push({ mimeType: 'application/pdf', url: uploaded.url });
+        }
+        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: attachments } });
         renderBrewDoc({ title: res.title || 'Study notes', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
         brewImages.clear();
         brewPdfFile = null;

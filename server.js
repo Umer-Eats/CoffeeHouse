@@ -28,9 +28,9 @@ const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'public', 'settings.h
 const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-assistant.html'), 'utf8');
 
 const app = express();
-app.use(express.json({ limit: '200mb' })); // Support PDF uploads up to 200 MB base64-encoded
+app.use(express.json({ limit: '1mb' })); // Blob uploads keep payloads small; only URLs + text are sent
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.too.large') return res.status(413).json({error:'Payload too large. Please use smaller images or a shorter PDF (max 3 MB).'});
+  if (err.type === 'entity.too.large') return res.status(413).json({error:'Payload too large. Please try again.'});
   if (err.type === 'entity.parse.failed') return res.status(400).json({error:'The request could not be read. Please try again.'});
   next(err);
 });
