@@ -10,8 +10,8 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 for (const file of ['public/index.html', 'public/student.html', 'public/settings.html', 'public/ai-assistant.html']) {
   test(file + ' has valid scripts and no duplicate IDs', () => {
     const html = read(file);
-    for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
-      new vm.Script(match[1], { filename: file });
+    for (const match of html.matchAll(/<script(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g)) {
+      if (match[1].trim()) new vm.Script(match[1], { filename: file });
     }
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
     assert.equal(new Set(ids).size, ids.length, 'duplicate element IDs');

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CoffeeHouse">
+  <path fill="#f7cf89" d="M27 2h4v7h-4V6h-4V2zm13 4h4v6h-4v6h-4v-6h4z"/>
+  <path fill="#f7cf89" d="M8 21h40v4h8v5h3v12h-4v5h-8v5H37v5H17v-4h-6v-7H8zM48 29v13h6V29zM13 52h35v4H13zM6 48h7v5H6zm42 0h7v5h-7z"/>
+  <path fill="#502d16" d="M13 24h32v7H13z"/>
+  <path fill="#e4bb7c" d="M39 34h6v13h-5v5H28v-4h9z"/>
+</svg>
