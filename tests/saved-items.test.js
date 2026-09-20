@@ -30,8 +30,9 @@ test('delete confirmation cancels safely, reports failure, and refreshes after s
 test('download uses rendered content and native offline math instead of external assets',()=>{
   const source=read('public/saved-items.js');
   new vm.Script(source);
-  assert.match(source,/AIFormat.render\(doc.body\)/);
+  assert.match(source,/AIFormat.render\(doc\.body\)/);
   assert.match(source,/querySelectorAll\('\.katex-html'\)/);
-  assert.match(source,/text\/html;charset=utf-8/);
-  assert.match(source,/URL.revokeObjectURL/);
+  assert.match(source,/window\.open/);
+  assert.match(source,/win\.document\.write\(html\)/);
+  assert.match(source,/win\.print\(\)/);
 });

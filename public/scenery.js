@@ -1,8 +1,19 @@
 /* Animate the existing painting in source-image coordinates, keeping UI separate. */
 'use strict';
 // Pure geometry shared by the renderer and interaction regression tests.
-function sceneryPoint() { return {x:0,y:0}; }
-function leafRepulsion() { return {x:0,y:0}; }
+function sceneryPoint(cx, cy, rect) {
+  return {x: (cx - rect.left) * 1751 / rect.width, y: (cy - rect.top) * 898 / rect.height};
+}
+function leafRepulsion(cursor, region) {
+  if (!cursor) return {x: 0, y: 0};
+  const rx = region[0], ry = region[1], rw = region[2], rh = region[3];
+  const dx = cursor.x - (rx + rw / 2), dy = cursor.y - (ry + rh / 2);
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const radius = Math.max(rw, rh) * 2;
+  if (dist > radius || dist === 0) return {x: 0, y: 0};
+  const strength = (1 - dist / radius) * 10;
+  return {x: -dx / dist * strength, y: -dy / dist * strength};
+}
 (function () {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let paused = false;

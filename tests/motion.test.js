@@ -18,7 +18,7 @@ test('every café page uses the shared scene and transition files', () => {
 });
 
 test('provider labels are absent from the AI UI', () => {
-  const html = read('ai-assistant.html');
+  const html = read('public/ai-assistant.html');
   assert.match(html, /id="engineStatus">Barista · Brewer</);
   assert.doesNotMatch(html, /Baristi =|Barista =|Brewer =|class="engine"/);
 });
@@ -43,7 +43,7 @@ function harness(attachments = []) {
     CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},AIFormat:require('../public/ai-format.js'),location:{},esc:String,nowTime:()=>'',
     api:(url,options)=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
       ?new Promise((yes,no)=>{requests.push({url,options});resolve=yes;reject=no;}):Promise.resolve([])});
-  const html=read('ai-assistant.html');
+  const html=read('public/ai-assistant.html');
   const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
   vm.runInContext(scripts.at(-1)[1],context);
   return {element,states,requests,imageState,resolve:value=>resolve(value),reject:err=>reject(err)};

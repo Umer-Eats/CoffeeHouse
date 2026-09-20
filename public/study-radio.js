@@ -18,7 +18,7 @@
     stationButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.station===station)));
   }
   showStation();
-  let saved=null,player,ready=false,playing=false,settled=false;
+  let saved=null,player,ready=false,playing=false,settled=false,pendingPause=false;
   const controls=Array.from(document.querySelectorAll('[data-radio]'));
 
   function persist(){
@@ -32,11 +32,8 @@
   }
 
   function syncControls(){
-    if(!player)return;
-    const state=player.getPlayerState();
-    const active=[1,3].includes(state);
     const toggle=controls.find(button=>button.dataset.radio==='toggle');
-    if(toggle){toggle.textContent=active?'Ⅱ':'▶';toggle.title=active?'Pause music':'Play music';toggle.setAttribute('aria-label',toggle.title);}
+    if(toggle){toggle.textContent=playing?'Ⅱ':'▶';toggle.title=playing?'Pause music':'Play music';toggle.setAttribute('aria-label',toggle.title);}
   }
 
   function initialize(){
@@ -55,8 +52,12 @@
         syncControls();
       },
       onStateChange(event){
-        if(event.data===1){playing=true;settled=true;}
-        else if(event.data===2){playing=false;settled=true;}
+        if(event.data===1){
+          if(pendingPause){player.pauseVideo();playing=false;pendingPause=false;}
+          else{playing=true;}
+          settled=true;
+        }
+        else if(event.data===2){playing=false;settled=true;pendingPause=false;}
         persist();syncControls();
       },
       onAutoplayBlocked(){}
@@ -79,23 +80,25 @@
   controls.forEach(button=>button.addEventListener('click',()=>{
     if(!ready)return;
     const action=button.dataset.radio;
-    const wasPlaying=[1,3].includes(player.getPlayerState());
-    if(action==='previous')player.previousVideo();
-    else if(action==='next')player.nextVideo();
-    else if(action==='toggle'){
-      if(wasPlaying)player.pauseVideo();else player.playVideo();
-      persist();syncControls();return;
+    if(action==='previous'){
+      player.previousVideo();
+      if(!playing)pendingPause=true;
+    }else if(action==='next'){
+      player.nextVideo();
+      if(!playing)pendingPause=true;
+    }else if(action==='toggle'){
+      if(playing){player.pauseVideo();playing=false;pendingPause=false;}
+      else{player.playVideo();playing=true;}
     }else{
-      const volume=player.isMuted()?0:player.getVolume();
-      const next=Math.max(0,Math.min(100,volume+(action==='up'?10:-10)));
-      player.setVolume(next);if(next>0)player.unMute();
-      persist();syncControls();return;
+      try{
+        const vol=player.isMuted()?0:player.getVolume();
+        const next=Math.max(0,Math.min(100,vol+(action==='up'?10:-10)));
+        player.setVolume(next);if(next>0)player.unMute();
+      }catch{}
     }
-    if(!wasPlaying)player.pauseVideo();
     persist();syncControls();
   }));
 
-  // Restore saved state
   try{
     const value=JSON.parse(sessionStorage.getItem(key));
     if(value?.playlist===playlist&&/^[\w-]{11}$/.test(value.video)&&Number.isFinite(value.time)&&value.time>=0&&Number.isInteger(value.index)&&value.index>=0&&Number.isFinite(value.volume)&&value.volume>=0&&value.volume<=100)saved=value;
