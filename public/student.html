@@ -527,68 +527,6 @@
       $('studentSearch').addEventListener('input', e => renderStudents(e.target.value));
     }
 
-    /* ---------- music player ---------- */
-    // YouTube IFrame Player API
-    var tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    var firstScript = document.getElementsByTagName('script')[0];
-    firstScript.parentNode.insertBefore(tag, firstScript);
-    var player;
-    onYouTubeIframeAPIReady = function() {
-      player = new YTPlayer('youtube-player');
-    };
-    
-    function YTPlayer(elementId) {
-      player = new YT.Player(elementId, {
-        videoId: '',
-        playerVars: {
-          'playsinline': 1,
-          'autohide': 1,
-          'controls': 1,
-          'showinfo': 0,
-          'rel': 0,
-          'playlist': 'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7'
-        },
-        events: {
-          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
-        }
-      });
-    }
-    
-    function onPlayerReady(event) {
-      event.target.playVideo();
-    }
-    
-    var done = false;
-    function onPlayerStateChange(event) {
-      if (event.data === YT.PlayerState.PLAYING && !done) {
-        done = true;
-      }
-    }
-    
-    // Music control buttons
-    document.querySelectorAll('[data-radio]').forEach(function(button) {
-      button.addEventListener('click', function() {
-        var action = button.dataset.radio;
-        switch(action) {
-          case 'toggle':
-            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
-              player.pauseVideo();
-            } else {
-              player.playVideo();
-            }
-            break;
-          case 'next':
-            player.nextVideo();
-            break;
-          case 'previous':
-            player.previousVideo();
-            break;
-        }
-      });
-    });
-    
     /* ---------- polling ---------- */
     function startPolling() {
       setInterval(async () => {

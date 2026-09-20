@@ -2,7 +2,6 @@
 (() => {
   const frame=document.querySelector('.study-radio iframe');
   if(!frame)return;
-  // Session storage survives reloads and page navigation, without competing tabs.
   const key='coffeehouse.radio.v1';
   const stations={
     jazz:{list:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',credit:'@ICYFOG'},
@@ -21,53 +20,7 @@
   showStation();
   let saved=null,player,ready=false,playing=false,settled=false;
   const controls=Array.from(document.querySelectorAll('[data-radio]'));
-stationButtons.forEach(button=>button.addEventListener('click',()=>{
-    if(!ready||button.dataset.station===station)return;
-    station=button.dataset.station;playlist=stations[station].list;settled=false;playing=true;
-    try{sessionStorage.setItem(key+'.station',station);sessionStorage.removeItem(key);}catch{}
-    showStation();
-    // Replace iframe src so the entire YouTube API loads per playlist
-    const source=new URL(frame.src);
-    source.searchParams.set('list',playlist);
-    source.searchParams.delete('start');
-    frame.src=source.href;
-    player=null;ready=false;
-    if(window.YT?.Player)initialize();
-  }));
-  function syncControls(){
-    const active=[1,3].includes(player.getPlayerState());
-    const toggle=controls.find(button=>button.dataset.radio==='toggle');
-    if(toggle){toggle.textContent=active?'Ⅱ':'▶';toggle.title=active?'Pause music':'Play music';toggle.setAttribute('aria-label',toggle.title);}
-  }
-  controls.forEach(button=>button.addEventListener('click',()=>{
-    if(!ready)return;
-    const action=button.dataset.radio;
-    if(action==='previous')player.previousVideo();
-    else if(action==='next')player.nextVideo();
-    else if(action==='toggle'){
-      if([1,3].includes(player.getPlayerState()))player.pauseVideo();else player.playVideo();
-    }else{
-      const volume=player.isMuted()?0:player.getVolume();
-      const next=Math.max(0,Math.min(100,volume+(action==='up'?10:-10)));
-      player.setVolume(next);if(next>0)player.unMute();
-    }
-    persist();syncControls();
-  }));
-  try{
-    const value=JSON.parse(sessionStorage.getItem(key));
-    if(value?.playlist===playlist&&/^[\w-]{11}$/.test(value.video)&&Number.isFinite(value.time)&&value.time>=0&&Number.isInteger(value.index)&&value.index>=0&&Number.isFinite(value.volume)&&value.volume>=0&&value.volume<=100)saved=value;
-  }catch{}
-  const source=new URL(frame.src);
-  source.searchParams.set('enablejsapi','1');
-  source.searchParams.set('origin',location.origin);
-  source.searchParams.set('list',playlist);
-  source.searchParams.set('controls','0');
-  if(station!=='jazz')source.pathname='/embed/videoseries';
-  if(saved){
-    source.pathname='/embed/'+saved.video;
-    source.searchParams.set('start',String(Math.floor(saved.time)));
-  }
-  frame.src=source.href;
+
   function persist(){
     if(!ready||!settled)return;
     try{
@@ -75,10 +28,19 @@ stationButtons.forEach(button=>button.addEventListener('click',()=>{
       const index=player.getPlaylistIndex(),time=player.getCurrentTime();
       if(!/^[\w-]{11}$/.test(video)||index<0||!Number.isFinite(time))return;
       sessionStorage.setItem(key,JSON.stringify({playlist,video,index,time,volume:player.getVolume(),muted:player.isMuted(),playing}));
-    }catch{} // Storage restrictions must not interrupt playback.
+    }catch{}
   }
+
+  function syncControls(){
+    if(!player)return;
+    const state=player.getPlayerState();
+    const active=[1,3].includes(state);
+    const toggle=controls.find(button=>button.dataset.radio==='toggle');
+    if(toggle){toggle.textContent=active?'Ⅱ':'▶';toggle.title=active?'Pause music':'Play music';toggle.setAttribute('aria-label',toggle.title);}
+  }
+
   function initialize(){
-    player=new YT.Player(frame, {events:{
+    player=new YT.Player(frame,{events:{
       onReady(event){
         player=event.target;ready=true;player.setLoop(true);
         controls.forEach(button=>button.disabled=false);
@@ -90,17 +52,67 @@ stationButtons.forEach(button=>button.addEventListener('click',()=>{
           const options={list:playlist,index:saved.index,startSeconds:saved.time};
           if(playing)player.loadPlaylist(options);else player.cuePlaylist(options);
         }
+        syncControls();
       },
       onStateChange(event){
         if(event.data===1){playing=true;settled=true;}
         else if(event.data===2){playing=false;settled=true;}
-        // A cued/restoring player can report time zero; preserve the saved offset
-        // until real playback or an explicit pause supplies a reliable position.
         persist();syncControls();
       },
-      onAutoplayBlocked(){ /* Native Play control resumes the restored video. */ }
+      onAutoplayBlocked(){}
     }});
   }
+
+  stationButtons.forEach(button=>button.addEventListener('click',()=>{
+    if(!ready||button.dataset.station===station)return;
+    station=button.dataset.station;playlist=stations[station].list;settled=false;
+    try{sessionStorage.setItem(key+'.station',station);sessionStorage.removeItem(key);}catch{}
+    showStation();
+    const source=new URL(frame.src);
+    source.searchParams.set('list',playlist);
+    source.searchParams.delete('start');
+    frame.src=source.href;
+    ready=false;
+    if(window.YT?.Player)initialize();
+  }));
+
+  controls.forEach(button=>button.addEventListener('click',()=>{
+    if(!ready)return;
+    const action=button.dataset.radio;
+    const wasPlaying=[1,3].includes(player.getPlayerState());
+    if(action==='previous')player.previousVideo();
+    else if(action==='next')player.nextVideo();
+    else if(action==='toggle'){
+      if(wasPlaying)player.pauseVideo();else player.playVideo();
+      persist();syncControls();return;
+    }else{
+      const volume=player.isMuted()?0:player.getVolume();
+      const next=Math.max(0,Math.min(100,volume+(action==='up'?10:-10)));
+      player.setVolume(next);if(next>0)player.unMute();
+      persist();syncControls();return;
+    }
+    if(!wasPlaying)player.pauseVideo();
+    persist();syncControls();
+  }));
+
+  // Restore saved state
+  try{
+    const value=JSON.parse(sessionStorage.getItem(key));
+    if(value?.playlist===playlist&&/^[\w-]{11}$/.test(value.video)&&Number.isFinite(value.time)&&value.time>=0&&Number.isInteger(value.index)&&value.index>=0&&Number.isFinite(value.volume)&&value.volume>=0&&value.volume<=100)saved=value;
+  }catch{}
+
+  const source=new URL(frame.src);
+  source.searchParams.set('enablejsapi','1');
+  source.searchParams.set('origin',location.origin);
+  source.searchParams.set('list',playlist);
+  source.searchParams.set('controls','0');
+  if(station!=='jazz')source.pathname='/embed/videoseries';
+  if(saved){
+    source.pathname='/embed/'+saved.video;
+    source.searchParams.set('start',String(Math.floor(saved.time)));
+  }
+  frame.src=source.href;
+
   if(window.YT?.Player)initialize();
   else{
     const previous=window.onYouTubeIframeAPIReady;
