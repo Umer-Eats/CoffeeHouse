@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+ <rect width="1200" height="760" fill="#12102d"/>
+ <text x="60" y="70" fill="#f5edff" font-family="monospace" font-size="28" font-weight="bold">Night-mode CoffeeHouse title options</text>
+ <g font-family="monospace" font-size="20" font-weight="bold">
+  <g transform="translate(60 120)"><rect width="1080" height="105" rx="8" fill="#1f1b45" stroke="#514878" stroke-width="2"/><text x="25" y="34" fill="#f5edff">1 · Moon Lavender · #C9B6FF</text><text x="25" y="84" fill="#f5edff" stroke="#c9b6ff" stroke-width="5" paint-order="stroke" font-size="43">CoffeeHouse</text><text x="330" y="84" fill="#c9b6ff" font-size="43">CoffeeHouse</text></g>
+  <g transform="translate(60 245)"><rect width="1080" height="105" rx="8" fill="#1f1b45" stroke="#514878" stroke-width="2"/><text x="25" y="34" fill="#f5edff">2 · Neon Peach · #FFB38A</text><text x="25" y="84" fill="#f5edff" stroke="#ffb38a" stroke-width="5" paint-order="stroke" font-size="43">CoffeeHouse</text><text x="330" y="84" fill="#ffb38a" font-size="43">CoffeeHouse</text></g>
+  <g transform="translate(60 370)"><rect width="1080" height="105" rx="8" fill="#1f1b45" stroke="#514878" stroke-width="2"/><text x="25" y="34" fill="#f5edff">3 · Sakura Pink · #FF8FD8</text><text x="25" y="84" fill="#f5edff" stroke="#ff8fd8" stroke-width="5" paint-order="stroke" font-size="43">CoffeeHouse</text><text x="330" y="84" fill="#ff8fd8" font-size="43">CoffeeHouse</text></g>
+  <g transform="translate(60 495)"><rect width="1080" height="105" rx="8" fill="#1f1b45" stroke="#514878" stroke-width="2"/><text x="25" y="34" fill="#f5edff">4 · Electric Mint · #78E6C7</text><text x="25" y="84" fill="#f5edff" stroke="#78e6c7" stroke-width="5" paint-order="stroke" font-size="43">CoffeeHouse</text><text x="330" y="84" fill="#78e6c7" font-size="43">CoffeeHouse</text></g>
+  <g transform="translate(60 620)"><rect width="1080" height="105" rx="8" fill="#1f1b45" stroke="#514878" stroke-width="2"/><text x="25" y="34" fill="#f5edff">5 · Golden Espresso · #F7CF89</text><text x="25" y="84" fill="#f5edff" stroke="#f7cf89" stroke-width="5" paint-order="stroke" font-size="43">CoffeeHouse</text><text x="330" y="84" fill="#f7cf89" font-size="43">CoffeeHouse</text></g>
+ </g>
+</svg>
