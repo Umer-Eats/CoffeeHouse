@@ -5,7 +5,7 @@ const {render} = require('../public/ai-format.js');
 test('browser library assets referenced by pages exist locally', () => {
   const fs = require('node:fs');
   const path = require('node:path');
-  for (const file of ['ai-assistant.html','student.html']) {
+  for (const file of ['public/ai-assistant.html','public/student.html']) {
     const html = fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     for (const match of html.matchAll(/(?:src|href)="\/vendor\/(katex|markdown-it)\/([^"]+)"/g)) {
       assert.ok(fs.existsSync(path.join(__dirname,'../node_modules',match[1],'dist',match[2])),match[0]);

@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 test('database timestamps convert from UTC to local time with daylight saving',()=>{
-  for(const file of ['client.js','public/app.js']){
+  for(const file of ['public/app.js']){
     const source=fs.readFileSync(path.join(__dirname,'..',file),'utf8');
     const start=source.indexOf('function fmtTime('),end=source.indexOf('const AVATAR_COLORS',start);
     for(const [zone,summer,winter] of [['America/New_York','12:01 am','11:01 pm'],['UTC','4:01 am','4:01 am'],['Asia/Kolkata','9:31 am','9:31 am']]){

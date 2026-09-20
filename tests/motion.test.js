@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
 test('every café page uses the shared scene and transition files', () => {
-  for (const file of ['index.html','student.html','settings.html','ai-assistant.html','public/chat.html','public/study.html','public/profile.html']) {
+  for (const file of ['public/index.html','public/student.html','public/settings.html','public/ai-assistant.html','public/chat.html','public/study.html','public/profile.html']) {
     const html = read(file);
     assert.match(html, /href="\/motion.css"/);
     assert.match(html, /src="\/scenery.js" defer/);

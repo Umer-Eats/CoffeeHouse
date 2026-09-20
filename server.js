@@ -18,12 +18,12 @@ const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
-const ART_JS = fs.readFileSync(path.join(__dirname, 'art.js'), 'utf8');
-const APP_JS = fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8');
-const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-const STUDENT_HTML = fs.readFileSync(path.join(__dirname, 'student.html'), 'utf8');
-const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'settings.html'), 'utf8');
-const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'ai-assistant.html'), 'utf8');
+const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
+const APP_JS = fs.readFileSync(path.join(__dirname, 'public', 'app.js'), 'utf8');
+const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+const STUDENT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'student.html'), 'utf8');
+const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'public', 'settings.html'), 'utf8');
+const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-assistant.html'), 'utf8');
 
 const app = express();
 app.use(express.json({ limit: '200mb' })); // Support PDF uploads up to 200 MB base64-encoded
