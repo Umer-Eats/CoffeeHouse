@@ -16,6 +16,8 @@ const {moderateMessage} = require('./moderation');
 const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
+const {resolveAttachments} = require('./blob-helpers');
+const {handleUpload} = require('@vercel/blob/client');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
@@ -28,7 +30,7 @@ const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-ass
 const app = express();
 app.use(express.json({ limit: '200mb' })); // Support PDF uploads up to 200 MB base64-encoded
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.too.large') return res.status(413).json({error:'These images are too large to send. Please use smaller images.'});
+  if (err.type === 'entity.too.large') return res.status(413).json({error:'Payload too large. Please use smaller images or a shorter PDF (max 3 MB).'});
   if (err.type === 'entity.parse.failed') return res.status(400).json({error:'The request could not be read. Please try again.'});
   next(err);
 });
@@ -498,12 +500,38 @@ app.post('/api/groups/:id/leave',requireAuth,requireSchool,async(req,res)=>{
   catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not leave group. Please try again.'});}
 });
 
+/* ---------------- Vercel Blob client-direct uploads ---------------- */
+
+app.post('/api/blob/upload', requireAuth, async (req, res) => {
+  try {
+    const body = req.body;
+    const result = await handleUpload({
+      request: req,
+      body,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      onBeforeGenerateToken: async (pathname, clientPayload, multipart) => {
+        // Only allow images and PDFs, limit to 50 MB
+        const ext = (pathname.split('.').pop() || '').toLowerCase();
+        const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
+        if (!allowed.includes(ext)) throw new Error('File type not allowed.');
+        return {
+          maximumSizeInBytes: 50 * 1024 * 1024,
+          allowedContentTypes: ['image/jpeg','image/png','image/webp','image/gif','application/pdf'],
+        };
+      },
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* ---------------- AI assistants ---------------- */
 
 app.post('/api/ai/baristi', requireAuth, async (req, res) => {
   try {
     const text = inputText(req.body?.text, 12000, 'Question');
-    const images = validateImages(req.body?.images);
+    const images = await resolveAttachments(req.body?.images);
     if (!text && !images.length) return res.status(400).json({error:'Add a question or an image.'});
     const reply = await ai.baristaReply(text, images);
     res.json({ reply });
@@ -535,7 +563,7 @@ app.post('/api/ai/brewer', requireAuth, async (req, res) => {
   try {
     const source = inputText(req.body?.source, 200, 'Source name');
     const text = inputText(req.body?.text, 60000, 'Source text');
-    const images = validateImages(req.body?.images);
+    const images = await resolveAttachments(req.body?.images);
     if (!text && !images.length) return res.status(400).json({error:'Add source text or an image to brew notes.'});
     const label = source || (images.length ? 'Attached images' : 'Pasted text');
     const { doc, engine } = await ai.brewNotes(label, text, images);

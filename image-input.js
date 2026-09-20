@@ -33,8 +33,8 @@ function validateImages(images) {
       if (image.data.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(image.data)) invalid('The PDF data is invalid. Please attach it again.');
       const bytes = Buffer.from(image.data, 'base64');
       if (!bytes.length) invalid('PDF is empty. Please attach a valid PDF.');
-      const maxPdfBytes = 200 * 1024 * 1024; // 200 MB decoded limit (accommodates base64 inflation)
-      if (bytes.length > maxPdfBytes) invalid('PDF is too large. Please attach a smaller PDF (max 100 MB file).');
+      const maxPdfBytes = 4 * 1024 * 1024; // 4 MB decoded limit (base64 inflation of 3 MB file + overhead)
+      if (bytes.length > maxPdfBytes) invalid('PDF is too large. Please attach a smaller PDF (max 3 MB).');
       return {mimeType:'application/pdf',data:image.data};
     }
     if (image.mimeType !== 'image/jpeg' && image.mimeType !== 'image/png' && image.mimeType !== 'image/webp') invalid('Please attach a JPEG, PNG, WebP, or PDF using the image picker.');

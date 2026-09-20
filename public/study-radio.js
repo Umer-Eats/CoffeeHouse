@@ -6,6 +6,7 @@
   const stations={
     jazz:{list:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',credit:'@ICYFOG'},
     hiphop:{list:'PL-oM23jv3aFJFCSy3WMirbB_xLVnyehrF',credit:'@DJ___NBA'},
+    lockin:{list:'PLHXjm-OqioH0',credit:'@productivityonyt'},
     indie:{list:'PLhT4JwDPPf89IGvy-7JcK5U6tibi6IBvl',credit:'@napsea'}
   };
   let station='jazz';

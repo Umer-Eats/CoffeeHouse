@@ -3,7 +3,7 @@
 .room-banner-radio .room-banner-copy{flex:1;min-width:0}
 .study-radio{display:grid;grid-template-columns:minmax(200px,360px) 44px 112px;column-gap:12px;flex:0 1 540px;width:540px;min-width:256px;margin:0}
 .radio-stations{display:flex;flex-direction:column;gap:8px}
-.radio-stations .btn{flex:1;padding:6px;font-size:18px;white-space:normal}
+.radio-stations .btn{flex:1;padding:4px;font-size:16px;white-space:normal;min-height:30px}
 .radio-stations .btn[aria-pressed="true"]{background:var(--gold);color:var(--head)}
 .radio-stations .btn:disabled{opacity:.5;cursor:wait}
 .radio-controls{display:flex;flex-direction:column;justify-content:space-between;gap:4px}

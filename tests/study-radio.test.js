@@ -9,7 +9,7 @@ function boot(saved){
   const controls=['previous','next','toggle','up','down'].map(action=>({dataset:{radio:action},setAttribute(){},addEventListener(type,fn){this.click=fn;}}));
   const player={setLoop(){},setVolume(v){this.volume=v;},mute(){this.muted=true;},unMute(){this.muted=false;},loadPlaylist(v){loaded=v;},cuePlaylist(v){cued=v;},getVideoUrl:()=> 'https://www.youtube.com/watch?v=lSLwapzJNaE',getPlaylistIndex:()=>3,getCurrentTime:()=>123,getVolume:()=>42,isMuted:()=>true,getPlayerState:()=>player.state||2,previousVideo:()=>player.previous=true,nextVideo:()=>player.next=true,playVideo:()=>player.state=1,pauseVideo:()=>player.state=2};
   context={URL,sessionStorage:{getItem:()=>stored,setItem:(k,v)=>stored=v},location:{origin:'https://www.coffee-house.app'},document:{querySelector:()=>frame,addEventListener(){}},window:{YT:{Player:true},addEventListener(){}},YT:{Player:function(f,opts){events=opts.events;return player;}},setInterval(fn){tick=fn;}};
-  const stationButtons=['jazz','hiphop','indie'].map(station=>({dataset:{station},setAttribute(){},addEventListener(type,fn){this.click=fn;}}));
+  const stationButtons=['jazz','hiphop','lockin','indie'].map(station=>({dataset:{station},setAttribute(){},addEventListener(type,fn){this.click=fn;}}));
   context.document.querySelectorAll=selector=>selector==='[data-station]'?stationButtons:controls;
   const credit={};
   context.document.querySelector=selector=>selector==='.study-radio iframe'?frame:credit;
@@ -23,7 +23,7 @@ function boot(saved){
 const saved=playing=>JSON.stringify({playlist:'PL9ndRPYDuLTe4zuQo8B3kfignCJ1RYyT7',video:'lSLwapzJNaE',index:3,time:123,volume:42,muted:true,playing});
 test('genre buttons switch playlists - indie',()=>{
   const app=boot(saved(false));
-  app.stationButtons[2].click();
+  app.stationButtons[3].click();
   assert.ok(app.frame.src.includes('PLhT4JwDPPf89IGvy-7JcK5U6tibi6IBvl'));
   assert.equal(app.credit.textContent,'@napsea');assert.equal(app.choices.station,'indie');assert.equal(app.stored(),null);
 });
@@ -32,6 +32,12 @@ test('genre buttons switch playlists - hiphop',()=>{
   app.stationButtons[1].click();
   assert.ok(app.frame.src.includes('PL-oM23jv3aFJFCSy3WMirbB_xLVnyehrF'));
   assert.equal(app.credit.href,'https://www.youtube.com/@DJ___NBA');
+});
+test('genre button switches playlists - lock in',()=>{
+  const app=boot(saved(false));
+  app.stationButtons[2].click();
+  assert.ok(app.frame.src.includes('PLHXjm-OqioH0'));
+  assert.equal(app.credit.href,'https://www.youtube.com/@productivityonyt');
 });
 test('genre buttons switch playlists - jazz',()=>{
   const app=boot(saved(false));
