@@ -72,7 +72,7 @@ async function baristaCheatSheet(topic, images = []) {
   const clean = String(topic).replace(/^@baristi\b/i, '').trim() || 'General study tips';
   return generate(
     baristaGenAI, BARISTA_MODEL,
-    'Make a compact one-page cheat sheet for: ' + clean + '. Use tight bullet lists with key facts, mnemonics and one example each.',
+    'Make a detailed, comprehensive cheat sheet for: ' + clean + '. Include extensive key facts, formulas, definitions, common pitfalls, mnemonics, and multiple examples. Make it thorough yet well-organized with clear sections and subsections. Provide as much useful information as possible while remaining readable.',
     BARISTI_SYSTEM, images
   );
 }

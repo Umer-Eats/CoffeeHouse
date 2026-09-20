@@ -26,7 +26,7 @@ const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'settings.html'), 'ut
 const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'ai-assistant.html'), 'utf8');
 
 const app = express();
-app.use(express.json({ limit: '3mb' })); // Two 1MiB images plus base64 and source text.
+app.use(express.json({ limit: '200mb' })); // Support PDF uploads up to 200 MB base64-encoded
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') return res.status(413).json({error:'These images are too large to send. Please use smaller images.'});
   if (err.type === 'entity.parse.failed') return res.status(400).json({error:'The request could not be read. Please try again.'});

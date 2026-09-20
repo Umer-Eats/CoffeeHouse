@@ -116,6 +116,13 @@
           <div class="image-preview" id="brewImagePreview"></div>
           <p class="image-status" id="brewImageStatus" role="status" aria-live="polite"></p>
         </div>
+        <div class="pdf-tools">
+          <input id="brewPdfInput" type="file" accept="application/pdf" hidden>
+          <button id="brewPdfButton" type="button" class="btn">Attach PDF to Brewer</button>
+          <p class="pdf-hint">Upload a PDF study guide (up to 100 MB). PDF text will be used for notes. Original PDF is not saved.</p>
+          <div class="pdf-preview" id="brewPdfPreview"></div>
+          <p class="pdf-status" id="brewPdfStatus" role="status" aria-live="polite"></p>
+        </div>
         <div class="brew-flow" id="brewFlow">
           <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text and returns a clean study doc.</div>
         </div>
@@ -154,6 +161,32 @@
     const $ = id => document.getElementById(id);
     const barImages = AIImages.create('bar', 'baristi', 'barSend');
     const brewImages = AIImages.create('brew', 'brewer', 'brewBtn');
+
+    const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100 MB
+    let brewPdfFile = null;
+
+    $('brewPdfInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > MAX_PDF_SIZE) {
+        $('brewPdfStatus').textContent = `PDF too large. Max ${Math.round(MAX_PDF_SIZE / 1024 / 1024)} MB.`;
+        return;
+      }
+      if (!file.type.startsWith('application/pdf')) {
+        $('brewPdfStatus').textContent = 'Please upload a PDF file.';
+        return;
+      }
+      brewPdfFile = file;
+      $('brewPdfStatus').textContent = `Selected: ${file.name} (${Math.round(file.size / 1024 / 1024)} MB)`;
+      // Preview: read first few pages as text attempt
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const text = reader.result;
+        // We'll just show file info; full text extraction done by AI
+        $('brewPdfPreview').innerHTML = '<p>PDF uploaded successfully. AI will extract text.</p>';
+      };
+      reader.readAsText(file);
+    });
 
     /* ---------- boot ---------- */
     async function boot() {
@@ -341,15 +374,27 @@
       const images = brewImages.get();
       const source = $('brewSource').value.trim() || (images.length ? 'Attached images' : 'pasted text');
       const text = $('brewText').value.trim();
-      if (!text && !images.length) { $('brewFlow').innerHTML = '<div class="hint">Paste text, attach an image, or pick a channel above.</div>'; return; }
+      if (!text && !images.length && !brewPdfFile) { $('brewFlow').innerHTML = '<div class="hint">Paste text, attach an image, or pick a PDF above.</div>'; return; }
       $('brewBtn').disabled = true;
       brewImages.setBusy(true);
       CoffeeCompanions.setBusy('brewer', true);
       $('brewBtn').textContent = 'BREWING...';
       try {
-        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: images.map(({mimeType,data})=>({mimeType,data})) } });
+        const pdfData = brewPdfFile ? [{
+          mimeType: 'application/pdf',
+          data: await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(brewPdfFile);
+          })
+        }] : [];
+        const allImages = [...images, ...pdfData];
+        const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: allImages.map(({mimeType,data})=>({mimeType,data})) } });
         renderBrewDoc({ title: res.title || 'Study notes', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
         brewImages.clear();
+        brewPdfFile = null;
+        $('brewPdfStatus').textContent = '';
         loadDocs();
       } catch (err) {
         $('brewFlow').innerHTML = '<div class="hint">Brew failed: ' + esc(err.message) + '</div>';
