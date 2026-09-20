@@ -165,6 +165,7 @@
     const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100 MB
     let brewPdfFile = null;
 
+    $('brewPdfButton').addEventListener('click', () => $('brewPdfInput').click());
     $('brewPdfInput').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -372,7 +373,7 @@
     async function brewNewNotes() {
       if ($('brewBtn').disabled || !brewImages.ready()) return;
       const images = brewImages.get();
-      const source = $('brewSource').value.trim() || (images.length ? 'Attached images' : 'pasted text');
+      const source = $('brewSource').value.trim() || (images.length ? 'Attached images' : brewPdfFile ? 'Attached PDF' : 'pasted text');
       const text = $('brewText').value.trim();
       if (!text && !images.length && !brewPdfFile) { $('brewFlow').innerHTML = '<div class="hint">Paste text, attach an image, or pick a PDF above.</div>'; return; }
       $('brewBtn').disabled = true;

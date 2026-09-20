@@ -1,5 +1,9 @@
 .image-tools{padding:12px 18px;border-top:1px solid var(--border);min-width:0}
 .image-tools .image-hint{font:16px/1.4 system-ui,sans-serif;color:var(--soft);margin:8px 0}
+.pdf-tools{padding:12px 18px;border-top:1px solid var(--border);min-width:0}
+.pdf-tools .pdf-hint{font:16px/1.4 system-ui,sans-serif;color:var(--soft);margin:8px 0}
+.pdf-tools .pdf-status{font:16px/1.4 system-ui,sans-serif;color:var(--gold);margin-top:6px}
+.pdf-tools .pdf-status:empty{display:none}
 .image-preview{display:flex;flex-wrap:wrap;gap:12px}
 .image-attachment{margin:10px 0 0;padding:10px;border:1px solid var(--border);background:var(--panel2);width:145px;min-width:0}
 .image-attachment img{display:block;width:100%;height:95px;object-fit:contain;background:#fff}
