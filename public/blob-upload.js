@@ -30,7 +30,9 @@
     var clientToken = tokenData.clientToken;
     if (!clientToken) throw new Error('Server did not return a client token.');
 
-    /* Step 2 — PUT the file directly to Vercel Blob API */
+    /* Step 2 — read file as ArrayBuffer, then PUT directly to Vercel Blob API */
+    var arrayBuffer = await file.arrayBuffer();
+    var bytes = new Uint8Array(arrayBuffer);
     var requestId = Date.now().toString(36) + Math.random().toString(36).slice(2);
     var putUrl = BLOB_API + '/?pathname=' + encodeURIComponent(pathname);
     var putRes = await fetch(putUrl, {
@@ -41,7 +43,7 @@
         'x-api-blob-request-id': requestId,
         'x-api-blob-request-attempt': '0'
       },
-      body: file
+      body: bytes
     });
     if (!putRes.ok) {
       var body = await putRes.json().catch(function () { return { error: { message: 'Upload failed.' } }; });

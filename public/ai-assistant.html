@@ -167,12 +167,26 @@
     const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20 MB (blob uploads bypass serverless limit)
     let brewPdfFile = null;
 
+    function renderPdfStatus() {
+      const status = $('brewPdfStatus');
+      if (!brewPdfFile) { status.textContent = ''; return; }
+      status.innerHTML = '';
+      const span = document.createElement('span');
+      span.textContent = 'Selected: ' + brewPdfFile.name + ' (' + Math.round(brewPdfFile.size / 1024 / 1024) + ' MB) ';
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn'; btn.textContent = '\u00d7'; btn.title = 'Remove PDF';
+      btn.style.cssText = 'padding:2px 8px;font-size:14px;background:var(--danger);color:#fff;min-width:auto;';
+      btn.addEventListener('click', () => { brewPdfFile = null; $('brewPdfInput').value = ''; renderPdfStatus(); $('brewPdfPreview').innerHTML = ''; });
+      status.appendChild(span);
+      status.appendChild(btn);
+    }
+
     $('brewPdfButton').addEventListener('click', () => $('brewPdfInput').click());
     $('brewPdfInput').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > MAX_PDF_SIZE) {
-        $('brewPdfStatus').textContent = `PDF too large (${Math.round(file.size / 1024 / 1024)} MB). Max is ${Math.round(MAX_PDF_SIZE / 1024 / 1024)} MB. Try splitting the file.`;
+        $('brewPdfStatus').textContent = 'PDF too large (' + Math.round(file.size / 1024 / 1024) + ' MB). Max is ' + Math.round(MAX_PDF_SIZE / 1024 / 1024) + ' MB. Try splitting the file.';
         return;
       }
       if (!file.type.startsWith('application/pdf')) {
@@ -180,15 +194,8 @@
         return;
       }
       brewPdfFile = file;
-      $('brewPdfStatus').textContent = `Selected: ${file.name} (${Math.round(file.size / 1024 / 1024)} MB)`;
-      // Preview: read first few pages as text attempt
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const text = reader.result;
-        // We'll just show file info; full text extraction done by AI
-        $('brewPdfPreview').innerHTML = '<p>PDF uploaded successfully. AI will extract text.</p>';
-      };
-      reader.readAsText(file);
+      renderPdfStatus();
+      $('brewPdfPreview').innerHTML = '<p>PDF ready. AI will extract text when you brew.</p>';
     });
 
     /* ---------- boot ---------- */
@@ -401,7 +408,8 @@
         renderBrewDoc({ title: res.title || 'Study notes', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
         brewImages.clear();
         brewPdfFile = null;
-        $('brewPdfStatus').textContent = '';
+        renderPdfStatus();
+        $('brewPdfPreview').innerHTML = '';
         loadDocs();
       } catch (err) {
         $('brewFlow').innerHTML = '<div class="hint">Brew failed: ' + esc(err.message) + '</div>';
