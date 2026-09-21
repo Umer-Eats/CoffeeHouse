@@ -174,8 +174,8 @@
       const span = document.createElement('span');
       span.textContent = 'Selected: ' + brewPdfFile.name + ' (' + Math.round(brewPdfFile.size / 1024 / 1024) + ' MB) ';
       const btn = document.createElement('button');
-      btn.type = 'button'; btn.className = 'btn'; btn.textContent = '\u00d7'; btn.title = 'Remove PDF';
-      btn.style.cssText = 'padding:2px 6px;font-size:14px;line-height:1;background:var(--danger);color:#fff;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;';
+      btn.type = 'button'; btn.textContent = '\u00d7'; btn.title = 'Remove PDF';
+      btn.style.cssText = 'padding:0;font-size:14px;line-height:1;background:var(--danger);color:#fff;width:22px;min-width:22px;max-width:22px;height:22px;min-height:22px;border:1px solid var(--border);border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 var(--shad)';
       btn.addEventListener('click', () => { brewPdfFile = null; $('brewPdfInput').value = ''; renderPdfStatus(); $('brewPdfPreview').innerHTML = ''; });
       status.appendChild(span);
       status.appendChild(btn);

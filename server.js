@@ -17,7 +17,8 @@ const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 const {resolveAttachments} = require('./blob-helpers');
-const {generateClientTokenFromReadWriteToken} = require('@vercel/blob/client');
+const blobPut = require('@vercel/blob').put;
+const Busboy = require('busboy');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
@@ -500,28 +501,74 @@ app.post('/api/groups/:id/leave',requireAuth,requireSchool,async(req,res)=>{
   catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not leave group. Please try again.'});}
 });
 
-/* ---------------- Vercel Blob client-direct uploads ---------------- */
+/* ---------------- Vercel Blob uploads (server-mediated) ---------------- */
 
-app.post('/api/blob/upload', requireAuth, async (req, res) => {
-  try {
-    const { type, payload } = req.body || {};
-    if (type !== 'blob.generate-client-token') {
-      return res.status(400).json({ error: 'Invalid upload event type.' });
-    }
-    const { pathname } = payload || {};
-    if (!pathname) return res.status(400).json({ error: 'Missing pathname.' });
-    const ext = (pathname.split('.').pop() || '').toLowerCase();
-    const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
-    if (!allowed.includes(ext)) return res.status(400).json({ error: 'File type not allowed.' });
-    const clientToken = await generateClientTokenFromReadWriteToken({
-      pathname,
-      maximumSizeInBytes: 50 * 1024 * 1024,
-      allowedContentTypes: ['image/jpeg','image/png','image/webp','image/gif','application/pdf'],
-    });
-    res.json({ clientToken });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post('/api/blob/upload', requireAuth, (req, res) => {
+  const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
+  const maxBytes = 20 * 1024 * 1024;
+  const contentTypeMap = {
+    'image/jpeg': 'image/jpeg', 'image/jpg': 'image/jpeg',
+    'image/png': 'image/png', 'image/webp': 'image/webp',
+    'image/gif': 'image/gif', 'application/pdf': 'application/pdf',
+  };
+
+  const ct = req.headers['content-type'] || '';
+  if (!ct.includes('multipart/form-data')) {
+    return res.status(400).json({ error: 'Expected multipart/form-data.' });
   }
+
+  let destroyed = false;
+  const cleanup = () => { if (!destroyed) { destroyed = true; req.destroy(); } };
+
+  const bb = Busboy({ headers: req.headers, limits: { fileSize: maxBytes, files: 1 } });
+  let fileBuffer = null;
+  let fileName = 'file.bin';
+  let mimeType = 'application/octet-stream';
+
+  bb.on('file', (_fieldname, stream, info) => {
+    fileName = info.filename || 'file.bin';
+    mimeType = info.mimeType || 'application/octet-stream';
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    if (!allowed.includes(ext)) {
+      cleanup();
+      if (!res.headersSent) return res.status(400).json({ error: 'File type not allowed. Use jpg, png, webp, gif, or pdf.' });
+      return;
+    }
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('limit', () => { cleanup(); if (!res.headersSent) res.status(413).json({ error: 'File too large (max 20 MB).' }); });
+    stream.on('end', () => { fileBuffer = Buffer.concat(chunks); });
+  });
+
+  bb.on('finish', async () => {
+    if (res.headersSent || destroyed) return;
+    if (!fileBuffer || !fileBuffer.length) {
+      return res.status(400).json({ error: 'No file received.' });
+    }
+    try {
+      const ext = (fileName.split('.').pop() || 'bin').toLowerCase();
+      const prefix = ext === 'pdf' ? 'coffeehouse-brewer' : 'coffeehouse-barista';
+      const pathname = prefix + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      const blob = await blobPut(pathname, fileBuffer, {
+        access: 'public',
+        contentType: mimeType,
+      });
+      res.json({ url: blob.url, pathname: blob.pathname, contentType: blob.contentType });
+    } catch (err) {
+      console.error('Blob upload error:', err.message);
+      if (!res.headersSent) res.status(500).json({ error: 'Upload failed: ' + err.message });
+    } finally {
+      cleanup();
+    }
+  });
+
+  bb.on('error', (err) => {
+    console.error('Busboy error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Upload parse error.' });
+    cleanup();
+  });
+
+  req.pipe(bb);
 });
 
 /* ---------------- AI assistants ---------------- */
