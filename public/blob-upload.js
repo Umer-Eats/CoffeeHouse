@@ -12,12 +12,18 @@
     if (!file.size || file.size > maxMB * 1024 * 1024) throw new Error('Choose a non-empty file up to ' + maxMB + ' MB.');
     var prefix = opts.prefix || (ext === 'pdf' ? 'coffeehouse-brewer' : 'coffeehouse-barista');
     var pathname = prefix + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 10) + '.' + ext;
-    return window.CoffeeHouseBlobClient.upload(pathname, file, {
+    var uploadPromise = window.CoffeeHouseBlobClient.upload(pathname, file, {
       access: 'public',
       handleUploadUrl: '/api/blob/upload',
       contentType: type,
-      multipart: true,
     });
+    // Do not leave the Brewer/Barista busy state running if Blob or the
+    // browser's network stack stops responding.
+    var timer;
+    var timeout = new Promise(function (_, reject) {
+      timer = setTimeout(function () { reject(new Error('File upload timed out. Please try again.')); }, 120000);
+    });
+    return Promise.race([uploadPromise, timeout]).finally(function () { clearTimeout(timer); });
   }
 
   async function uploadBase64(attachment, opts) {

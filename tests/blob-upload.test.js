@@ -7,7 +7,7 @@ const { createBlobUploadHandler } = require('../blob-upload-handler');
 function browser() {
   const calls = [];
   const window = { CoffeeHouseBlobClient: { upload: async (...args) => { calls.push(args); return { url: 'https://example.public.blob.vercel-storage.com/file.pdf' }; } } };
-  vm.runInNewContext(fs.readFileSync(require.resolve('../public/blob-upload.js'), 'utf8'), { window, Blob, Uint8Array, atob });
+  vm.runInNewContext(fs.readFileSync(require.resolve('../public/blob-upload.js'), 'utf8'), { window, Blob, Uint8Array, atob, setTimeout });
   return { calls, helper: window.VercelBlob };
 }
 
@@ -17,7 +17,7 @@ test('10 MB PDF goes directly to Blob as binary, never base64 JSON through the s
   const result = await helper.upload(pdf, { prefix: 'coffeehouse-brewer' });
   assert.ok(result.url);
   assert.equal(calls[0][1], pdf);
-  assert.equal(calls[0][2].multipart, true);
+  assert.equal(calls[0][2].multipart, undefined);
   assert.equal(calls[0][2].handleUploadUrl, '/api/blob/upload');
   assert.match(calls[0][0], /^coffeehouse-brewer\/.*\.pdf$/);
 });
