@@ -1,18 +1,22 @@
 /* Vercel Blob upload — browser helper.
-   Sends files as multipart/form-data to /api/blob/upload.
-   The server uploads to Vercel Blob (no CORS issues) and returns the URL. */
+   Sends file as raw binary POST to /api/blob/upload with metadata in headers.
+   The server uploads to Vercel Blob and returns the URL. */
 'use strict';
 (function () {
   async function uploadFile(file, opts) {
     opts = opts || {};
-    var prefix = opts.prefix || 'coffeehouse-uploads';
-    var fd = new FormData();
-    fd.append('file', file, file.name || 'file');
-    fd.append('prefix', prefix);
+    var ext = (file.name || 'file').split('.').pop().toLowerCase();
+    var buf = await file.arrayBuffer();
     var res = await fetch('/api/blob/upload', {
       method: 'POST',
       credentials: 'same-origin',
-      body: fd,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-File-Name': file.name || 'file',
+        'X-File-Type': file.type || 'application/octet-stream',
+        'X-File-Ext': ext,
+      },
+      body: new Uint8Array(buf),
     });
     if (!res.ok) {
       var body = await res.json().catch(function () { return { error: 'Upload failed.' }; });
@@ -33,8 +37,7 @@
     var filename = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
     var blob = new Blob([bytes], { type: attachment.mimeType || 'application/octet-stream' });
     var file = new File([blob], filename, { type: attachment.mimeType });
-    var prefix = (opts && opts.prefix) || (ext === 'pdf' ? 'coffeehouse-brewer' : 'coffeehouse-barista');
-    return uploadFile(file, { prefix: prefix });
+    return uploadFile(file, opts);
   }
 
   async function uploadFromDataUrl(dataUrl, mimeType, name, opts) {
