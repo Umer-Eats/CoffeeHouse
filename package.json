@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "build:blob": "esbuild browser/blob-client.js --bundle --platform=browser --format=iife --minify --outfile=public/vendor/blob-client.js",
+    "build": "npm run build:blob"
   },
   "engines": {
     "node": "24.x"
@@ -26,5 +28,8 @@
   },
   "overrides": {
     "jose": "4.15.9"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

@@ -17,7 +17,8 @@ const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 const {resolveAttachments} = require('./blob-helpers');
-const blobPut = require('@vercel/blob').put;
+const { handleUpload } = require('@vercel/blob/client');
+const { createBlobUploadHandler } = require('./blob-upload-handler');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
@@ -29,69 +30,6 @@ const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-ass
 
 const app = express();
 
-/* Auth helper for blob upload (runs before cookieParser). */
-function parseSessionCookie(req) {
-  const raw = (req.headers.cookie || '').split(';').find(c => c.trim().startsWith('ch_session='));
-  if (!raw) return null;
-  return raw.split('=').slice(1).join('=').trim() || null;
-}
-
-/* Blob upload — registered as app.use() so it fires BEFORE the global express.json(). */
-app.use('/api/blob/upload', (req, res, next) => {
-  if (req.method !== 'POST') return next();
-  const sessionCookie = parseSessionCookie(req);
-  if (!sessionCookie || !sessionCookie.split('|')[0]) {
-    return res.status(401).json({ error: 'Sign in required.' });
-  }
-
-  const chunks = [];
-  let totalBytes = 0;
-  const maxBytes = 25 * 1024 * 1024;
-
-  req.on('data', (chunk) => {
-    totalBytes += chunk.length;
-    if (totalBytes > maxBytes) {
-      req.destroy();
-      if (!res.headersSent) res.status(413).json({ error: 'File too large (max 25 MB).' });
-      return;
-    }
-    chunks.push(chunk);
-  });
-
-  req.on('end', async () => {
-    if (res.headersSent) return;
-    if (!chunks.length) {
-      return res.status(400).json({ error: 'No file received.' });
-    }
-    try {
-      const raw = Buffer.concat(chunks);
-      const body = JSON.parse(raw.toString('utf8'));
-      const { file, name, type, ext } = body || {};
-      if (!file || !ext) return res.status(400).json({ error: 'Missing file data.' });
-      const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
-      if (!allowed.includes(ext)) {
-        return res.status(400).json({ error: 'File type not allowed. Use jpg, png, webp, gif, or pdf.' });
-      }
-      const fileBuffer = Buffer.from(file, 'base64');
-      const prefix = ext === 'pdf' ? 'coffeehouse-brewer' : 'coffeehouse-barista';
-      const pathname = prefix + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-      const blob = await blobPut(pathname, fileBuffer, {
-        access: 'public',
-        contentType: type || 'application/octet-stream',
-      });
-      res.json({ url: blob.url, pathname: blob.pathname, contentType: blob.contentType });
-    } catch (err) {
-      console.error('Blob upload error:', err.message);
-      if (!res.headersSent) res.status(500).json({ error: 'Upload failed: ' + err.message });
-    }
-  });
-
-  req.on('error', (err) => {
-    console.error('Request error:', err.message);
-    if (!res.headersSent) res.status(500).json({ error: 'Upload failed.' });
-  });
-});
-
 app.use(express.json({ limit: '1mb' })); // Other routes keep payloads small; only URLs + text are sent
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') return res.status(413).json({error:'Payload too large. Please try again.'});
@@ -99,6 +37,14 @@ app.use((err, req, res, next) => {
   next(err);
 });
 app.use(cookieParser());
+
+app.post('/api/blob/upload', createBlobUploadHandler({
+  handleUpload,
+  sessionUser: async (cookie) => {
+    await ensureDb();
+    return db.sessionUser(cookie);
+  },
+}));
 
 const PORT = process.env.PORT || 3000;
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days

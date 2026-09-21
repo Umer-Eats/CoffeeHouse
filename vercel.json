@@ -5,7 +5,7 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["node_modules/katex/dist/**", "node_modules/markdown-it/dist/**"]
+        "includeFiles": ["node_modules/katex/dist/**", "node_modules/markdown-it/dist/**", "public/vendor/blob-client.js"]
       }
     }
   ],
