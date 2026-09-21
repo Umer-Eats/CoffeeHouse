@@ -29,24 +29,19 @@ const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-ass
 
 const app = express();
 
-/* Blob upload must come BEFORE express.json() to avoid body-parser
-   intercepting the raw binary stream and throwing entity.too.large. */
-app.post('/api/blob/upload', (req, res) => {
-  /* Auth check (inline — cookieParser hasn't run yet) */
-  const rawCookie = (req.headers.cookie || '').split(';').find(c => c.trim().startsWith('ch_session='));
-  const sessionCookie = rawCookie ? rawCookie.split('=').slice(1).join('=').trim() : '';
-  if (!sessionCookie) return res.status(401).json({ error: 'Sign in required.' });
-  const parts = sessionCookie.split('|');
-  const uid = parts[0];
-  if (!uid) return res.status(401).json({ error: 'Sign in required.' });
+/* Auth helper for blob upload (runs before cookieParser). */
+function parseSessionCookie(req) {
+  const raw = (req.headers.cookie || '').split(';').find(c => c.trim().startsWith('ch_session='));
+  if (!raw) return null;
+  return raw.split('=').slice(1).join('=').trim() || null;
+}
 
-  const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
-  const ext = (req.headers['x-file-ext'] || '').toLowerCase();
-  const fileName = req.headers['x-file-name'] || 'file.bin';
-  const mimeType = req.headers['x-file-type'] || 'application/octet-stream';
-
-  if (!allowed.includes(ext)) {
-    return res.status(400).json({ error: 'File type not allowed. Use jpg, png, webp, gif, or pdf.' });
+/* Blob upload — registered as app.use() so it fires BEFORE the global express.json(). */
+app.use('/api/blob/upload', (req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const sessionCookie = parseSessionCookie(req);
+  if (!sessionCookie || !sessionCookie.split('|')[0]) {
+    return res.status(401).json({ error: 'Sign in required.' });
   }
 
   const chunks = [];
@@ -69,12 +64,20 @@ app.post('/api/blob/upload', (req, res) => {
       return res.status(400).json({ error: 'No file received.' });
     }
     try {
-      const fileBuffer = Buffer.concat(chunks);
+      const raw = Buffer.concat(chunks);
+      const body = JSON.parse(raw.toString('utf8'));
+      const { file, name, type, ext } = body || {};
+      if (!file || !ext) return res.status(400).json({ error: 'Missing file data.' });
+      const allowed = ['jpg','jpeg','png','webp','gif','pdf'];
+      if (!allowed.includes(ext)) {
+        return res.status(400).json({ error: 'File type not allowed. Use jpg, png, webp, gif, or pdf.' });
+      }
+      const fileBuffer = Buffer.from(file, 'base64');
       const prefix = ext === 'pdf' ? 'coffeehouse-brewer' : 'coffeehouse-barista';
       const pathname = prefix + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
       const blob = await blobPut(pathname, fileBuffer, {
         access: 'public',
-        contentType: mimeType,
+        contentType: type || 'application/octet-stream',
       });
       res.json({ url: blob.url, pathname: blob.pathname, contentType: blob.contentType });
     } catch (err) {
