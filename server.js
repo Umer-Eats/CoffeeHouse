@@ -17,7 +17,7 @@ const {validateAttachment}=require('./chat-attachment');
 const {noteTitle} = require('./note-title');
 const {validateImages, inputText} = require('./image-input');
 const {resolveAttachments} = require('./blob-helpers');
-const { handleUpload } = require('@vercel/blob/client');
+const { generateClientTokenFromReadWriteToken } = require('@vercel/blob/client');
 const { createBlobUploadHandler } = require('./blob-upload-handler');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
@@ -39,7 +39,13 @@ app.use((err, req, res, next) => {
 app.use(cookieParser());
 
 app.post('/api/blob/upload', createBlobUploadHandler({
-  handleUpload,
+  handleUpload: async ({ request, body, onBeforeGenerateToken }) => {
+    if (!body || body.type !== 'blob.generate-client-token') throw Object.assign(new Error('Invalid Blob upload request.'), { status: 400 });
+    const { pathname, clientPayload, multipart } = body.payload || {};
+    const options = await onBeforeGenerateToken(pathname, clientPayload, multipart);
+    const token = await generateClientTokenFromReadWriteToken({ ...options, pathname, token: process.env.BLOB_READ_WRITE_TOKEN });
+    return { clientToken: token };
+  },
   sessionUser: async (cookie) => {
     await ensureDb();
     return db.sessionUser(cookie);
