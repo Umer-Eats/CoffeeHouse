@@ -14,6 +14,10 @@
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
 <link rel="stylesheet" href="/motion.css">
 <script src="/scenery.js" defer></script>
+<link rel="stylesheet" href="/matcha-mode.css?v=3">
+<script defer src="/matcha-menu.js?v=1"></script>
+<script defer src="/matcha-core.js?v=1"></script>
+<script defer src="/matcha-mode.js?v=1"></script>
 </head>
 <body class="settings-page">
 
@@ -31,6 +35,7 @@
     <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>CoffeeHouse</span></a>
     <button id="notepadButton" class="btn matcha" type="button" aria-haspopup="dialog" aria-expanded="false">NOTEPAD</button>
     <div style="display:flex; gap:10px; align-items:center;">
+      <button id="matchaModeButton" class="btn" type="button" aria-haspopup="dialog">Matcha Mode</button>
       <div class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
         <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
