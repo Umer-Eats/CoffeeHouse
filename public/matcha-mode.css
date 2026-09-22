@@ -38,3 +38,10 @@ body.matcha-open{overflow:hidden}
 .mm-focus .mm-coupon-dock{padding-top:12px;padding-bottom:0}
 .mm-focus .mm-stamps{margin:8px 0}
 @media(max-width:650px){.mm-detail .mm-coupon{display:block}.mm-focus{min-height:calc(100dvh - 87px)}}
+/* Clearer pixel numerals: Pixelify Sans makes 5 resemble a closed 8. */
+.mm-clock,.mm-price,.mm-detail-price,.mm-stamps span:not(.stamped),.mm-redeem,.mm-receipt-line>span:last-child,.mm-receipt-line>strong:last-child{
+  font-family:"VT323","Courier New",monospace;
+  font-variant-numeric:tabular-nums;
+  font-weight:400;
+}
+.mm-price small,.mm-detail-price span{font-family:"Pixelify Sans",monospace}
