@@ -281,6 +281,17 @@ app.post('/api/school/join', requireAuth, async (req, res) => {
 });
 
 /* ---------------- students (real accounts, sorted by school) ---------------- */
+const matchaGifts=require('./matcha-gifts').gifts(db);
+const giftRoute=fn=>async(req,res)=>{try{res.json(await fn(req));}catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not update drink gift. Please retry.'});}};
+app.post('/api/matcha/gifts',requireAuth,requireSchool,giftRoute(async r=>{
+ await moderateMessage('dm:'+r.body.recipientId,String(r.body.instructions||''));
+ return matchaGifts.send(r.user.id,r.school.id,r.body);
+}));
+app.get('/api/matcha/rewards',requireAuth,giftRoute(r=>matchaGifts.rewards(r.user.id)));
+app.get('/api/matcha/gifts/:id',requireAuth,requireSchool,giftRoute(r=>matchaGifts.read(r.params.id,r.user.id,r.school.id)));
+app.post('/api/matcha/gifts/:id/start',requireAuth,requireSchool,giftRoute(r=>matchaGifts.start(r.params.id,r.user.id,r.school.id)));
+app.post('/api/matcha/gifts/:id/finish',requireAuth,requireSchool,giftRoute(r=>matchaGifts.finish(r.params.id,r.user.id,r.school.id)));
+app.post('/api/matcha/gifts/:id/cancel',requireAuth,requireSchool,giftRoute(r=>matchaGifts.cancel(r.params.id,r.user.id,r.school.id)));
 
 app.get('/api/students', requireAuth, requireSchool, async (req, res) => {
   res.json(await db.schoolStudents(req.school.id, req.user.id));

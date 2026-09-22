@@ -29,3 +29,10 @@ The requested official https://www.heytea.com/products page was unavailable duri
 Run `node --test --test-isolation=none tests/*.test.js` in restricted Windows environments, or `npm test` normally. `node tests/matcha-preview.cjs` provides an isolated localhost:3108 UI fixture with a synthetic account and no production database or AI calls.
 
 Public feature pages use sandboxed, generated previews. Run `npm run build:previews` after changing product markup. Matcha preview state is memory-only and never reads account APIs or saved user progression.
+
+## Community drink gifts
+The receipt has a Send to Friend picker listing the signed-in user's community. A gift is stored together with its DM in one database transaction. The DM opens the recipient's receipt, including the selected drink and instructions; a gifted drink can be tried even when locally locked. Gift recipients cannot forward that same gift.
+
+Tearing a gifted receipt starts a server-timed interval. Cancelling resets the interval and awards nothing. Reloading resumes a started gift. Completion credits exactly one full coupon for that drink to each participant, stored in `matcha_gifts` and counted from completed gifts. Full gift coupons fill the existing five-stamp card and allow its normal next-drink redemption; repeated gifts remain counted in the coupon's earned total. An already redeemed drink does not skip additional drinks. Gift rewards synchronize on opening Matcha Mode, returning to its tab, and every 30 seconds while open. Ordinary timer progress and unlocks retain the existing per-browser storage.
+
+`tests/matcha-gifts.test.js` exercises real in-memory SQL for delivery, cross-community and recipient authorization, premature completion, cancellation, and concurrent duplicate completion. `node tests/matcha-gift-preview.cjs` serves an isolated mocked UI at localhost:3109 for sender and recipient checks.

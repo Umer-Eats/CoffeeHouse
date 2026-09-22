@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const menu=MatchaMenu,core=MatchaCore,preview=document.body.dataset.matchaPreview==='true';
-let state,key,selected,category='All drinks',dialog,content,interval,notice='',savingFailed=false,opening=false;
+let state,key,selected,category='All drinks',dialog,content,interval,notice='',savingFailed=false,opening=false,rewardBusy=false;
 const button=document.getElementById('matchaModeButton');
 const html=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const art=d=>`<img class="mm-drink-art" src="${d.art}" alt="Pixel illustration of ${html(d.name)}">`;
@@ -10,6 +10,7 @@ function load(){if(preview){state=core.create(menu);return;}let stored;try{store
 function drink(){return menu.drinks.find(d=>d.id===state.active?.drinkId);}
 function render(){
  const a=state.active;
+ dialog.querySelector('.mm-send').hidden=preview||a?.phase!=='receipt'||!!a?.giftId;
  content.innerHTML='';
  dialog.scrollTop=0;
  if(a?.phase==='running'||a?.phase==='complete')renderTimer();
@@ -44,7 +45,7 @@ function renderDetail(){
 }
 function coupon(d){
  const count=state.stamps[d.id],used=state.redeemed[d.id],rows=menu.drinks.filter(x=>x.category===d.category),last=rows.at(-1).id===d.id;
- return `<section class="mm-coupon" aria-label="Drink coupon"><div class="mm-coupon-head"><span>COFFEEHOUSE / LOYALTY CLUB</span><span>№ ${d.id.toUpperCase()}</span></div><h3>${html(d.name)}</h3><div class="mm-stamps" aria-label="${count} of 5 completed orders">${Array.from({length:5},(_,i)=>`<span class="${i<count?'stamped':''}">${i<count?'✿':i+1}</span>`).join('')}</div><p>${used?(last?'Collection complete. Beautifully brewed.':'Coupon redeemed. Your next cup is unlocked.'):'Five finished timers. One new favorite.'}</p><button class="mm-redeem" data-redeem="${d.id}" ${count<5||used?'disabled':''}>${last?'Redeem collection badge':'Redeem coupon'} ${count}/5</button></section>`;
+ return `<section class="mm-coupon" aria-label="Drink coupon"><div class="mm-coupon-head"><span>COFFEEHOUSE / LOYALTY CLUB</span><span>№ ${d.id.toUpperCase()}</span></div><h3>${html(d.name)}</h3>${state.giftCoupons?.[d.id]?`<p>${state.giftCoupons[d.id]} full gift coupon${state.giftCoupons[d.id]===1?'':'s'} earned for this drink.</p>`:''}<div class="mm-stamps" aria-label="${count} of 5 completed orders">${Array.from({length:5},(_,i)=>`<span class="${i<count?'stamped':''}">${i<count?'✿':i+1}</span>`).join('')}</div><p>${used?(last?'Collection complete. Beautifully brewed.':'Coupon redeemed. Your next cup is unlocked.'):'Five finished timers. One new favorite.'}</p><button class="mm-redeem" data-redeem="${d.id}" ${count<5||used?'disabled':''}>${last?'Redeem collection badge':'Redeem coupon'} ${count}/5</button></section>`;
 }
 function wireCoupon(){content.querySelectorAll('[data-redeem]').forEach(b=>b.onclick=()=>{const next=core.redeem(menu,state,b.dataset.redeem);save();notice=next?next.name+' unlocked. Find it on the menu.':'Collection complete!';render();});}
 function renderReceipt(){
@@ -52,7 +53,7 @@ function renderReceipt(){
  content.innerHTML=`<section class="mm-receipt-scene"><p class="mm-eyebrow">ONE ORDER. A LITTLE INTENTION.</p><h1 id="mm-title">Your moment, on paper.</h1><p>Pull down the customer copy to begin brewing.</p><div class="mm-receipt"><div class="mm-receipt-top"><h2>MATCHA MODE</h2><p>COFFEEHOUSE FOCUS BAR<br>ORDER ${d.id.toUpperCase()} / MADE FOR YOU</p><hr><div class="mm-receipt-line"><strong>${html(d.name)}</strong><span>${state.minutes[d.id]} MIN</span></div><p>${html(state.active.instructions)}</p><hr><div class="mm-receipt-line"><span>TOTAL TIME</span><strong>${state.minutes[d.id]} MIN</strong></div><p class="mm-receipt-thanks">GOOD THINGS TAKE YOUR TIME.</p></div><button class="mm-tear" type="button" aria-label="Tear off customer receipt and start timer"><span>✂ · · · · · · · · · · · · · · · · · · ·</span><strong>CUSTOMER COPY</strong><small>Drag down to tear · or press Enter</small><span class="mm-barcode">▌▏▌▌▏▎▌▏▌▎▏▌▌▏▌▌▏▎▌</span></button></div></section>`;
  const tear=content.querySelector('.mm-tear');let start=null,dragged=false;
  const receiptOrder=state.active;
- const begin=()=>{if(tear.disabled)return;tear.disabled=true;tear.classList.add('is-torn');setTimeout(()=>{if(!dialog.open||state.active!==receiptOrder)return;if(core.tear(state)){save();render();}},350);};
+ const begin=async()=>{if(tear.disabled)return;tear.disabled=true;if(state.active.giftId){try{const g=await api('/api/matcha/gifts/'+state.active.giftId+'/start',{method:'POST'});state.active.startedAt=g.started_at;state.active.endAt=g.started_at+g.minutes*60000;}catch(err){tear.disabled=false;dialog.querySelector('.mm-status').textContent=err.message;return;}}tear.classList.add('is-torn');setTimeout(()=>{if(!dialog.open||state.active!==receiptOrder)return;if(state.active.giftId){state.active.phase='running';save();render();}else if(core.tear(state)){save();render();}},350);};
  tear.onpointerdown=e=>{start=e.clientY;dragged=false;tear.setPointerCapture(e.pointerId);};
  tear.onpointermove=e=>{if(start===null)return;const dy=Math.max(0,e.clientY-start);dragged=dy>8;tear.style.transform=`translateY(${Math.min(dy,120)}px) rotate(${Math.min(dy/20,5)}deg)`;};
  tear.onpointerup=e=>{const distance=e.clientY-start;start=null;if(distance>60)begin();else tear.style.transform='';};
@@ -66,22 +67,56 @@ function renderTimer(){
  const again=content.querySelector('.mm-again');if(again)again.onclick=()=>{state.active=null;save();render();};
 }
 function tick(){
- if(!state)return;
- if(core.finish(state)){save();notice='Timer complete. Your coupon has a new stamp.';render();return;}
+ if(!state?.active)return;
+ if(state.active?.giftId&&state.active.phase==='running'&&Date.now()>=state.active.endAt){finishGift();return;}
+ if(!state.active?.giftId&&core.finish(state)){save();notice='Timer complete. Your coupon has a new stamp.';render();return;}
  const clock=content?.querySelector('.mm-clock');if(clock){const seconds=Math.max(0,Math.ceil((state.active.endAt-Date.now())/1000));clock.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
 }
-async function open(){
+async function open(giftId){
+ if(typeof giftId!=='string')giftId=null;
  if(opening||dialog?.open)return;opening=true;button.disabled=true;
  try{
   const me=preview?{user:{id:'preview'}}:await api('/api/me');if(!me.user?.id)throw Error('Sign in to open Matcha Mode.');
-  key='coffeehouse-matcha-v1:'+me.user.id;load();notice='';
-  if(!dialog){dialog=document.createElement('dialog');dialog.className='matcha-mode';dialog.setAttribute('closedby','none');dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();}},true);dialog.setAttribute('aria-labelledby','mm-title');dialog.innerHTML='<div class="mm-top"><span class="mm-wordmark">✿ MATCHA MODE <small>by CoffeeHouse</small></span><button class="mm-cancel" type="button">Cancel order ×</button></div><p class="mm-status" role="status"></p><main class="mm-content"></main>';document.body.appendChild(dialog);content=dialog.querySelector('main');dialog.addEventListener('cancel',e=>e.preventDefault());dialog.querySelector('.mm-cancel').onclick=()=>{state.active=null;save();clearInterval(interval);dialog.close();document.body.classList.remove('matcha-open');button.focus();};}
-  core.finish(state);save();render();dialog.showModal();document.body.classList.add('matcha-open');interval=setInterval(tick,500);
- }catch(err){button.textContent='Matcha unavailable — retry';button.title=err.message;}finally{opening=false;button.disabled=false;}
+  key='coffeehouse-matcha-v1:'+me.user.id;load();notice='';await syncRewards();
+  if(giftId){if(state.active&&state.active.giftId!==giftId&&state.active.phase!=='complete')throw Error('Finish or cancel your current order before opening a gift.');const g=await api('/api/matcha/gifts/'+giftId);if(g.completed)throw Error('This gift is already complete. Your coupon has been credited.');state.active={giftId:g.id,drinkId:g.drink_id,instructions:g.instructions,phase:g.started_at?'running':'receipt',startedAt:g.started_at||0,endAt:g.started_at?g.started_at+g.minutes*60000:0};save();}
+  if(!dialog){dialog=document.createElement('dialog');dialog.className='matcha-mode';dialog.setAttribute('closedby','none');dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();}},true);dialog.setAttribute('aria-labelledby','mm-title');dialog.innerHTML='<div class="mm-top"><span class="mm-wordmark">✿ MATCHA MODE <small>by CoffeeHouse</small></span><div class="mm-actions"><button class="mm-send mm-cancel" type="button" hidden>Send to Friend</button><button class="mm-cancel mm-exit" type="button">Cancel order ×</button></div></div><p class="mm-status" role="status"></p><main class="mm-content"></main>';document.body.appendChild(dialog);content=dialog.querySelector('main');dialog.addEventListener('cancel',e=>e.preventDefault());dialog.querySelector('.mm-send').onclick=sendToFriend;dialog.querySelector('.mm-exit').onclick=async()=>{if(state.active?.giftId){try{await api('/api/matcha/gifts/'+state.active.giftId+'/cancel',{method:'POST'});}catch(err){dialog.querySelector('.mm-status').textContent=err.message;return;}}state.active=null;save();clearInterval(interval);dialog.close();document.body.classList.remove('matcha-open');button.focus();};}
+  if(!state.active?.giftId)core.finish(state);save();render();dialog.showModal();document.body.classList.add('matcha-open');interval=setInterval(tick,500);
+ }catch(err){button.textContent='Matcha unavailable — retry';button.title=err.message;window.alert(err.message);}finally{opening=false;button.disabled=false;}
 }
-button.addEventListener('click',open);
+button.addEventListener('click',()=>open());
+window.openMatchaGift=id=>{if(dialog?.open){dialog.querySelector('.mm-status').textContent='Finish or cancel your current order first.';return;}open(id);};
+async function syncRewards(){
+ if(preview)return;
+ const rewards=await api('/api/matcha/rewards');state.giftCoupons=Object.fromEntries(rewards.map(r=>[r.drink_id,Number(r.coupons)]));
+ // Completed gifts are authoritative and reusable as a full coupon on every device.
+ for(const r of rewards)if(state.stamps[r.drink_id]!==undefined&&r.coupons>0)state.stamps[r.drink_id]=5;
+ save();
+ if(dialog?.open){const current=menu.drinks.find(d=>d.id===(state.active?.drinkId||selected));const old=content.querySelector('.mm-coupon');if(current&&old){old.outerHTML=coupon(current);wireCoupon();}}
+}
+async function finishGift(){
+ if(rewardBusy)return;rewardBusy=true;const a=state.active;
+ try{await api('/api/matcha/gifts/'+a.giftId+'/finish',{method:'POST'});if(state.active!==a)return;await syncRewards();a.phase='complete';save();notice='Gift complete! You and your friend each earned a full drink coupon.';render();}
+ catch(err){dialog.querySelector('.mm-status').textContent=err.message+' Completion will retry automatically.';}
+ finally{setTimeout(()=>{rewardBusy=false;},5000);}
+}
+async function sendToFriend(){
+ if(content.querySelector('.mm-friends')){content.querySelector('.mm-friends input').focus();return;}
+ const order=state.active;if(order?.phase!=='receipt'||order.giftId)return;
+ const send=dialog.querySelector('.mm-send');send.disabled=true;
+ try{
+ const students=await api('/api/students');
+ const picker=document.createElement('section');picker.className='mm-friends';picker.setAttribute('aria-label','Send drink to a friend');
+ picker.innerHTML='<h2>Send to Friend</h2><p>Choose someone in your community. When they finish this timer, you both earn a full coupon for this drink.</p><label>Find a friend <input type="search" placeholder="Search by name"></label><div class="mm-friend-list"></div><p role="status"></p><button type="button" class="mm-primary">Back to receipt</button>';
+ content.prepend(picker);picker.querySelector('button').onclick=()=>picker.remove();
+ const list=picker.querySelector('.mm-friend-list'),status=picker.querySelector('[role=status]');let sending=false;
+ const draw=()=>{list.replaceChildren();const matches=students.filter(u=>u.name.toLowerCase().includes(picker.querySelector('input').value.toLowerCase()));status.textContent=matches.length?'':'No community members found.';for(const u of matches){const b=document.createElement('button');b.type='button';b.textContent=u.name;b.onclick=async()=>{if(sending)return;sending=true;list.querySelectorAll('button').forEach(x=>x.disabled=true);status.textContent='Sending…';try{await api('/api/matcha/gifts',{method:'POST',body:{recipientId:u.id,drinkId:order.drinkId,instructions:order.instructions}});notice='Drink sent to '+u.name+'. Find it in your direct messages.';render();}catch(err){status.textContent=err.message;sending=false;list.querySelectorAll('button').forEach(x=>x.disabled=false);}};list.append(b);}};
+ picker.querySelector('input').oninput=draw;draw();picker.querySelector('input').focus();
+ }catch(err){dialog.querySelector('.mm-status').textContent=err.message;}finally{send.disabled=false;}
+}
+
 window.addEventListener('storage',e=>{if(e.key===key&&dialog?.open){let stored;try{stored=JSON.parse(e.newValue||'{}');}catch{stored={};}state=core.create(menu,stored);render();}});
-document.addEventListener('visibilitychange',tick);
+document.addEventListener('visibilitychange',()=>{tick();if(!document.hidden&&dialog?.open&&!preview)syncRewards().catch(()=>{});});
+setInterval(()=>{if(dialog?.open&&!preview)syncRewards().catch(()=>{});},30000);
 // Restore a running order after a reload, without opening the mode for new users.
 (async()=>{if(preview){open();return;}try{const me=await api('/api/me');const saved=JSON.parse(localStorage.getItem('coffeehouse-matcha-v1:'+me.user?.id)||'{}');if(saved.active)open();}catch{}})();
 })();

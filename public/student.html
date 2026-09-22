@@ -363,7 +363,7 @@
       whoRow.textContent = botKind ? (botKind === 'brewer' ? 'Brewer' : 'Barista') : (isMe ? 'You' : m.author);
       const p = document.createElement(m.bot ? 'div' : 'p');
       if (m.bot) { p.className = 'ai-content'; p.innerHTML = AIFormat.render(m.text); }
-      else p.innerHTML = esc(m.text)
+      else p.innerHTML = esc(m.text.replace(/\[matcha-gift:[0-9a-f-]{36}\]/g,''))
         .replace(/@baristi/gi, '<b style="color:#f6c978;">@baristi</b>')
         .replace(/@brewer/gi, '<b style="color:#e0b2ff;">@brewer</b>');
       const time = document.createElement('span');
@@ -371,6 +371,8 @@
       time.textContent = fmtTime(m.time);
       whoRow.appendChild(time);
       bub.appendChild(whoRow); bub.appendChild(p);
+      const giftId=m.text.match(/\[matcha-gift:([0-9a-f-]{36})\]/)?.[1];
+      if(giftId&&!isMe){const gift=document.createElement('button');gift.className='btn';gift.textContent='Open Matcha drink gift';gift.onclick=()=>window.openMatchaGift(giftId);bub.appendChild(gift);}
       if(m.attachment){
         const link=document.createElement('a');link.href=m.attachment.url;link.textContent='Download '+m.attachment.name;link.className='attachment-link';link.setAttribute('download',m.attachment.name);
         if(m.attachment.mimeType==='image/jpeg'){const preview=document.createElement('img');preview.src=m.attachment.url;preview.alt=m.attachment.name;preview.className='chat-attachment';preview.loading='lazy';bub.appendChild(preview);}

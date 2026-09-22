@@ -15,6 +15,11 @@ const client = createClient({
 /* ---------------- schema ---------------- */
 
 const SCHEMA = `
+CREATE TABLE IF NOT EXISTS matcha_gifts (
+ id TEXT PRIMARY KEY, school_id INTEGER NOT NULL, sender_id INTEGER NOT NULL,
+ recipient_id INTEGER NOT NULL, drink_id TEXT NOT NULL, instructions TEXT NOT NULL,
+ minutes INTEGER NOT NULL, started_at INTEGER, completed INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   firebase_uid TEXT UNIQUE NOT NULL,
