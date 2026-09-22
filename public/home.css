@@ -65,4 +65,24 @@ h1{font-size:clamp(44px,5vw,84px);margin:0 0 3px}
   .navigation{gap:13px;font-size:20px}.login-button{font-size:20px}
   .intro{font-size:22px;padding:12px 14px}.feature p{font-size:18px}
 }
+/* Keep navigation labels and account names intact on every public page. */
+.site-header{gap:clamp(16px,2vw,32px)}
+.site-header .navigation{flex:1;flex-wrap:nowrap;justify-content:space-evenly;gap:clamp(16px,2vw,32px);margin-left:0}
+.navigation a{flex-shrink:0;white-space:nowrap}
+.login-button{min-width:0;max-width:240px;padding-inline:18px;flex-shrink:1}
+.login-button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:851px) and (max-width:1250px){
+  .site-header{flex-wrap:wrap;gap:8px 24px}
+  .site-header .navigation{order:4;flex-basis:100%;justify-content:center;gap:clamp(24px,5vw,60px)}
+  .login-button{margin-left:auto}
+  .theme-toggle{margin-left:0}
+}
+@media(max-width:850px){
+  .site-header .navigation{flex-basis:100%;gap:clamp(14px,4vw,32px)}
+}
+@media(max-width:540px){
+  .site-header{grid-template-columns:minmax(0,1fr) auto}
+  .site-header .navigation{grid-column:1 / -1;grid-row:3;justify-content:space-between;gap:10px;width:100%;font-size:20px}
+  .login-button{grid-column:1 / -1;grid-row:2;justify-self:end;max-width:100%}
+}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation:none!important;transition:none!important}}
