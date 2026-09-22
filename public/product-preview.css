@@ -1,0 +1,11 @@
+.product-preview{margin:40px 0 48px;min-width:0}.preview-heading{margin-bottom:20px}.preview-heading h2{font-family:"Pixelify Sans",monospace;font-size:32px;margin:8px 0}.preview-heading p{max-width:760px}.preview-browser{border:2px solid var(--border,#8c735a);border-radius:8px;overflow:hidden;box-shadow:7px 8px 0 #1e14262b;background:#f5f3e9}.preview-browser-bar{display:flex;justify-content:space-between;gap:16px;align-items:center;background:var(--panel,#463224);padding:12px 18px;font:15px "VT323",monospace;color:var(--ink,#fff0cf)}.preview-browser-bar>span:first-child{letter-spacing:5px;color:#9caf79}.preview-browser-bar>span:last-child{font-size:12px;letter-spacing:2px}.preview-browser iframe{display:block;border:0;width:100%;height:760px;background:#f5f3e9}.navigation{flex-wrap:wrap}
+@media(max-width:720px){.preview-browser iframe{height:680px}.preview-browser-bar{padding:10px;font-size:13px}.preview-heading h2{font-size:26px}}
+/* The previews reuse the real page markup and styles with isolated sample content. */
+body[data-preview] .preview-label{padding:10px 18px;text-align:center;background:#dfe8cc;color:#314629;font:16px "VT323",monospace;border-bottom:1px solid #879c68}
+body[data-preview] .preview-radio{min-height:150px;display:grid;place-content:center;background:#24213a;color:#dacff3;text-align:center;border:2px solid #766991;padding:20px}
+body[data-preview] button:disabled{opacity:.8;cursor:default}
+body[data-preview] .preview-message{padding:14px 16px;border:1px solid var(--border);background:var(--panel2);margin-bottom:12px;max-width:90%}
+body[data-preview] .preview-message strong{display:block;color:var(--gold);font-size:16px;margin-bottom:5px}
+body[data-preview] .preview-room{display:block;padding:12px;margin:4px 0;background:var(--panel2);color:var(--ink)}
+body[data-preview] .preview-room.selected{border-left:3px solid var(--gold)}
+body[data-preview] header .me{flex-wrap:nowrap}

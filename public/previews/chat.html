@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CoffeeHouse Student Hall — your virtual classroom for group projects, class discussions, and study sessions with classmates.">
+<meta name="robots" content="noindex, nofollow">
+<title>CoffeeHouse - Student Hall</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/study-radio.css">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/motion.css">
+
+<link rel="stylesheet" href="/vendor/katex/katex.min.css">
+<link rel="stylesheet" href="/ai-format.css">
+<link rel="stylesheet" href="/groups.css">
+<link rel="stylesheet" href="/notepad.css?v=3">
+<link rel="stylesheet" href="/matcha-mode.css?v=3">
+
+
+
+<link rel="stylesheet" href="/product-preview.css?v=1">
+</head>
+<body class="hall-page" data-preview="chat"><div class="preview-label">Sample account · scroll to explore</div>
+
+<svg class="ch-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="ch-cup" viewBox="0 0 40 40">
+    <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
+    <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
+    <path fill="var(--coffee, #502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
+  </symbol>
+  <symbol id="ch-sun" viewBox="0 0 24 24"><path fill="currentColor" d="M11 0h2v4h-2zm0 20h2v4h-2zM0 11h4v2H0zm20 0h4v2h-4zM3 3h3v3H3zm15 0h3v3h-3zM3 18h3v3H3zm15 0h3v3h-3zM8 6h8v2h2v8h-2v2H8v-2H6V8h2z"/></symbol>
+  <symbol id="ch-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M10 1h5v2h-3v3h-2v7h2v3h3v2h7v2h-3v2H8v-2H4v-3H2V7h2V4h3V2h3z"/></symbol>
+</defs></svg>
+
+  <header>
+    <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>CoffeeHouse</span></a>
+    <button id="notepadButton" class="btn matcha" type="button" aria-haspopup="dialog" aria-expanded="false">NOTEPAD</button>
+    <div class="me" id="meBox">
+      <span class="avatar" id="meAvatar"></span>
+      <div id="meName">... <span class="status-dot"></span>
+        <small id="meSub">loading your school community...</small>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button id="matchaModeButton" class="btn" type="button" aria-haspopup="dialog">Matcha Mode</button>
+      <div class="theme-toggle" role="group" aria-label="Color theme">
+        <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
+      </div>
+      <a class="btn" href="/">HOME</a>
+      <a class="btn matcha" href="ai-assistant.html">STUDY CORNER</a>
+      <a class="btn" href="settings.html">SETTINGS</a>
+    </div>
+  </header>
+  <section class="room-banner room-banner-radio">
+    <div class="room-banner-copy"><p class="eyebrow">COFFEEHOUSE / COMMUNITY</p><h1>Student Hall</h1><p>Pull up a chair. Find your people, share a question, and learn together.</p></div>
+    <figure class="study-radio" aria-label="Lo-fi study playlist">
+      <div class="preview-radio"><strong>♫ A little background music</strong><span>Your study playlist lives here.</span></div>
+      <div class="radio-controls" role="group" aria-label="Music controls">
+        <button class="btn" type="button" data-radio="previous" aria-label="Previous video" title="Previous video" disabled>⏮</button>
+        <button class="btn" type="button" data-radio="next" aria-label="Next video" title="Next video" disabled>⏭</button>
+        <button class="btn" type="button" data-radio="toggle" aria-label="Play music" title="Play music" disabled>▶</button>
+        <button class="btn" type="button" data-radio="up" aria-label="Increase video volume" title="Increase video volume" disabled>+</button>
+        <button class="btn" type="button" data-radio="down" aria-label="Decrease video volume" title="Decrease video volume" disabled>−</button>
+      </div>
+      <div class="radio-stations" role="group" aria-label="Music playlists">
+        <button class="btn" type="button" data-station="jazz" aria-pressed="true" disabled>Vinyl Jazz</button>
+        <button class="btn" type="button" data-station="hiphop" aria-pressed="false" disabled>R&amp;B Hip Hop</button>
+        <button class="btn" type="button" data-station="lockin" aria-pressed="false" disabled>Lock In</button>
+        <button class="btn" type="button" data-station="indie" aria-pressed="false" disabled>Indie Pop</button>
+      </div>
+      <figcaption><a href="https://www.youtube.com/@ICYFOG" target="_blank" rel="noopener noreferrer">@ICYFOG</a></figcaption>
+    </figure>
+    <svg aria-hidden="true"><use href="#ch-cup"/></svg>
+  </section>
+
+  <div class="app">
+
+    <aside class="side-left">
+      <div class="tabs">
+        <button class="tab active" data-tab="classes">Rooms</button>
+        <button class="tab" data-tab="dms">Messages</button>
+      </div>
+      <div class="scroller" id="classList"></div>
+      <div class="side-art">
+        <canvas class="tm" id="sideMoon" data-art="Moon"></canvas>
+        <canvas class="ta" id="sideTree" data-art="Tree"></canvas>
+        <canvas class="tl" id="sideLan" data-art="Lantern"></canvas>
+      </div>
+    </aside>
+
+    <main class="chat">
+      <div class="chat-head">
+        <h2 id="chatTitle">Choose a room</h2>
+        <div class="meta" id="chatMeta">Loading your community…</div>
+        <button id="editMembers" type="button" class="btn" hidden>Edit Members</button>
+      </div>
+      <div class="msg-scroll" id="msgScroll" role="log" aria-label="Conversation"></div>
+      <div class="composer">
+        <div id="hallBarista" class="companion" data-companion="barista" hidden></div>
+        <div id="hallBrewer" class="companion" data-companion="brewer" hidden></div>
+        <div class="quick">
+          <input id="chatFileInput" type="file" accept="application/pdf,image/png,image/jpeg" hidden>
+          <button id="chatFileButton" type="button">Attach file</button>
+          <button type="button" data-quick=" @baristi ">ADD @baristi</button>
+          <button type="button" data-quick=" @brewer ">ADD @brewer</button>
+          <button id="chatFileRemove" type="button" hidden>Remove file</button>
+          <span id="chatFileStatus" role="status"></span>
+        </div>
+        <p id="hallStatus" role="status"></p><form id="msgForm">
+          <input id="msgInput" aria-label="Message" maxlength="4000" autocomplete="off" placeholder="Pour in a message... try @baristi 'explain photosynthesis'">
+          <button class="btn send" type="submit">SEND</button>
+        </form>
+      </div>
+    </main>
+
+    <aside class="side-right">
+      <div class="panel">
+        <h3>FIND A STUDENT</h3>
+        <input class="search-box" id="studentSearch" aria-label="Search students" placeholder="Search by name...">
+        <div id="studentList"></div>
+      </div>
+      <div class="panel">
+        <h3>PROJECT GROUPS</h3>
+        <div id="groupList"></div>
+        <button id="createGroup" class="btn matcha" type="button">Create Group</button>
+      </div>
+    </aside>
+
+  </div>
+
+  <dialog id="groupDialog" aria-labelledby="groupTitle">
+    <button id="groupClose" class="btn" type="button" aria-label="Close group creation">×</button>
+    <h2 id="groupTitle">Create Group</h2>
+    <div id="groupPickStep">
+      <label for="groupSearch">Find students</label><input id="groupSearch" type="search" placeholder="Search by name…" autocomplete="off">
+      <div id="groupResults"></div><button id="groupMore" type="button" class="btn" hidden>Load more</button>
+      <div id="groupSelected" aria-label="Selected students"></div><p id="groupSelectionCount"></p>
+      <button id="groupAdd" type="button" class="btn" disabled>Add Group</button>
+    </div>
+    <form id="groupNameStep" hidden><label for="groupName">Name your group</label><input id="groupName" maxlength="80" required autocomplete="off"><button id="groupBack" class="btn" type="button">Back</button><button id="groupSave" class="btn matcha" type="submit">Create Group</button></form>
+    <p id="groupStatus" role="status" aria-live="polite"></p>
+  </dialog>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+<script src="/product-preview.js?v=1"></script></body>
+</html>

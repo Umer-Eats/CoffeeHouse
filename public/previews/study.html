@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CoffeeHouse Study Corner — ask questions, get AI-powered explanations, brew cheat sheets, and create study notes with lo-fi music.">
+<meta name="robots" content="noindex, nofollow">
+<title>CoffeeHouse - Study Corner</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/study-radio.css">
+<link rel="stylesheet" href="/notepad.css?v=3">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/motion.css">
+
+<link rel="stylesheet" href="/vendor/katex/katex.min.css">
+<link rel="stylesheet" href="/ai-format.css">
+<link rel="stylesheet" href="/ai-images.css">
+<link rel="stylesheet" href="/saved-items.css">
+
+<link rel="stylesheet" href="/matcha-mode.css?v=3">
+
+
+
+<link rel="stylesheet" href="/product-preview.css?v=1">
+</head>
+<body class="study-page" data-preview="study"><div class="preview-label">Sample account · scroll to explore</div>
+
+<svg class="ch-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="ch-cup" viewBox="0 0 40 40">
+    <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
+    <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
+    <path fill="var(--coffee, #502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
+  </symbol>
+  <symbol id="ch-sun" viewBox="0 0 24 24"><path fill="currentColor" d="M11 0h2v4h-2zm0 20h2v4h-2zM0 11h4v2H0zm20 0h4v2h-4zM3 3h3v3H3zm15 0h3v3h-3zM3 18h3v3H3zm15 0h3v3h-3zM8 6h8v2h2v8h-2v2H8v-2H6V8h2z"/></symbol>
+  <symbol id="ch-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M10 1h5v2h-3v3h-2v7h2v3h3v2h7v2h-3v2H8v-2H4v-3H2V7h2V4h3V2h3z"/></symbol>
+</defs></svg>
+
+  <header class="notepad-page-header">
+    <a class="brand-header" href="/" aria-label="CoffeeHouse home"><svg class="ch-cup" aria-hidden="true"><use href="#ch-cup"/></svg><span>CoffeeHouse</span></a>
+    <button id="notepadButton" class="btn matcha" type="button" aria-haspopup="dialog" aria-expanded="false">NOTEPAD</button>
+    <span class="me" id="engineStatus">Barista · Brewer</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button id="matchaModeButton" class="btn" type="button" aria-haspopup="dialog">Matcha Mode</button>
+      <div class="theme-toggle" role="group" aria-label="Color theme">
+        <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
+      </div>
+      <a class="btn" href="/">HOME</a>
+      <a class="btn matcha" href="student.html" style="padding:8px 10px;">SCHOOL COMMUNITY</a>
+      <a class="btn" href="settings.html">SETTINGS</a>
+    </div>
+  </header>
+  <section class="room-banner room-banner-radio">
+    <div class="room-banner-copy"><p class="eyebrow">COFFEEHOUSE / STUDY CORNER</p><h1>The study corner</h1><p>A fresh explanation. A clearer set of notes. One idea at a time.</p></div>
+    <figure class="study-radio" aria-label="Lo-fi study playlist">
+      <div class="preview-radio"><strong>♫ A little background music</strong><span>Your study playlist lives here.</span></div>
+      <div class="radio-controls" role="group" aria-label="Music controls">
+        <button class="btn" type="button" data-radio="previous" aria-label="Previous video" title="Previous video" disabled>⏮</button>
+        <button class="btn" type="button" data-radio="next" aria-label="Next video" title="Next video" disabled>⏭</button>
+        <button class="btn" type="button" data-radio="toggle" aria-label="Play music" title="Play music" disabled>▶</button>
+        <button class="btn" type="button" data-radio="up" aria-label="Increase video volume" title="Increase video volume" disabled>+</button>
+        <button class="btn" type="button" data-radio="down" aria-label="Decrease video volume" title="Decrease video volume" disabled>−</button>
+      </div>
+      <div class="radio-stations" role="group" aria-label="Music playlists">
+        <button class="btn" type="button" data-station="jazz" aria-pressed="true" disabled>Vinyl Jazz</button>
+        <button class="btn" type="button" data-station="hiphop" aria-pressed="false" disabled>R&amp;B Hip Hop</button>
+        <button class="btn" type="button" data-station="lockin" aria-pressed="false" disabled>Lock In</button>
+        <button class="btn" type="button" data-station="indie" aria-pressed="false" disabled>Indie Pop</button>
+      </div>
+      <figcaption><a href="https://www.youtube.com/@ICYFOG" target="_blank" rel="noopener noreferrer">@ICYFOG</a></figcaption>
+    </figure>
+    <svg aria-hidden="true"><use href="#ch-cup"/></svg>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active bar" data-panel="baristi" aria-pressed="true">BARISTA<small>explain anything &middot; make cheat sheets</small></button>
+    <button class="tab brew" data-panel="brewer" aria-pressed="false">BREWER<small>analyze text &amp; chat feeds &middot; brew study notes</small></button>
+  </div>
+
+  <div class="app">
+
+    <main class="workspace">
+      <!-- BARISTI -->
+      <section class="ws-panel on" id="baristi">
+        <div class="companion" data-companion="barista"></div>
+        <div class="chat-flow" id="barChat"></div>
+        <p class="study-tip">Ask in your own words. AI can make mistakes—check your class materials.</p>
+<div class="image-tools">
+          <input id="barImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <button id="barImageButton" type="button" class="btn">Attach images to Barista</button>
+          <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
+          <div class="image-preview" id="barImagePreview"></div>
+          <p class="image-status" id="barImageStatus" role="status" aria-live="polite"></p>
+        </div>
+        <form class="search-bar" id="barForm">
+          <input id="barInput" aria-label="Question for Barista" autocomplete="off" placeholder="Ask Barista anything... try @baristi">
+          <button class="btn" type="submit" id="barSend">ASK</button>
+        </form>
+      </section>
+
+      <!-- BREWER -->
+      <section class="ws-panel" id="brewer">
+        <div class="companion" data-companion="brewer"></div>
+        <div class="brew-top">
+          <div>
+            <label for="brewSource">SOURCE NAME</label>
+            <input type="text" id="brewSource" placeholder="channel or file name">
+          </div>
+          <div>
+            <label for="brewChannel">OR LOAD A CHANNEL</label>
+            <select class="channel-pick" id="brewChannel"><option value="">— paste text below —</option></select>
+          </div>
+          <button class="btn brew" id="brewBtn">&#9729; BREW NOTES</button>
+          <div class="brew-source-wrap">
+            <textarea id="brewText" aria-label="Source text" placeholder="Paste the source text here, or pick a channel above to load its recent messages. Then hit BREW NOTES."></textarea>
+          </div>
+        </div>
+<div class="image-tools">
+          <input id="brewImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <button id="brewImageButton" type="button" class="btn">Attach images to Brewer</button>
+          <input id="brewPdfInput" type="file" accept="application/pdf" hidden>
+          <button id="brewPdfButton" type="button" class="btn">Attach PDF to Brewer</button>
+          <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
+          <p class="pdf-hint">Upload a PDF study guide (up to 20 MB). PDF text will be used for notes. PDF uploads are temporary.</p>
+          <div class="image-preview" id="brewImagePreview"></div>
+          <p class="image-status" id="brewImageStatus" role="status" aria-live="polite"></p>
+          <div class="pdf-preview" id="brewPdfPreview"></div>
+          <p class="pdf-status" id="brewPdfStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="brew-flow" id="brewFlow">
+          <div class="hint">Paste a source (or pick a channel), then hit "BREW NOTES". Brewer AI reads the full text and returns a clean study doc.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SIDE RACK -->
+    <aside class="side-rack">
+      <div class="rack-art">
+        <canvas class="tc" id="rackCup" data-art="Cup"></canvas>
+        <canvas class="ta" id="rackTree" data-art="Tree"></canvas>
+        <canvas class="tl" id="rackLan" data-art="Lantern"></canvas>
+      </div>
+      <div class="panel">
+        <h3>BARISTA CHEAT SHEETS</h3>
+        <div class="cheat-list" id="cheatList" tabindex="0" role="region" aria-label="Saved Barista cheat sheets"></div>
+      </div>
+      <div class="panel brew">
+        <h3>BREWER DOCUMENTS</h3>
+        <div id="docList" tabindex="0" role="region" aria-label="Saved Brewer documents"></div>
+      </div>
+    </aside>
+
+  </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+  
+<script src="/product-preview.js?v=1"></script></body>
+</html>

@@ -11,15 +11,16 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/notepad.css">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script defer src="https://va.vercel-scripts.com/script.js"></script>
+
 <link rel="stylesheet" href="/motion.css">
-<script src="/scenery.js" defer></script>
+
 <link rel="stylesheet" href="/matcha-mode.css?v=3">
-<script defer src="/matcha-menu.js?v=1"></script>
-<script defer src="/matcha-core.js?v=2"></script>
-<script defer src="/matcha-mode.js?v=2"></script>
+
+
+
+<link rel="stylesheet" href="/product-preview.css?v=1">
 </head>
-<body class="settings-page">
+<body class="settings-page" data-preview="profile"><div class="preview-label">Sample account · scroll to explore</div>
 
 <svg class="ch-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
   <symbol id="ch-cup" viewBox="0 0 40 40">
@@ -92,96 +93,9 @@
 
   </div>
 
-  <script src="/art.js"></script>
-  <script src="/app.js"></script>
-  <script src="/notepad.js"></script>
-  <script>
-    const $ = id => document.getElementById(id);
-    let SCHOOLS = [];
-
-    async function boot() {
-      Art.initTheme();
-      let me;
-      try { me = await api('/api/me'); } catch (e) { location.href = '/'; return; }
-      if (!me.school) { location.href = '/?login=1'; return; }
-
-      const av = $('meAvatar');
-      av.style.background = colorFor(me.user.name);
-      av.innerHTML = me.user.picture ? `<img src="${esc(me.user.picture)}">` : esc(initials(me.user.name));
-      $('meName').textContent = me.user.name;
-      $('displayName').value = me.user.name;
-      $('meEmail').textContent = me.user.email;
-      $('curSchool').textContent = me.school.name;
-
-      SCHOOLS = await api('/api/schools');
-      $('schoolSelect').innerHTML = SCHOOLS.map(s =>
-        `<option value="${s.id}" ${s.id === me.school.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-    }
-
-    $('displayNameForm').addEventListener('submit', async event => {
-      event.preventDefault();
-      $('saveDisplayName').disabled=true;
-      $('displayNameStatus').textContent='Saving…';
-      try{
-        const result=await api('/api/me/display-name',{method:'PUT',body:{name:$('displayName').value}});
-        $('displayName').value=result.name;
-        $('meName').textContent=result.name;
-        $('meAvatar').style.background=colorFor(result.name);
-        if(!$('meAvatar').querySelector('img'))$('meAvatar').textContent=initials(result.name);
-        $('displayNameStatus').textContent='Saved. Other students will see this name.';
-      }catch(err){$('displayNameStatus').textContent=err.message;}
-      finally{$('saveDisplayName').disabled=false;}
-    });
-    $('changeSchool').addEventListener('click', async () => {
-      $('changeSchool').disabled = true;
-      const st = $('schoolStatus');
-      st.className = 'note';
-      st.textContent = '';
-      const password = $('schoolPassword').value.trim();
-      if (!password) { st.className = 'note err'; st.textContent = 'Please enter the community password.'; $('changeSchool').disabled = false; return; }
-      try {
-        const res = await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value), password } });
-        $('curSchool').textContent = res.school.name;
-        st.className = 'note ok';
-        st.textContent = 'Community updated to ' + res.school.name + '. You are now sorted into that school\'s halls.';
-        $('schoolPassword').value = '';
-      } catch (err) {
-        st.className = 'note err';
-        st.textContent = 'Failed: ' + err.message;
-      }
-      $('changeSchool').disabled = false;
-    });
-
-    $('logoutBtn').addEventListener('click', async () => {
-      $('logoutBtn').disabled = true;
-      try {
-        await api('/api/logout', { method: 'POST' });
-        location.href = '/';
-      } catch (err) {
-        $('schoolStatus').textContent = 'Could not log out: ' + err.message;
-        $('logoutBtn').disabled = false;
-      }
-    });
-
-    /* ---------- theme toggle ---------- */
-    (function() {
-      var saved = 'light';
-      try { saved = localStorage.getItem('ch-theme') || 'light'; } catch(e) {}
-      function applyTheme(theme) {
-        document.body.setAttribute('data-theme', theme);
-        document.querySelectorAll('.theme-toggle button').forEach(function(b) {
-          b.setAttribute('aria-pressed', b.dataset.themeChoice === theme);
-        });
-        try { localStorage.setItem('ch-theme', theme); } catch(e) {}
-        if (typeof Art !== 'undefined') Art.refreshAll();
-      }
-      applyTheme(saved);
-      document.querySelectorAll('.theme-toggle button').forEach(function(b) {
-        b.addEventListener('click', function() { applyTheme(b.dataset.themeChoice); });
-      });
-    })();
-
-    boot().catch(err => { $('schoolStatus').textContent = 'Could not load settings: ' + err.message; });
-  </script>
-</body>
+  
+  
+  
+  
+<script src="/product-preview.js?v=1"></script></body>
 </html>

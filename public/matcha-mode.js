@@ -1,12 +1,12 @@
 (function(){
 'use strict';
-const menu=MatchaMenu,core=MatchaCore;
+const menu=MatchaMenu,core=MatchaCore,preview=document.body.dataset.matchaPreview==='true';
 let state,key,selected,category='All drinks',dialog,content,interval,notice='',savingFailed=false,opening=false;
 const button=document.getElementById('matchaModeButton');
 const html=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const art=d=>`<img class="mm-drink-art" src="${d.art}" alt="Pixel illustration of ${html(d.name)}">`;
-function save(){try{localStorage.setItem(key,JSON.stringify(state));savingFailed=false;}catch{savingFailed=true;}}
-function load(){let stored;try{stored=JSON.parse(localStorage.getItem(key)||'{}');}catch{stored={};}state=core.create(menu,stored);save();}
+function save(){if(preview)return;try{localStorage.setItem(key,JSON.stringify(state));savingFailed=false;}catch{savingFailed=true;}}
+function load(){if(preview){state=core.create(menu);return;}let stored;try{stored=JSON.parse(localStorage.getItem(key)||'{}');}catch{stored={};}state=core.create(menu,stored);save();}
 function drink(){return menu.drinks.find(d=>d.id===state.active?.drinkId);}
 function render(){
  const a=state.active;
@@ -21,7 +21,7 @@ function renderMenu(){
  content.innerHTML=`<div class="mm-menu-heading"><p class="mm-eyebrow">A LITTLE RITUAL FOR YOUR NEXT BIG IDEA</p><h1 id="mm-title">A slower kind of order.</h1><p>Choose a cup. Give it your time. Let something good brew.</p><span class="mm-tag">${menu.drinks.length} cups · 7 collections · yours to discover</span></div>
  <nav class="mm-categories" aria-label="Drink categories">${['All drinks',...menu.categories].map(c=>`<button type="button" data-category="${html(c)}" aria-pressed="${category===c}">${html(c)}</button>`).join('')}</nav>
  <div class="mm-menu-layout"><section class="mm-grid" aria-label="Drink menu"></section><aside class="mm-detail" aria-label="Your drink"></aside></div>
- <footer class="mm-source">A CoffeeHouse focus ritual inspired by HEYTEA. Digital rewards only.<br>Menu reference: <a href="https://heyteas.com/" target="_blank" rel="noopener">heyteas.com</a> · Prices shown here are focus minutes. Progress stays in this browser.</footer>`;
+ <footer class="mm-source">A CoffeeHouse focus ritual inspired by HEYTEA. Digital rewards only.<br>Menu reference: <a href="https://heyteas.com/" target="_blank" rel="noopener">heyteas.com</a> · Prices shown here are focus minutes. ${preview?'Demo progress resets when you reload.':'Progress stays in this browser.'}</footer>`;
  const filtered=menu.drinks.filter(d=>category==='All drinks'||d.category===category);
  if(!selected||!filtered.some(d=>d.id===selected))selected=filtered[0].id;
  content.querySelector('.mm-grid').innerHTML=filtered.map(d=>{
@@ -73,7 +73,7 @@ function tick(){
 async function open(){
  if(opening||dialog?.open)return;opening=true;button.disabled=true;
  try{
-  const me=await api('/api/me');if(!me.user?.id)throw Error('Sign in to open Matcha Mode.');
+  const me=preview?{user:{id:'preview'}}:await api('/api/me');if(!me.user?.id)throw Error('Sign in to open Matcha Mode.');
   key='coffeehouse-matcha-v1:'+me.user.id;load();notice='';
   if(!dialog){dialog=document.createElement('dialog');dialog.className='matcha-mode';dialog.setAttribute('closedby','none');dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();}},true);dialog.setAttribute('aria-labelledby','mm-title');dialog.innerHTML='<div class="mm-top"><span class="mm-wordmark">✿ MATCHA MODE <small>by CoffeeHouse</small></span><button class="mm-cancel" type="button">Cancel order ×</button></div><p class="mm-status" role="status"></p><main class="mm-content"></main>';document.body.appendChild(dialog);content=dialog.querySelector('main');dialog.addEventListener('cancel',e=>e.preventDefault());dialog.querySelector('.mm-cancel').onclick=()=>{state.active=null;save();clearInterval(interval);dialog.close();document.body.classList.remove('matcha-open');button.focus();};}
   core.finish(state);save();render();dialog.showModal();document.body.classList.add('matcha-open');interval=setInterval(tick,500);
@@ -83,5 +83,5 @@ button.addEventListener('click',open);
 window.addEventListener('storage',e=>{if(e.key===key&&dialog?.open){let stored;try{stored=JSON.parse(e.newValue||'{}');}catch{stored={};}state=core.create(menu,stored);render();}});
 document.addEventListener('visibilitychange',tick);
 // Restore a running order after a reload, without opening the mode for new users.
-(async()=>{try{const me=await api('/api/me');const saved=JSON.parse(localStorage.getItem('coffeehouse-matcha-v1:'+me.user?.id)||'{}');if(saved.active)open();}catch{}})();
+(async()=>{if(preview){open();return;}try{const me=await api('/api/me');const saved=JSON.parse(localStorage.getItem('coffeehouse-matcha-v1:'+me.user?.id)||'{}');if(saved.active)open();}catch{}})();
 })();

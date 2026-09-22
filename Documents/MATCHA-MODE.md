@@ -16,7 +16,7 @@ The requested official https://www.heytea.com/products page was unavailable duri
 ## Behavior
 
 - Only the cheapest entry per category initially unlocks. Equal-price ties have a stable ID ordering.
-- Each drink gets one randomly sampled time: 5–120 minutes in five-minute increments, persisted for that user/browser.
+- Each drink gets a deterministic pseudorandom time: 5–120 minutes in five-minute increments, seeded by drink name. The same drink has the same duration for every user, including duplicate category entries. Old per-user prices are replaced on load; an already-running timer keeps its original end timestamp.
 - A topping or nonblank instruction is required. Ordering produces a receipt; tearing it starts the timer. Mouse/touch dragging, clicking and Enter are supported.
 - A persisted end timestamp survives reloads and browser timer throttling. A completed session earns exactly one stamp. Cancellation earns nothing.
 - Five stamps on a drink enable explicit coupon redemption, unlocking only the next entry in the same category. The final drink awards collection completion.
@@ -27,3 +27,5 @@ The requested official https://www.heytea.com/products page was unavailable duri
 ## Verification
 
 Run `node --test --test-isolation=none tests/*.test.js` in restricted Windows environments, or `npm test` normally. `node tests/matcha-preview.cjs` provides an isolated localhost:3108 UI fixture with a synthetic account and no production database or AI calls.
+
+Public feature pages use sandboxed, generated previews. Run `npm run build:previews` after changing product markup. Matcha preview state is memory-only and never reads account APIs or saved user progression.

@@ -17,7 +17,7 @@ for (const file of ['public/index.html', 'public/student.html', 'public/settings
     assert.equal(new Set(ids).size, ids.length, 'duplicate element IDs');
   });
 }
-for (const name of ['chat', 'study', 'profile']) {
+for (const name of ['chat', 'study', 'profile', 'matcha']) {
   test(name + ' is a public explanation page with working entry points', () => {
     const html = read('public/' + name + '.html');
     assert.match(html, new RegExp('href="/' + name + '\\.html" aria-current="page"'));

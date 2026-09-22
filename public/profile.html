@@ -26,6 +26,7 @@
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
 <link rel="stylesheet" href="/motion.css">
 <script src="/scenery.js" defer></script>
+<link rel="stylesheet" href="/product-preview.css?v=1">
 </head>
 <body class="explore-page">
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -45,7 +46,7 @@
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
-    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html" aria-current="page">Profile</a></nav>
+    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html" aria-current="page">Profile</a><a href="/matcha.html">Matcha Mode</a></nav>
     <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
     <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
   </header>
@@ -55,6 +56,7 @@
       <div class="cafe-window" aria-hidden="true"><div class="window-sign"><svg><use href="#user"/></svg><span>Make yourself at home</span></div></div>
     </section>
     <section class="explain-grid" aria-label="Profile features"><article class="explain-card"><span class="step">01</span><h2>A recognizable identity</h2><p>Sign in with Google. CoffeeHouse uses your account name and picture so classmates know who they are talking to.</p></article><article class="explain-card"><span class="step">02</span><h2>Your school, in one place</h2><p>Choose your school after signing in. Settings lets you change your community when you need to.</p></article><article class="explain-card"><span class="step">03</span><h2>Daylight or moonlight</h2><p>Choose the warm daytime café or the quiet night palette. Your preference stays in this browser as you move between pages.</p></article></section>
+    <section class="product-preview" aria-label="Your own corner of CoffeeHouse"><div class="preview-heading"><p class="eyebrow">TAKE A LOOK INSIDE</p><h2>Your own corner of CoffeeHouse</h2><p>Scroll through a signed-in-style preview with sample content. Sign in to use the tools.</p></div><div class="preview-browser"><div class="preview-browser-bar"><span aria-hidden="true">● ● ●</span><span>CoffeeHouse / profile</span><span>PREVIEW</span></div><iframe src="/previews/profile.html" title="Your own corner of CoffeeHouse — scrollable preview" loading="lazy" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div></section>
     <section class="closing-note"><svg aria-hidden="true"><use href="#cup"/></svg><div><h2>A simple place to belong.</h2><p>Your settings show your account details, school membership, and session controls. No invented achievements, activity counts, or profile statistics.</p></div><a href="/chat.html">Explore Chat →</a></section>
   </main><footer class="explore-footer"><a href="/">CoffeeHouse</a><span>Chat. Study. Grow. Together.</span></footer>
 

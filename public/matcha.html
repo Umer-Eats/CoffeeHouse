@@ -4,32 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#3d261a">
-  <meta name="description" content="CoffeeHouse is a cozy free platform for students to chat, study, and grow together. Create school rooms, share notes, and learn with friends.">
-  <title>CoffeeHouse — Chat. Study. Grow. Together.</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="canonical" href="https://www.coffee-house.app/">
+  <meta name="description" content="Turn focused time into a drink collection with Matcha Mode: choose a cup, tear your receipt, and earn your next favorite.">
+  <title>Matcha Mode — CoffeeHouse</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://www.coffee-house.app/matcha.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="CoffeeHouse — Chat. Study. Grow. Together.">
-  <meta property="og:description" content="CoffeeHouse is a cozy free platform for students to chat, study, and grow together. Create school rooms, share notes, and learn with friends.">
-  <meta property="og:url" content="https://www.coffee-house.app/">
+  <meta property="og:title" content="Matcha Mode — CoffeeHouse">
+  <meta property="og:description" content="Turn focused time into a drink collection with Matcha Mode: choose a cup, tear your receipt, and earn your next favorite.">
+  <meta property="og:url" content="https://www.coffee-house.app/matcha.html">
   <meta property="og:site_name" content="CoffeeHouse">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CoffeeHouse — Chat. Study. Grow. Together.">
-  <meta name="twitter:description" content="CoffeeHouse is a cozy free platform for students to chat, study, and grow together. Create school rooms, share notes, and learn with friends.">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"CoffeeHouse","url":"https://www.coffee-house.app/","description":"A cozy free platform for students to chat, study, and grow together.","potentialAction":{"@type":"SearchAction","target":"https://www.coffee-house.app/study.html?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"CoffeeHouse","url":"https://www.coffee-house.app/","logo":"https://www.coffee-house.app/favicon.svg","sameAs":[]}</script>
+  <meta name="twitter:title" content="Matcha Mode — CoffeeHouse">
+  <meta name="twitter:description" content="Turn focused time into a drink collection with Matcha Mode: choose a cup, tear your receipt, and earn your next favorite.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="/" as="document">
   <link rel="preload" href="/chat.html" as="document">
-  <link rel="preload" href="/study.html" as="document">
-  <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/home.css">
+  <link rel="stylesheet" href="/explore.css">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
 <link rel="stylesheet" href="/motion.css">
 <script src="/scenery.js" defer></script>
+<link rel="stylesheet" href="/product-preview.css?v=1">
 </head>
-<body>
+<body class="explore-page">
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
     <symbol id="cup" viewBox="0 0 40 40">
       <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
@@ -47,19 +46,19 @@
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
-    <nav class="navigation" aria-label="Main navigation"><a href="/" aria-current="page">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a><a href="/matcha.html">Matcha Mode</a></nav>
+    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a><a href="/matcha.html" aria-current="page">Matcha Mode</a></nav>
     <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
     <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
   </header>
-  <main class="cafe" id="main">
-    <div class="scenery scenery-day" aria-hidden="true"></div><div class="scenery scenery-night" aria-hidden="true"></div>
-    <section class="welcome" aria-labelledby="title">
-      <svg class="hero-cup" aria-hidden="true"><use href="#cup"/></svg>
-      <h1 id="title">CoffeeHouse</h1>
-      <p class="tagline">Chat. Study. Grow. Together.</p>
-      <p class="intro">Your cozy space for<br>communication and study.</p>
+  <main id="main" class="explore">
+    <section class="explore-hero">
+      <div class="explore-copy"><p class="eyebrow">One cup. One quiet moment.</p><h1>Make time.<br>Make matcha.</h1><p class="lead">Turn your next focus session into a little café ritual. Pick a drink, make it yours, and tear your receipt to start brewing.</p><button class="primary-button" data-login>Start your first order <span aria-hidden="true">→</span></button><p class="small-print">Digital drinks. Real time for the things that matter.</p></div>
+      <div class="cafe-window" aria-hidden="true"><div class="window-sign"><svg><use href="#cup"/></svg><span>A little focus, freshly whisked</span></div></div>
     </section>
-  </main>
+    <section class="explain-grid" aria-label="Matcha Mode features"><article class="explain-card"><span class="step">01</span><h2>Choose your ritual</h2><p>Explore 49 illustrated cups across seven collections. Each drink has its own focus time, from 5 minutes to 2 hours, shared by everyone.</p></article><article class="explain-card"><span class="step">02</span><h2>Tear. Whisk. Focus.</h2><p>Add a topping or a personal note. Tear off your receipt and let the timer run while your drink comes together on a quiet paper background.</p></article><article class="explain-card"><span class="step">03</span><h2>Collect your next cup</h2><p>Finish five full timers for one drink, then redeem its coupon to unlock the next drink in that collection. Your progress stays in this browser.</p></article></section>
+    <section class="product-preview" aria-label="Try the Matcha Mode ritual"><div class="preview-heading"><p class="eyebrow">TAKE A LOOK INSIDE</p><h2>Try the Matcha Mode ritual</h2><p>Explore the menu and tear a sample receipt. This demo keeps no progress.</p></div><div class="preview-browser"><div class="preview-browser-bar"><span aria-hidden="true">● ● ●</span><span>CoffeeHouse / Matcha Mode</span><span>PREVIEW</span></div><iframe src="/previews/matcha.html" title="Try the Matcha Mode ritual — scrollable preview" loading="lazy" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe></div></section>
+    <section class="closing-note"><svg aria-hidden="true"><use href="#cup"/></svg><div><h2>Stay for a little while.</h2><p>Need to leave? Use Cancel order. Unfinished orders do not earn a stamp, and completed progress is saved for your next visit.</p></div><a href="/study.html">Explore Study →</a></section>
+  </main><footer class="explore-footer"><a href="/">CoffeeHouse</a><span>Chat. Study. Grow. Together.</span></footer>
 
   <dialog id="accountDialog" aria-labelledby="accountTitle">
     <button class="close-dialog" type="button" aria-label="Close dialog">×</button>

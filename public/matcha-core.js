@@ -1,12 +1,18 @@
 (function(root){
 'use strict';
-function create(menu,saved={},random=Math.random){
+// A versioned seed gives each drink a varied but identical price for every user.
+function durationFor(name){
+ let hash=2166136261;
+ for(const c of 'coffeehouse-matcha-v1:'+name.toLowerCase())hash=Math.imul(hash^c.charCodeAt(0),16777619);
+ hash=Math.imul(hash^(hash>>>16),0x45d9f3b);hash^=hash>>>16;
+ return 5*(1+((hash>>>0)%24));
+}
+function create(menu,saved={}){
  saved=saved&&typeof saved==='object'?saved:{};
- const state={version:1,minutes:{},stamps:{},unlocked:{},redeemed:{},active:null};
+ const state={version:2,minutes:{},stamps:{},unlocked:{},redeemed:{},active:null};
  const ids=new Set(menu.drinks.map(d=>d.id));
  for(const d of menu.drinks){
-  const minutes=saved.minutes?.[d.id];
-  state.minutes[d.id]=Number.isInteger(minutes)&&minutes>=5&&minutes<=120&&minutes%5===0?minutes:5*(1+Math.min(23,Math.floor(random()*24)));
+  state.minutes[d.id]=durationFor(d.name);
   state.stamps[d.id]=Math.max(0,Math.min(5,Math.floor(Number(saved.stamps?.[d.id])||0)));
   state.redeemed[d.id]=saved.redeemed?.[d.id]===true;
  }
@@ -31,6 +37,6 @@ function redeem(menu,state,id){
  state.redeemed[id]=true;state.unlocked[drink.category]=Math.max(state.unlocked[drink.category],Math.min(index+1,rows.length-1));
  return rows[index+1]||null;
 }
-const core={create,available,order,tear,finish,redeem};
+const core={durationFor,create,available,order,tear,finish,redeem};
 if(typeof module!=='undefined')module.exports=core;else root.MatchaCore=core;
 })(typeof window==='undefined'?{}:window);

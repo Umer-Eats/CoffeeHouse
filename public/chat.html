@@ -26,6 +26,7 @@
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
 <link rel="stylesheet" href="/motion.css">
 <script src="/scenery.js" defer></script>
+<link rel="stylesheet" href="/product-preview.css?v=1">
 </head>
 <body class="explore-page">
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -45,7 +46,7 @@
   <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
-    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html" aria-current="page">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a></nav>
+    <nav class="navigation" aria-label="Main navigation"><a href="/">Home</a><a href="/chat.html" aria-current="page">Chat</a><a href="/study.html">Study</a><a href="/profile.html">Profile</a><a href="/matcha.html">Matcha Mode</a></nav>
     <button class="login-button" id="loginBtn"><svg aria-hidden="true"><use href="#user"/></svg><span>Login</span></button>
     <div class="theme-toggle" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button><button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button></div>
   </header>
@@ -55,6 +56,7 @@
       <div class="cafe-window" aria-hidden="true"><div class="window-sign"><svg><use href="#chat"/></svg><span>Pull up a chair</span></div></div>
     </section>
     <section class="explain-grid" aria-label="Chat features"><article class="explain-card"><span class="step">01</span><h2>School discussion rooms</h2><p>Keep homework questions, study conversations, and everyday school talk in dedicated rooms.</p></article><article class="explain-card"><span class="step">02</span><h2>A familiar face, a direct message</h2><p>Find students in your school and start a one-to-one conversation. Your real community, not a demo roster.</p></article><article class="explain-card"><span class="step">03</span><h2>A little help from AI</h2><p>Mention @baristi for an explanation or @brewer to turn a discussion into study notes.</p></article></section>
+    <section class="product-preview" aria-label="Take a look around Student Hall"><div class="preview-heading"><p class="eyebrow">TAKE A LOOK INSIDE</p><h2>Take a look around Student Hall</h2><p>Scroll through a signed-in-style preview with sample content. Sign in to use the tools.</p></div><div class="preview-browser"><div class="preview-browser-bar"><span aria-hidden="true">● ● ●</span><span>CoffeeHouse / chat</span><span>PREVIEW</span></div><iframe src="/previews/chat.html" title="Take a look around Student Hall — scrollable preview" loading="lazy" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div></section>
     <section class="closing-note"><svg aria-hidden="true"><use href="#cup"/></svg><div><h2>Your seat is waiting.</h2><p>Sign in, choose your school, and enter the Student Hall. Rooms start with real conversations from the people who join.</p></div><a href="/study.html">Explore Study →</a></section>
   </main><footer class="explore-footer"><a href="/">CoffeeHouse</a><span>Chat. Study. Grow. Together.</span></footer>
 
