@@ -30,7 +30,9 @@ const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-ass
 
 const app = express();
 
-app.use(express.json({ limit: '1mb' })); // Other routes keep payloads small; only URLs + text are sent
+// Two prepared images plus a small PDF fit below Vercel's 4.5 MB request limit.
+app.use('/api/ai', express.json({ limit: '4mb' }));
+app.use(express.json({ limit: '1mb' }));
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') return res.status(413).json({error:'Payload too large. Please try again.'});
   if (err.type === 'entity.parse.failed') return res.status(400).json({error:'The request could not be read. Please try again.'});
@@ -43,6 +45,7 @@ app.post('/api/blob/upload', createBlobUploadHandler({
     if (!body || body.type !== 'blob.generate-client-token') throw Object.assign(new Error('Invalid Blob upload request.'), { status: 400 });
     const { pathname, clientPayload, multipart } = body.payload || {};
     const options = await onBeforeGenerateToken(pathname, clientPayload, multipart);
+    if (!process.env.BLOB_READ_WRITE_TOKEN) throw Object.assign(new Error('Large PDF uploads are not configured. Try a PDF smaller than 700 KB or contact support.'), {status:503});
     const token = await generateClientTokenFromReadWriteToken({ ...options, pathname, token: process.env.BLOB_READ_WRITE_TOKEN });
     return { clientToken: token };
   },

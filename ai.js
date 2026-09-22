@@ -55,7 +55,21 @@ async function generate(genAI, model, prompt, system = null, images = []) {
     'Analyze diagrams, handwriting, and visible text. Say when details are unclear; do not invent unreadable content. ';
   const req = {contents:[{role:'user',parts}]};
   if (system) req.systemInstruction = system + (images.length ? imageGuidance : '');
-  const result = await withRetry(() => genAI.getGenerativeModel({ model }).generateContent(req, {timeout: images.length ? 60000 : 15000}));
+  const controller = new AbortController();
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(Object.assign(new Error('AI processing timed out. Try a smaller file or ask again.'), {status:504}));
+      controller.abort();
+    }, 80000);
+  });
+  let result;
+  try {
+    result = await Promise.race([deadline, withRetry(() => {
+      if (controller.signal.aborted) throw new Error('AI request cancelled.');
+      return genAI.getGenerativeModel({ model }).generateContent(req, {signal:controller.signal});
+    })]);
+  } finally { clearTimeout(timer); }
   const text = result.response.text();
   if (!text) throw new Error('AI returned an empty response.');
   return text.trim();

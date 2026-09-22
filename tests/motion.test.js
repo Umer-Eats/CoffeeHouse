@@ -42,7 +42,7 @@ function harness(attachments = []) {
   const context = vm.createContext({document,localStorage:{getItem:()=>null,setItem:()=>{}},Art:{initTheme(){},refreshAll(){}},
     AIImages:{create:()=>({get:()=>imageState.images,ready:()=>true,setBusy(){},clear(){imageState.images=[];}})},
     CoffeeCompanions:{setBusy:(name,busy)=>states.push([name,busy])},AIFormat:require('../public/ai-format.js'),location:{},esc:String,nowTime:()=>'',
-    VercelBlob:{upload:async(file)=>{const url='https://test.blob.vercel-storage.com/uploads/'+(file.name||'file');blobUploads.push({file,url});return{url:url};},uploadBase64:async(attachment)=>{const url='https://test.blob.vercel-storage.com/uploads/'+(attachment.name||'file');blobUploads.push({attachment,url});return{url:url};}},
+    VercelBlob:{prepareAttachments:async(images,pdf)=>[...images.map(({mimeType,data})=>({mimeType,data})),...(pdf?[{mimeType:'application/pdf',data:Buffer.from('%PDF-1.4 test').toString('base64')}]:[])],upload:async(file)=>{const url='https://test.blob.vercel-storage.com/uploads/'+(file.name||'file');blobUploads.push({file,url});return{url:url};},uploadBase64:async(attachment)=>{const url='https://test.blob.vercel-storage.com/uploads/'+(attachment.name||'file');blobUploads.push({attachment,url});return{url:url};}},
     api:(url,options)=>url==='/api/me'?new Promise(()=>{}):url==='/api/ai/baristi'||url==='/api/ai/brewer'
       ?new Promise((yes,no)=>{requests.push({url,options});resolve=yes;reject=no;}):Promise.resolve([])});
   const html=read('public/ai-assistant.html');
@@ -60,7 +60,8 @@ for (const kind of ['barista','brewer']) {
       assert.equal(h.requests.length,1);
       const body=JSON.parse(JSON.stringify(h.requests[0].options.body));
       assert.equal(body.text,'');
-      assert.deepEqual(body.images,[{mimeType:'image/jpeg',url:'https://test.blob.vercel-storage.com/uploads/worksheet.jpg'}]);
+      assert.deepEqual(body.images,[{mimeType:'image/jpeg',data:'test-image'}]);
+      await new Promise(r=>setTimeout(r,0));
       if(outcome==='success') h.resolve({reply:'Answer',doc:'Notes'}); else h.reject(new Error('Unavailable'));
       await run;
       assert.equal(h.imageState.images.length,outcome==='success'?0:1);
@@ -77,10 +78,30 @@ for (const kind of ['barista','brewer']) {
       const run=trigger.listeners[kind==='barista'?'submit':'click']({preventDefault(){}});
       assert.equal(button.disabled,true);
       assert.deepEqual(h.states,[[kind,true]]);
+      await new Promise(r=>setTimeout(r,0));
       if(outcome==='success') h.resolve({reply:'Answer',doc:'Notes'}); else h.reject(new Error('Unavailable'));
       await run;
       assert.equal(button.disabled,false);
       assert.deepEqual(h.states,[[kind,true],[kind,false]]);
+    });
+  }
+}
+for (const kind of ['barista','brewer']) {
+  for (const outcome of ['success','failure']) {
+    test(`${kind} sends a PDF without text and exits busy state on ${outcome}`,async()=>{
+      const h=harness();
+      const prefix=kind==='barista'?'bar':'brew';
+      h.element(prefix+'PdfInput').files=[{name:'guide.pdf',size:100,type:'application/pdf'}];
+      h.element(prefix+'PdfInput').listeners.change({target:h.element(prefix+'PdfInput')});
+      const run=h.element(kind==='barista'?'barForm':'brewBtn').listeners[kind==='barista'?'submit':'click']({preventDefault(){}});
+      await new Promise(r=>setTimeout(r,0));
+      assert.equal(h.requests[0].options.body.images[0].mimeType,'application/pdf');
+      assert.equal(h.element(prefix+'PdfInput').disabled,true);
+      if(outcome==='success')h.resolve({reply:'Answer',doc:'Notes'});else h.reject(Error('Network failure'));
+      await run;
+      assert.equal(h.element(prefix+'PdfInput').disabled,false);
+      assert.deepEqual(h.states,[[kind,true],[kind,false]]);
+      assert.equal(h.element(prefix+'PdfStatus').textContent==='',outcome==='success');
     });
   }
 }

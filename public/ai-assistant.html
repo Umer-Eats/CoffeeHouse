@@ -86,6 +86,10 @@
           <input id="barImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
           <button id="barImageButton" type="button" class="btn">Attach images to Barista</button>
           <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
+          <input id="barPdfInput" type="file" accept="application/pdf,.pdf" hidden>
+          <button id="barPdfButton" type="button" class="btn">Attach PDF to Barista</button>
+          <button id="barPdfRemove" type="button" class="btn">Remove PDF</button>
+          <p id="barPdfStatus" role="status" aria-live="polite"></p>
           <div class="image-preview" id="barImagePreview"></div>
           <p class="image-status" id="barImageStatus" role="status" aria-live="polite"></p>
         </div>
@@ -118,7 +122,7 @@
           <input id="brewPdfInput" type="file" accept="application/pdf" hidden>
           <button id="brewPdfButton" type="button" class="btn">Attach PDF to Brewer</button>
           <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
-          <p class="pdf-hint">Upload a PDF study guide (up to 20 MB). PDF text will be used for notes. Original PDF is not saved.</p>
+          <p class="pdf-hint">Upload a PDF study guide (up to 20 MB). PDF text will be used for notes. PDF uploads are temporary.</p>
           <div class="image-preview" id="brewImagePreview"></div>
           <p class="image-status" id="brewImageStatus" role="status" aria-live="polite"></p>
           <div class="pdf-preview" id="brewPdfPreview"></div>
@@ -150,7 +154,7 @@
   </div>
 
   <script src="/art.js"></script>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=3"></script>
   <script src="/study-radio.js"></script>
   <script src="/notepad.js"></script>
   <script src="/vendor/markdown-it/browser/markdown-it.umd.min.js"></script>
@@ -158,8 +162,8 @@
   <script src="/ai-format.js"></script>
   <script src="/companions.js"></script>
   <script src="/ai-images.js"></script>
-<script src="/vendor/blob-client.js?v=2"></script>
-<script src="/blob-upload.js?v=2"></script>
+<script src="/vendor/blob-client.js?v=3"></script>
+<script src="/blob-upload.js?v=3"></script>
   <script>
     const $ = id => document.getElementById(id);
     const barImages = AIImages.create('bar', 'baristi', 'barSend');
@@ -167,6 +171,21 @@
 
     const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20 MB (blob uploads bypass serverless limit)
     let brewPdfFile = null;
+    let barPdfFile = null;
+    $('barPdfButton').addEventListener('click', () => $('barPdfInput').click());
+    $('barPdfInput').addEventListener('change', () => {
+      const file = $('barPdfInput').files[0];
+      if (!file) return;
+      if (!file.size || file.size > MAX_PDF_SIZE || (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name))) {
+        $('barPdfStatus').textContent = 'Choose a non-empty PDF up to 20 MB.';
+        return;
+      }
+      barPdfFile = file;
+      $('barPdfStatus').textContent = 'Selected: ' + file.name;
+    });
+    $('barPdfRemove').addEventListener('click', () => {
+      barPdfFile = null; $('barPdfInput').value = ''; $('barPdfStatus').textContent = '';
+    });
 
     function renderPdfStatus() {
       const status = $('brewPdfStatus');
@@ -177,7 +196,8 @@
       const btn = document.createElement('button');
       btn.type = 'button'; btn.textContent = '\u00d7'; btn.title = 'Remove PDF';
       btn.style.cssText = 'padding:0;font-size:14px;line-height:1;background:var(--danger);color:#fff;width:22px;min-width:22px;max-width:22px;height:22px;min-height:22px;border:1px solid var(--border);border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 var(--shad)';
-      btn.addEventListener('click', () => { brewPdfFile = null; $('brewPdfInput').value = ''; renderPdfStatus(); $('brewPdfPreview').innerHTML = ''; });
+      btn.addEventListener('click', () => {
+        if ($('brewBtn').disabled) return; brewPdfFile = null; $('brewPdfInput').value = ''; renderPdfStatus(); $('brewPdfPreview').innerHTML = ''; });
       status.appendChild(span);
       status.appendChild(btn);
     }
@@ -190,7 +210,7 @@
         $('brewPdfStatus').textContent = 'PDF too large (' + Math.round(file.size / 1024 / 1024) + ' MB). Max is ' + Math.round(MAX_PDF_SIZE / 1024 / 1024) + ' MB. Try splitting the file.';
         return;
       }
-      if (!file.type.startsWith('application/pdf')) {
+      if (!file.size || (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name))) {
         $('brewPdfStatus').textContent = 'Please upload a PDF file.';
         return;
       }
@@ -269,24 +289,22 @@
       const inp = $('barInput');
       const q = inp.value.trim();
       const images = barImages.get();
-      if ((!q && !images.length) || $('barSend').disabled || !barImages.ready()) return;
+      if ((!q && !images.length && !barPdfFile) || $('barSend').disabled || !barImages.ready()) return;
       inp.value = '';
       $('barSend').disabled = true;
       barImages.setBusy(true);
+      ['barPdfButton','barPdfInput','barPdfRemove'].forEach(id => $(id).disabled = true);
       inp.disabled = true;
       CoffeeCompanions.setBusy('barista', true);
-      addChat(q || 'Please explain these images.', false, false, images);
+      addChat(q || 'Please explain these attachments.', false, false, images);
       const think = addChat('Pouring a fresh answer...', true, true);
       try {
-        const attachments = [];
-        for (const img of images) {
-          const uploaded = await VercelBlob.uploadBase64(img, { prefix: 'coffeehouse-barista' });
-          attachments.push({ mimeType: img.mimeType, url: uploaded.url });
-        }
+        const attachments = await VercelBlob.prepareAttachments(images, barPdfFile, { prefix: 'coffeehouse-barista' });
         const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q, images: attachments } });
         think.remove();
         addChat('@baristi ' + res.reply, true);
         barImages.clear();
+        barPdfFile = null; $('barPdfInput').value = ''; $('barPdfStatus').textContent = '';
         if (/cheat\s*sheet/i.test(q)) {
           try {
             const cs = await api('/api/ai/baristi/cheats', { method: 'POST', body: { topic: q, content: res.reply } });
@@ -302,6 +320,7 @@
         $('barSend').disabled = false;
         inp.disabled = false;
         barImages.setBusy(false);
+        ['barPdfButton','barPdfInput','barPdfRemove'].forEach(id => $(id).disabled = false);
         CoffeeCompanions.setBusy('barista', false);
       }
     });
@@ -393,18 +412,11 @@
       if (!text && !images.length && !brewPdfFile) { $('brewFlow').innerHTML = '<div class="hint">Paste text, attach an image, or pick a PDF above.</div>'; return; }
       $('brewBtn').disabled = true;
       brewImages.setBusy(true);
+      $('brewPdfButton').disabled = $('brewPdfInput').disabled = true;
       CoffeeCompanions.setBusy('brewer', true);
       $('brewBtn').textContent = 'BREWING...';
       try {
-        const attachments = [];
-        for (const img of images) {
-          const uploaded = await VercelBlob.uploadBase64(img, { prefix: 'coffeehouse-brewer' });
-          attachments.push({ mimeType: img.mimeType, url: uploaded.url });
-        }
-        if (brewPdfFile) {
-          const uploaded = await VercelBlob.upload(brewPdfFile, { prefix: 'coffeehouse-brewer' });
-          attachments.push({ mimeType: 'application/pdf', url: uploaded.url });
-        }
+        const attachments = await VercelBlob.prepareAttachments(images, brewPdfFile, { prefix: 'coffeehouse-brewer' });
         const res = await api('/api/ai/brewer', { method: 'POST', body: { source, text, images: attachments } });
         renderBrewDoc({ title: res.title || 'Study notes', body: res.doc, src: source, notebook: res.notebook, engine: res.engine });
         brewImages.clear();
@@ -417,6 +429,7 @@
       } finally {
         $('brewBtn').disabled = false;
         brewImages.setBusy(false);
+        $('brewPdfButton').disabled = $('brewPdfInput').disabled = false;
         $('brewBtn').textContent = 'BREW NOTES';
         CoffeeCompanions.setBusy('brewer', false);
       }

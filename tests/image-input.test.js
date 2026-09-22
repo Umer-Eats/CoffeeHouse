@@ -25,7 +25,7 @@ test('image validation rejects wrong types, corrupt data, huge images and excess
 });
 test('Barista and Brewer pass inline images to the model alongside text',async()=>{
   const requests=[];
-  const context=vm.createContext({module:{exports:{}},process:{env:{BARISTA_API_KEY:'test-only',BREWER_API_KEY:'test-only'}},
+  const context=vm.createContext({module:{exports:{}},setTimeout,clearTimeout,AbortController,process:{env:{BARISTA_API_KEY:'test-only',BREWER_API_KEY:'test-only'}},
     require(name){
       if(name==='dotenv') return {config(){}};
       if(name==='@google/generative-ai') return {GoogleGenerativeAI:class {getGenerativeModel(){return {generateContent:async request=>{requests.push(request);return {response:{text:()=> 'Analysis from test double'}};}};}}};

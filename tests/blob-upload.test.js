@@ -7,7 +7,7 @@ const { createBlobUploadHandler } = require('../blob-upload-handler');
 function browser() {
   const calls = [];
   const window = { CoffeeHouseBlobClient: { upload: async (...args) => { calls.push(args); return { url: 'https://example.public.blob.vercel-storage.com/file.pdf' }; } } };
-  vm.runInNewContext(fs.readFileSync(require.resolve('../public/blob-upload.js'), 'utf8'), { window, Blob, Uint8Array, atob, setTimeout });
+  vm.runInNewContext(fs.readFileSync(require.resolve('../public/blob-upload.js'), 'utf8'), { window, Blob, Uint8Array, atob, btoa, setTimeout, clearTimeout, AbortController });
   return { calls, helper: window.VercelBlob };
 }
 
@@ -62,4 +62,20 @@ test('token issuance rejects arbitrary paths and unsupported extensions', async 
   for (const pathname of ['elsewhere/file.pdf', 'coffeehouse-brewer/../file.pdf', 'coffeehouse-brewer/file.html']) {
     assert.equal((await authorize({ id: 1 }, pathname)).res.code, 400);
   }
+});
+
+test('images and small PDFs use inline data without calling Blob', async () => {
+  const {calls,helper}=browser();
+  const img={mimeType:'image/jpeg',data:'YWJj'};
+  const result=await helper.prepareAttachments([img],new Blob(['%PDF-1.4 test'],{type:'application/pdf'}));
+  assert.equal(result[0].data,img.data);
+  assert.equal(Buffer.from(result[1].data,'base64').toString(),'%PDF-1.4 test');
+  assert.equal(calls.length,0);
+});
+test('large PDFs keep the binary direct-upload path', async () => {
+  const {calls,helper}=browser();
+  const result=await helper.prepareAttachments([],new Blob([new Uint8Array(1024*1024)],{type:'application/pdf'}));
+  assert.equal(calls.length,1);
+  assert.ok(result[0].url);
+  assert.equal(result[0].data,undefined);
 });

@@ -2,19 +2,32 @@
 'use strict';
 
 async function api(path, opts = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts.timeout || (path.startsWith('/api/ai/') ? 110000 : 30000));
+  try {
   const res = await fetch(path, {
     method: opts.method || 'GET',
     headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
-    credentials: 'same-origin'
+    credentials: 'same-origin',
+    signal: controller.signal
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(err => {
+    if (controller.signal.aborted) throw err;
+    if (res.ok) throw new Error('The server returned an unreadable response. Please try again.');
+    return {};
+  });
   if (!res.ok) {
     const err = new Error(data.error || (res.status + ' ' + res.statusText));
     err.status = res.status;
     throw err;
   }
   return data;
+  } catch (err) {
+    if (controller.signal.aborted) throw new Error('The request timed out. Please try again.');
+    if (err instanceof TypeError) throw new Error('Could not reach CoffeeHouse. Check your connection and try again.');
+    throw err;
+  } finally { clearTimeout(timer); }
 }
 
 function esc(s) {
