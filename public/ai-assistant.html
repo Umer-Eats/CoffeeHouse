@@ -86,10 +86,6 @@
           <input id="barImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
           <button id="barImageButton" type="button" class="btn">Attach images to Barista</button>
           <p class="image-hint">Paste a screenshot here, or attach up to 2 JPEG, PNG, or WebP images (10 MB each before resizing). Original images are not saved with notes.</p>
-          <input id="barPdfInput" type="file" accept="application/pdf,.pdf" hidden>
-          <button id="barPdfButton" type="button" class="btn">Attach PDF to Barista</button>
-          <button id="barPdfRemove" type="button" class="btn">Remove PDF</button>
-          <p id="barPdfStatus" role="status" aria-live="polite"></p>
           <div class="image-preview" id="barImagePreview"></div>
           <p class="image-status" id="barImageStatus" role="status" aria-live="polite"></p>
         </div>
@@ -171,22 +167,6 @@
 
     const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20 MB (blob uploads bypass serverless limit)
     let brewPdfFile = null;
-    let barPdfFile = null;
-    $('barPdfButton').addEventListener('click', () => $('barPdfInput').click());
-    $('barPdfInput').addEventListener('change', () => {
-      const file = $('barPdfInput').files[0];
-      if (!file) return;
-      if (!file.size || file.size > MAX_PDF_SIZE || (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name))) {
-        $('barPdfStatus').textContent = 'Choose a non-empty PDF up to 20 MB.';
-        return;
-      }
-      barPdfFile = file;
-      $('barPdfStatus').textContent = 'Selected: ' + file.name;
-    });
-    $('barPdfRemove').addEventListener('click', () => {
-      barPdfFile = null; $('barPdfInput').value = ''; $('barPdfStatus').textContent = '';
-    });
-
     function renderPdfStatus() {
       const status = $('brewPdfStatus');
       if (!brewPdfFile) { status.textContent = ''; return; }
@@ -289,22 +269,20 @@
       const inp = $('barInput');
       const q = inp.value.trim();
       const images = barImages.get();
-      if ((!q && !images.length && !barPdfFile) || $('barSend').disabled || !barImages.ready()) return;
+      if ((!q && !images.length) || $('barSend').disabled || !barImages.ready()) return;
       inp.value = '';
       $('barSend').disabled = true;
       barImages.setBusy(true);
-      ['barPdfButton','barPdfInput','barPdfRemove'].forEach(id => $(id).disabled = true);
       inp.disabled = true;
       CoffeeCompanions.setBusy('barista', true);
       addChat(q || 'Please explain these attachments.', false, false, images);
       const think = addChat('Pouring a fresh answer...', true, true);
       try {
-        const attachments = await VercelBlob.prepareAttachments(images, barPdfFile, { prefix: 'coffeehouse-barista' });
+        const attachments = await VercelBlob.prepareAttachments(images, null, { prefix: 'coffeehouse-barista' });
         const res = await api('/api/ai/baristi', { method: 'POST', body: { text: q, images: attachments } });
         think.remove();
         addChat('@baristi ' + res.reply, true);
         barImages.clear();
-        barPdfFile = null; $('barPdfInput').value = ''; $('barPdfStatus').textContent = '';
         if (/cheat\s*sheet/i.test(q)) {
           try {
             const cs = await api('/api/ai/baristi/cheats', { method: 'POST', body: { topic: q, content: res.reply } });
@@ -320,7 +298,6 @@
         $('barSend').disabled = false;
         inp.disabled = false;
         barImages.setBusy(false);
-        ['barPdfButton','barPdfInput','barPdfRemove'].forEach(id => $(id).disabled = false);
         CoffeeCompanions.setBusy('barista', false);
       }
     });

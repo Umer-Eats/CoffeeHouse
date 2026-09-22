@@ -86,7 +86,7 @@ for (const kind of ['barista','brewer']) {
     });
   }
 }
-for (const kind of ['barista','brewer']) {
+for (const kind of ['brewer']) {
   for (const outcome of ['success','failure']) {
     test(`${kind} sends a PDF without text and exits busy state on ${outcome}`,async()=>{
       const h=harness();
