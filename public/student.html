@@ -18,6 +18,10 @@
 <link rel="stylesheet" href="/ai-format.css">
 <link rel="stylesheet" href="/groups.css">
 <link rel="stylesheet" href="/notepad.css">
+<link rel="stylesheet" href="/matcha-mode.css?v=1">
+<script defer src="/matcha-menu.js?v=1"></script>
+<script defer src="/matcha-core.js?v=1"></script>
+<script defer src="/matcha-mode.js?v=1"></script>
 </head>
 <body class="hall-page">
 
@@ -41,6 +45,7 @@
       </div>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
+      <button id="matchaModeButton" type="button" aria-haspopup="dialog">Matcha Mode</button>
       <div class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
         <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
