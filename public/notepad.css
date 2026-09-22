@@ -1,6 +1,8 @@
 .hall-page>header{gap:24px}
 .notepad-page-header{justify-content:flex-start;gap:24px}
 .notepad-page-header>div:last-child{margin-left:auto}
+.notepad-page-header>#engineStatus{flex:1;justify-content:center;text-align:center}
+@media(max-width:1100px){.notepad-page-header>#engineStatus{flex-basis:100%}}
 .hall-page #meBox{flex:1;min-width:180px}
 #notepadButton{flex:none;margin-left:12px}
 @media(max-width:720px){.hall-page>header,.notepad-page-header{gap:12px}#notepadButton{margin-left:0}}
