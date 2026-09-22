@@ -1,5 +1,7 @@
 /* A quiet paper counter, isolated from the site's day/night palette. */
 #matchaModeButton{background:#a8bd7b;color:#23351e;border:2px solid #70864e;white-space:nowrap;font-family:"Pixelify Sans",monospace;box-shadow:3px 3px 0 #273a21;font-size:16px;padding:10px 12px}
+#matchaModeButton:hover{border-color:#536b3c}
+#matchaModeButton:active{box-shadow:none}
 body.matcha-open{overflow:hidden}
 .matcha-mode{--mm-ink:#344330;--mm-green:#657c48;--mm-paper:#f7f6ef;position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:0;border:0;color:var(--mm-ink);background-color:var(--mm-paper);background-image:url('/images/matcha/paper.svg');background-size:650px;overflow:auto;font-family:"Pixelify Sans",monospace;font-size:18px;line-height:1.5;color-scheme:light}
 .matcha-mode::backdrop{background:#f7f6ef}

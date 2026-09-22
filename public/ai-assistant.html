@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/study-radio.css">
-<link rel="stylesheet" href="/notepad.css?v=2">
+<link rel="stylesheet" href="/notepad.css?v=3">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://va.vercel-scripts.com/script.js"></script>
 <link rel="stylesheet" href="/motion.css">
@@ -20,6 +20,10 @@
 <link rel="stylesheet" href="/ai-images.css">
 <link rel="stylesheet" href="/saved-items.css">
 <script src="/saved-items.js" defer></script>
+<link rel="stylesheet" href="/matcha-mode.css?v=2">
+<script defer src="/matcha-menu.js?v=1"></script>
+<script defer src="/matcha-core.js?v=1"></script>
+<script defer src="/matcha-mode.js?v=1"></script>
 </head>
 <body class="study-page">
 
@@ -38,6 +42,7 @@
     <button id="notepadButton" class="btn matcha" type="button" aria-haspopup="dialog" aria-expanded="false">NOTEPAD</button>
     <span class="me" id="engineStatus">Barista · Brewer</span>
     <div style="display:flex; align-items:center; gap:10px;">
+      <button id="matchaModeButton" class="btn" type="button" aria-haspopup="dialog">Matcha Mode</button>
       <div class="theme-toggle" role="group" aria-label="Color theme">
         <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#ch-sun"/></svg>Day</button>
         <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#ch-moon"/></svg>Night</button>
