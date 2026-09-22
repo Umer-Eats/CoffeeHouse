@@ -19,6 +19,7 @@ const {validateImages, inputText} = require('./image-input');
 const {resolveAttachments} = require('./blob-helpers');
 const { generateClientTokenFromReadWriteToken } = require('@vercel/blob/client');
 const { createBlobUploadHandler } = require('./blob-upload-handler');
+const {blobToken} = require('./blob-config');
 
 /* Read static JS at module scope so Vercel's nft bundles them */
 const ART_JS = fs.readFileSync(path.join(__dirname, 'public', 'art.js'), 'utf8');
@@ -45,8 +46,8 @@ app.post('/api/blob/upload', createBlobUploadHandler({
     if (!body || body.type !== 'blob.generate-client-token') throw Object.assign(new Error('Invalid Blob upload request.'), { status: 400 });
     const { pathname, clientPayload, multipart } = body.payload || {};
     const options = await onBeforeGenerateToken(pathname, clientPayload, multipart);
-    if (!process.env.BLOB_READ_WRITE_TOKEN) throw Object.assign(new Error('Large PDF uploads are not configured. Try a PDF smaller than 700 KB or contact support.'), {status:503});
-    const token = await generateClientTokenFromReadWriteToken({ ...options, pathname, token: process.env.BLOB_READ_WRITE_TOKEN });
+    if (!blobToken()) throw Object.assign(new Error('Large PDF uploads are not configured. Try a PDF smaller than 700 KB or contact support.'), {status:503});
+    const token = await generateClientTokenFromReadWriteToken({ ...options, pathname, token: blobToken() });
     return { clientToken: token };
   },
   sessionUser: async (cookie) => {

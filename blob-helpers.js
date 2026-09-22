@@ -1,9 +1,10 @@
 /* Resolve bounded attachments without letting storage stalls block AI forever. */
 'use strict';
 const {validateImages} = require('./image-input');
+const {blobToken} = require('./blob-config');
 const fail = message => Object.assign(new Error(message), {status:400});
-async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, token = process.env.BLOB_READ_WRITE_TOKEN, deleteBlob = async url => {
-  if (process.env.BLOB_READ_WRITE_TOKEN) await require('@vercel/blob').del(url, {abortSignal:AbortSignal.timeout(2000)});
+async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, token = blobToken(), deleteBlob = async url => {
+  if (token) await require('@vercel/blob').del(url, {token, abortSignal:AbortSignal.timeout(2000)});
 }} = {}) {
   if (images === undefined) return [];
   if (!Array.isArray(images) || images.length > 3) throw fail('Attach up to two images and one PDF.');
