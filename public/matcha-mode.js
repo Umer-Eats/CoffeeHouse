@@ -21,7 +21,7 @@ function renderMenu(){
  content.innerHTML=`<div class="mm-menu-heading"><p class="mm-eyebrow">A LITTLE RITUAL FOR YOUR NEXT BIG IDEA</p><h1 id="mm-title">A slower kind of order.</h1><p>Choose a cup. Give it your time. Let something good brew.</p><span class="mm-tag">${menu.drinks.length} cups · 7 collections · yours to discover</span></div>
  <nav class="mm-categories" aria-label="Drink categories">${['All drinks',...menu.categories].map(c=>`<button type="button" data-category="${html(c)}" aria-pressed="${category===c}">${html(c)}</button>`).join('')}</nav>
  <div class="mm-menu-layout"><section class="mm-grid" aria-label="Drink menu"></section><aside class="mm-detail" aria-label="Your drink"></aside></div>
- <footer class="mm-source">A CoffeeHouse focus ritual inspired by HEYTEA. Digital rewards only.<br>Menu reference: <a href="https://heyteas.com/" target="_blank" rel="noopener">heyteas.com</a> · Prices shown here are focus minutes. ${preview?'Demo progress resets when you reload.':'Progress stays in this browser.'}</footer>`;
+ <footer class="mm-source">A CoffeeHouse focus ritual inspired by HEYTEA. Digital rewards only.<br>Menu reference: <a href="https://www.heytea.com/" target="_blank" rel="noopener">www.heytea.com</a> · Prices shown here are focus minutes. ${preview?'Demo progress resets when you reload.':'Progress stays in this browser.'}</footer>`;
  const filtered=menu.drinks.filter(d=>category==='All drinks'||d.category===category);
  if(!selected||!filtered.some(d=>d.id===selected))selected=filtered[0].id;
  content.querySelector('.mm-grid').innerHTML=filtered.map(d=>{

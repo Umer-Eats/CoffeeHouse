@@ -60,6 +60,6 @@ const groups = [
  ['Slim Boost Tea',7.49,'A light tea for a clean, refreshing sip.','#8eaa60','leaf']]]
 ];
 const drinks=groups.flatMap(([category,rows],g)=>rows.map(([name,price,description,color,style],i)=>({id:`m${g}-${i}`,category,name,price,description,color,style,art:`/images/matcha/m${g}-${i}.svg`}))).sort((a,b)=>a.price-b.price||a.id.localeCompare(b.id));
-const menu={drinks,categories:groups.map(g=>g[0]),toppings:['Matcha Cloud','Grapefruit Pulp','Coconut Milk Jelly','Sago','Brown Sugar Bobo'],source:'https://heyteas.com/'};
+const menu={drinks,categories:groups.map(g=>g[0]),toppings:['Matcha Cloud','Grapefruit Pulp','Coconut Milk Jelly','Sago','Brown Sugar Bobo'],source:'https://www.heytea.com/'};
 if(typeof module!=='undefined')module.exports=menu;else root.MatchaMenu=menu;
 })(typeof window==='undefined'?{}:window);
