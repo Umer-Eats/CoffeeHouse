@@ -15,7 +15,7 @@
     if (!window.CoffeeHouseBlobClient) throw new Error('The upload tools could not load. Refresh the page and try again.');
     var controller = new AbortController();
     var uploadPromise = window.CoffeeHouseBlobClient.upload(pathname, file, {
-      access: 'public',
+      access: 'private',
       handleUploadUrl: '/api/blob/upload',
       contentType: type,
       abortSignal: controller.signal,

@@ -2,7 +2,7 @@
 'use strict';
 const {validateImages} = require('./image-input');
 const fail = message => Object.assign(new Error(message), {status:400});
-async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, deleteBlob = async url => {
+async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, token = process.env.BLOB_READ_WRITE_TOKEN, deleteBlob = async url => {
   if (process.env.BLOB_READ_WRITE_TOKEN) await require('@vercel/blob').del(url, {abortSignal:AbortSignal.timeout(2000)});
 }} = {}) {
   if (images === undefined) return [];
@@ -13,7 +13,15 @@ async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, d
     if (!img.url) return validateImages([img])[0];
     let url;
     try { url = new URL(img.url); } catch { throw fail('Invalid attachment URL.'); }
-    if (url.protocol !== 'https:' || !/^[a-z0-9-]+\.public\.blob\.vercel-storage\.com$/.test(url.hostname) || url.username || url.password || url.port || !/^\/coffeehouse-(barista|brewer)\/[a-zA-Z0-9_.-]+$/.test(url.pathname)) throw fail('Invalid attachment URL.');
+    if (url.protocol !== 'https:' || !/^[a-z0-9-]+\.(public|private)\.blob\.vercel-storage\.com$/.test(url.hostname) || url.username || url.password || url.port || !/^\/coffeehouse-(barista|brewer)\/[a-zA-Z0-9_.-]+$/.test(url.pathname)) throw fail('Invalid attachment URL.');
+    const headers = {};
+    if (url.hostname.includes('.private.')) {
+      if (!token) throw Object.assign(new Error('Private file storage is not configured. Please contact support.'), {status:503});
+      // Only send the server credential to this store, and never follow redirects.
+      const storeId = token.split('_')[3];
+      if (!storeId || url.hostname !== `${storeId.toLowerCase()}.private.blob.vercel-storage.com`) throw fail('The attachment belongs to a different store.');
+      headers.authorization = `Bearer ${token}`;
+    }
     const controller = new AbortController();
     let timer;
     const deadline = new Promise((_, reject) => {
@@ -24,7 +32,7 @@ async function resolveAttachments(images, {fetchImpl = fetch, timeout = 15000, d
     });
     try {
       return await Promise.race([deadline, (async () => {
-        const resp = await fetchImpl(url.href, {signal:controller.signal, redirect:'error'});
+        const resp = await fetchImpl(url.href, {signal:controller.signal, redirect:'error', headers});
         if (!resp.ok) throw Object.assign(new Error('Could not read the uploaded file. Attach it again.'), {status:502});
         const max = img.mimeType === 'application/pdf' ? 20 * 1024 * 1024 : 1024 * 1024;
         const chunks = [];

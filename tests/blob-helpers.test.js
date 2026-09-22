@@ -25,3 +25,36 @@ test('invalid URLs, excess files, malformed images and fake PDFs fail before AI'
     await assert.rejects(resolveAttachments(input),e=>e.status===400);
   }
 });
+const privateUrl='https://test.private.blob.vercel-storage.com/coffeehouse-brewer/test.pdf';
+const privateToken='vercel_blob_rw_test_test-only-secret';
+test('private PDF reads authenticate only to the configured store',async()=>{
+  const result=await resolveAttachments([{mimeType:pdf.mimeType,url:privateUrl}],{
+    token:privateToken,deleteBlob:async()=>{},fetchImpl:async(url,opts)=>{
+      assert.equal(url,privateUrl);
+      assert.equal(opts.headers.authorization,'Bearer '+privateToken);
+      assert.equal(opts.redirect,'error');
+      return new Response(Buffer.from(pdf.data,'base64'));
+    }
+  });
+  assert.deepEqual(result,[pdf]);
+});
+test('private files reject missing credentials and foreign stores before download',async()=>{
+  for(const token of ['', 'vercel_blob_rw_other_test-only-secret']) {
+    await assert.rejects(resolveAttachments([{mimeType:pdf.mimeType,url:privateUrl}],{
+      token,fetchImpl:()=>{assert.fail('Must not transmit credentials');},deleteBlob:async()=>{}
+    }), /not configured|different store/);
+  }
+});
+test('both assistants resolve a full 20 MiB private PDF; larger files are rejected',async()=>{
+  const bytes=Buffer.alloc(20*1024*1024,32);bytes.write('%PDF-1.4\n');
+  for(const kind of ['barista','brewer']) {
+    const url=privateUrl.replace('coffeehouse-brewer','coffeehouse-'+kind);
+    const result=await resolveAttachments([{mimeType:'application/pdf',url}],{
+      token:privateToken,deleteBlob:async()=>{},fetchImpl:async()=>new Response(bytes)
+    });
+    assert.equal(Buffer.from(result[0].data,'base64').length,bytes.length);
+  }
+  await assert.rejects(resolveAttachments([{mimeType:'application/pdf',url:privateUrl}],{
+    token:privateToken,deleteBlob:async()=>{},fetchImpl:async()=>new Response(Buffer.alloc(bytes.length+1))
+  }),/too large/);
+});

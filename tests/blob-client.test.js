@@ -13,8 +13,8 @@ test('PDF authorization forwards cancellation, preserves binary data and uses th
     assert.equal(url,'/api/blob/upload');assert.equal(opts.signal,controller.signal);
     assert.equal(JSON.parse(opts.body).payload.pathname,'coffeehouse-brewer/test.pdf');
     return {ok:true,json:async()=>({clientToken:'restricted-token'})};
-  },async(pathname,body,opts)=>{assert.equal(body,file);assert.equal(opts.token,'restricted-token');assert.equal(opts.abortSignal,controller.signal);uploaded=true;return {url:'uploaded'};});
-  await uploader.upload('coffeehouse-brewer/test.pdf',file,{handleUploadUrl:'/api/blob/upload',abortSignal:controller.signal});
+  },async(pathname,body,opts)=>{assert.equal(body,file);assert.equal(opts.token,'restricted-token');assert.equal(opts.access,'private');assert.equal(opts.abortSignal,controller.signal);uploaded=true;return {url:'uploaded'};});
+  await uploader.upload('coffeehouse-brewer/test.pdf',file,{handleUploadUrl:'/api/blob/upload',access:'private',abortSignal:controller.signal});
   assert.equal(uploaded,true);
 });
 test('missing storage configuration and expired sessions reach the UI unchanged',async()=>{

@@ -19,6 +19,7 @@ test('10 MB PDF goes directly to Blob as binary, never base64 JSON through the s
   assert.equal(calls[0][1], pdf);
   assert.equal(calls[0][2].multipart, undefined);
   assert.equal(calls[0][2].handleUploadUrl, '/api/blob/upload');
+  assert.equal(calls[0][2].access, 'private');
   assert.match(calls[0][0], /^coffeehouse-brewer\/.*\.pdf$/);
 });
 
