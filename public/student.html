@@ -409,7 +409,7 @@
             const ch = el('.chan' + (current.kind === 'channel' && current.key === chan.key ? ' active' : ''), {}, esc(chan.title));
             ch.addEventListener('click', () => openChannel(c, chan));
             ch.insertAdjacentHTML('beforeend', countBadge(chan.key));
-            const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(ch);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(chan.key,chan.title));chanList.appendChild(wrap);
+            const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(ch);if(window.CoffeeAlerts)CoffeeAlerts.bindMute(wrap,chan.key,chan.title);chanList.appendChild(wrap);
           });
           item.appendChild(btn); item.appendChild(roomSection(btn,chanList,'school:'+c.code));
           box.appendChild(item);
@@ -421,7 +421,7 @@
           section.appendChild(heading);
           GROUPS.forEach(group=>{
             const button=document.createElement('button');button.type='button';button.className='chan'+(current.key===group.channel?' active':'');
-            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(button);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(group.channel,group.name));list.appendChild(wrap);
+            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(button);if(window.CoffeeAlerts)CoffeeAlerts.bindMute(wrap,group.channel,group.name);list.appendChild(wrap);
           });section.appendChild(roomSection(heading,list,'personal'));box.appendChild(section);
         }
       } else {
@@ -434,7 +434,7 @@
           `;
           row.addEventListener('click', () => openDM(d.partner));
           row.insertAdjacentHTML('beforeend', countBadge(d.channel));
-          const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(row);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(d.channel,d.partner.name));box.appendChild(wrap);
+          const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(row);if(window.CoffeeAlerts)CoffeeAlerts.bindMute(wrap,d.channel,d.partner.name);box.appendChild(wrap);
         });
       }
     }

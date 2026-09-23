@@ -31,8 +31,21 @@ function popup(title,text,onClick){
  const close=document.createElement('button');close.type='button';close.className='coffee-toast-close';close.textContent='×';close.setAttribute('aria-label','Dismiss notification');close.onclick=()=>toast.remove();toast.append(action,close);stack.append(toast);setTimeout(()=>toast.remove(),12000);
 }
 function isMuted(channel){return muted[channel]===true;}
-function updateButtons(){document.querySelectorAll('[data-notification-channel]').forEach(b=>{const off=isMuted(b.dataset.notificationChannel);b.textContent=off?'🔕':'🔔';b.setAttribute('aria-pressed',String(off));b.setAttribute('aria-label',(off?'Unmute':'Mute')+' notifications for '+b.dataset.notificationTitle);b.title=b.getAttribute('aria-label');});}
-function muteButton(channel,title){const b=document.createElement('button');b.type='button';b.className='notification-mute';b.dataset.notificationChannel=channel;b.dataset.notificationTitle=title;b.textContent='🔔';b.setAttribute('aria-label','Mute notifications for '+title);b.onclick=async e=>{e.stopPropagation();await ready;if(!userKey)return;muted=read(userKey+'-muted',{});muted[channel]=!isMuted(channel);write(userKey+'-muted',muted);updateButtons();};queueMicrotask(updateButtons);return b;}
+function updateMuteIndicators(){document.querySelectorAll('[data-notification-channel]').forEach(row=>{
+ const off=isMuted(row.dataset.notificationChannel),icon=row.querySelector('.notification-muted');
+ if(icon)icon.hidden=!off;
+ row.title=(off?'Muted. Right-click to unmute':'Right-click to mute')+' notifications for '+row.dataset.notificationTitle;
+});}
+function bindMute(row,channel,title){
+ row.dataset.notificationChannel=channel;row.dataset.notificationTitle=title;
+ const icon=document.createElement('span');icon.className='notification-muted';icon.hidden=true;icon.setAttribute('role','img');icon.setAttribute('aria-label','Notifications muted');
+ icon.innerHTML='<svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M2 7h4l5-4v14l-5-4H2z"/><path d="m14 7 4 6m0-6-4 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+ row.append(icon);if(!row.matches('button,a,[tabindex]'))row.tabIndex=0;
+ const toggle=async e=>{e.preventDefault();e.stopPropagation();await ready;if(!userKey)return;muted=read(userKey+'-muted',{});muted[channel]=!isMuted(channel);write(userKey+'-muted',muted);updateMuteIndicators();};
+ row.addEventListener('contextmenu',toggle);
+ row.addEventListener('keydown',e=>{if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10'))toggle(e);});
+ queueMicrotask(updateMuteIndicators);
+}
 function openConversation(channel){
  if(document.querySelector('dialog.matcha-mode[open]')){popup('Finish your focus session','Use Cancel order to leave Matcha Mode before opening the conversation.');return;}
  if(window.CoffeeOpenConversation)Promise.resolve(window.CoffeeOpenConversation(channel)).catch(()=>popup('Could not open conversation','Please try again from Student Hall.'));
@@ -53,9 +66,9 @@ async function poll(){
  };
  try{if(navigator.locks)await navigator.locks.request(userKey+'-poll',{ifAvailable:true},lock=>lock?run():undefined);else await run();}catch{/* Retry on the next poll without advancing the cursor. */}finally{busy=false;}
 }
-const ready=(async()=>{try{const me=await api('/api/me');if(!me.user?.id||!me.school?.id)return;userKey='coffeehouse-alerts:'+me.user.id+':'+me.school.id;muted=read(userKey+'-muted',{});updateButtons();await poll();setInterval(poll,4000);}catch{}})();
-window.addEventListener('storage',e=>{if(userKey&&e.key===userKey+'-muted'){muted=read(userKey+'-muted',{});updateButtons();}});
+const ready=(async()=>{try{const me=await api('/api/me');if(!me.user?.id||!me.school?.id)return;userKey='coffeehouse-alerts:'+me.user.id+':'+me.school.id;muted=read(userKey+'-muted',{});updateMuteIndicators();await poll();setInterval(poll,4000);}catch{}})();
+window.addEventListener('storage',e=>{if(userKey&&e.key===userKey+'-muted'){muted=read(userKey+'-muted',{});updateMuteIndicators();}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
-window.CoffeeAlerts={sound,popup,muteButton,isMuted};
+window.CoffeeAlerts={sound,popup,bindMute,isMuted};
 document.dispatchEvent(new Event('coffee-alerts-ready'));
 })();
