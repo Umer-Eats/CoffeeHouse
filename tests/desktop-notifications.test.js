@@ -21,3 +21,8 @@ test('supported browsers deliver through service worker persistent notifications
  assert.equal(calls[0],'/notification-worker.js');assert.equal(calls[1].title,'CoffeeHouse · Jamie');assert.equal(calls[1].options.data.channel,'dm:2');assert.equal(calls[1].options.silent,true);
  await alerts.desktop('Again','Hi','dm:2','message-4');assert.equal(calls.filter(c=>typeof c==='string').length,1);
 });
+test('disabling sound does not disable desktop notifications',async()=>{
+ const {alerts,Notification,calls}=setup();Notification.permission='granted';await alerts.toggleSound();
+ assert.equal(await alerts.sound('message'),false);assert.equal(await alerts.desktop('Message','Hello','dm:2','muted-sound-test'),true);
+ assert.equal(calls[0].options.silent,true);assert.equal(calls[0].title,'Message');
+});

@@ -1,14 +1,14 @@
 /* Shared café sounds and on-screen notifications. Uses a bundled message MP3; no microphone access. */
 (function(){
 'use strict';
-let messageBufferPromise,messageSource;
+let messageBufferPromise,messageSource,soundsEnabled=true;
 let context,userKey='',muted={},busy=false,cursor=null,feedFailed=false;
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}};
 const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));}catch{}};
-function unlock(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return Promise.resolve(false);context ||= new Audio();return (context.state==='running'?Promise.resolve():context.resume()).then(()=>context.state==='running').catch(()=>false);}catch{return Promise.resolve(false);}}
+function unlock(){if(!soundsEnabled)return Promise.resolve(false);try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return Promise.resolve(false);context ||= new Audio();return (context.state==='running'?Promise.resolve():context.resume()).then(()=>context.state==='running').catch(()=>false);}catch{return Promise.resolve(false);}}
 document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('keydown',unlock);
 async function playMessage(){
- if(!context||context.state!=='running')return false;
+ if(!soundsEnabled||!context||context.state!=='running')return false;
  try{
   messageBufferPromise ||= (async()=>{
    const response=await fetch('/sounds/message-notification.mp3?v=1',{signal:AbortSignal.timeout(10000)});
@@ -16,7 +16,7 @@ async function playMessage(){
    return context.decodeAudioData(await response.arrayBuffer());
   })().catch(err=>{messageBufferPromise=null;throw err;});
   const buffer=await messageBufferPromise;
-  if(context.state!=='running')return false;
+  if(!soundsEnabled||context.state!=='running')return false;
   // Restart instead of layering multiple messages into a loud burst.
   if(messageSource){messageSource.stop();messageSource.disconnect();}
   const source=context.createBufferSource();source.buffer=buffer;source.connect(context.destination);messageSource=source;
@@ -24,6 +24,7 @@ async function playMessage(){
  }catch(err){status('Notification sound could not play. Use Test notification & sound in Settings to retry.');return false;}
 }
 function sound(kind){
+ if(!soundsEnabled)return false;
  if(kind==='message')return playMessage();
  if(!context||context.state!=='running')return false;
  try{
@@ -50,7 +51,8 @@ function permission(){return window.Notification?.permission||'unsupported';}
 function updatePermissionStatus(){
  const p=permission();
  status(desktopError||(p==='granted'?'Desktop notifications are allowed. Test the sound on this device.':p==='denied'?'Notifications are blocked. In Chrome site settings, allow Notifications, then test again.':p==='unsupported'?'This browser does not support desktop notifications here. In-page alerts and sound are still available.':'Message alerts are on by default. Allow Chrome notifications once to receive desktop alerts.'));
- if(controls)controls.querySelector('[data-enable-alerts]').textContent=p==='granted'?'Enable sound':'Enable desktop notifications & sound';
+ if(controls){controls.querySelector('[data-enable-alerts]').hidden=p==='granted';const toggle=controls.querySelector('[data-toggle-sound]');toggle.textContent=soundsEnabled?'Disable sound':'Enable sound';toggle.setAttribute('aria-pressed',String(!soundsEnabled));}
+ if(!soundsEnabled)status('Sound disabled. Visual notifications remain on.');
 }
 async function desktop(title,body,channel,tag,audible=false){
  if(permission()!=='granted')return false;
@@ -66,6 +68,12 @@ async function desktop(title,body,channel,tag,audible=false){
   desktopError='';return true;
  }catch(err){desktopError='Desktop notification failed: '+err.message;status(desktopError);return false;}
 }
+async function toggleSound(){
+ soundsEnabled=!soundsEnabled;if(userKey)write(userKey+'-sound',soundsEnabled);
+ if(!soundsEnabled){if(messageSource){messageSource.stop();messageSource.disconnect();messageSource=null;}if(context?.suspend)await context.suspend().catch(()=>{});}
+ else await unlock();
+ updatePermissionStatus();status(soundsEnabled?'Sound enabled.':'Sound disabled. Visual notifications remain on.');
+}
 async function enableDesktop(){
  const audioReady=unlock();let requested;
  try{
@@ -73,21 +81,22 @@ async function enableDesktop(){
   requested=permission()==='default'?window.Notification.requestPermission():Promise.resolve(permission());
   await requested;await audioReady;desktopError='';updatePermissionStatus();
   const played=await sound('message');
-  if(permission()==='granted'){const shown=await desktop('CoffeeHouse notifications enabled','New messages will appear here while CoffeeHouse is open.',null,'coffeehouse-enabled',played);if(shown)status(played?'Notifications enabled. Coffee sound played.':'Notifications enabled. Sound is blocked; allow Sound in Chrome site settings.');}
+  if(permission()==='granted'){const shown=await desktop('CoffeeHouse notifications enabled','New messages will appear here while CoffeeHouse is open.',null,'coffeehouse-enabled',played);if(shown)status(played?'Notifications enabled. Coffee sound played.':(!soundsEnabled?'Notifications enabled. Sound is disabled.':'Notifications enabled. Sound is blocked; allow Sound in Chrome site settings.'));}
  }catch(err){status('Could not enable notifications: '+err.message);}
 }
 async function testAlerts(){
  const audioReady=await unlock(),played=await sound('message');popup('Notification test','This is how a new message will appear.');
  const shown=await desktop('CoffeeHouse notification test','Your desktop message notifications are working.',null,'coffeehouse-test',played);
- if(shown)status(played?'Test notification sent and coffee sound played. If you heard nothing, check device volume and Chrome site Sound settings.':'Test notification sent. Sound is blocked; check Chrome site Sound settings.');
- else if(!desktopError)status(permission()==='denied'?'Desktop notifications are blocked. Allow Notifications in Chrome site settings.':permission()==='default'?'Click Enable desktop notifications & sound, then choose Allow in Chrome.':audioReady?'Coffee sound played. Desktop notifications are unavailable in this browser.':'Sound is unavailable or blocked on this device.');
+ if(!soundsEnabled){status('Sound disabled. Visual notification test sent.');return;}
+ if(shown)status(played?'Test notification sent and coffee sound played. If you heard nothing, check device volume and Chrome site Sound settings.':(!soundsEnabled?'Test notification sent. Sound is disabled.':'Test notification sent. Sound is blocked; check Chrome site Sound settings.'));
+ else if(!desktopError)status(permission()==='denied'?'Desktop notifications are blocked. Allow Notifications in Chrome site settings.':permission()==='default'?'Click Enable desktop notifications, then choose Allow in Chrome.':audioReady?'Coffee sound played. Desktop notifications are unavailable in this browser.':'Sound is unavailable or blocked on this device.');
 }
 function mountControls(){
  const mount=document.getElementById('notificationSettings');if(controls||!mount)return;
  controls=document.createElement('section');controls.className='coffee-alert-settings';controls.setAttribute('aria-label','Message notifications');
- controls.innerHTML='<strong>Message notifications</strong><div><button type="button" class="btn" data-enable-alerts>Enable desktop notifications & sound</button><button type="button" class="btn" data-test-alerts>Test notification & sound</button></div><p role="status"></p><small>Keep CoffeeHouse open to receive alerts. Right-click a conversation to mute it.</small>';
+ controls.innerHTML='<strong>Message notifications</strong><div><button type="button" class="btn" data-toggle-sound>Disable sound</button><button type="button" class="btn" data-enable-alerts>Enable desktop notifications & sound</button><button type="button" class="btn" data-test-alerts>Test notification & sound</button></div><p role="status"></p><small>Keep CoffeeHouse open to receive alerts. Right-click a conversation to mute it.</small>';
  mount.append(controls);
- controls.querySelector('[data-enable-alerts]').onclick=enableDesktop;controls.querySelector('[data-test-alerts]').onclick=testAlerts;updatePermissionStatus();
+ controls.querySelector('[data-toggle-sound]').onclick=toggleSound;controls.querySelector('[data-enable-alerts]').onclick=enableDesktop;controls.querySelector('[data-test-alerts]').onclick=testAlerts;updatePermissionStatus();
 }
 if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type==='coffeehouse-open-conversation'&&typeof e.data.channel==='string')openConversation(e.data.channel);});
 function isMuted(channel){return muted[channel]===true;}
@@ -126,10 +135,10 @@ async function poll(){
  };
  try{if(navigator.locks)await navigator.locks.request(userKey+'-poll',{ifAvailable:true},lock=>lock?run():undefined);else await run();}catch{feedFailed=true;status('Message alerts could not connect. Retrying automatically…');}finally{busy=false;}
 }
-async function initialize(){try{const me=await api('/api/me');if(!me.user?.id||!me.school?.id)return;userKey='coffeehouse-alerts:'+me.user.id+':'+me.school.id;muted=read(userKey+'-muted',{});updateMuteIndicators();mountControls();await poll();setInterval(poll,4000);}catch{setTimeout(initialize,10000);}}
+async function initialize(){try{const me=await api('/api/me');if(!me.user?.id||!me.school?.id)return;userKey='coffeehouse-alerts:'+me.user.id+':'+me.school.id;muted=read(userKey+'-muted',{});soundsEnabled=read(userKey+'-sound',true)!==false;updateMuteIndicators();mountControls();await poll();setInterval(poll,4000);}catch{setTimeout(initialize,10000);}}
 const ready=initialize();
-window.addEventListener('storage',e=>{if(userKey&&e.key===userKey+'-muted'){muted=read(userKey+'-muted',{});updateMuteIndicators();}});
+window.addEventListener('storage',e=>{if(userKey&&e.key===userKey+'-sound'){soundsEnabled=read(userKey+'-sound',true)!==false;if(!soundsEnabled&&context?.suspend)context.suspend().catch(()=>{});updatePermissionStatus();}if(userKey&&e.key===userKey+'-muted'){muted=read(userKey+'-muted',{});updateMuteIndicators();}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
-window.CoffeeAlerts={sound,popup,bindMute,isMuted,enableDesktop,testAlerts,desktop};
+window.CoffeeAlerts={sound,popup,bindMute,isMuted,enableDesktop,testAlerts,desktop,toggleSound};
 document.dispatchEvent(new Event('coffee-alerts-ready'));
 })();

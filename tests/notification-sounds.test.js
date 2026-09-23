@@ -26,3 +26,9 @@ test('failed MP3 loads do not throw and can retry successfully',async()=>{
  const h=harness();await h.listeners.pointerdown();h.fail();assert.equal(await h.alerts.sound('message'),false);h.recover();assert.equal(await h.alerts.sound('message'),true);assert.equal(h.requests.length,2);
 });
 test('notification MP3 is a bundled nonempty audio asset',()=>{const bytes=fs.readFileSync('public/sounds/message-notification.mp3');assert.ok(bytes.length>1000);assert.ok(bytes.subarray(0,3).toString()==='ID3'||bytes[0]===255);});
+test('sound toggle stops current playback, silences all cues, and re-enables the MP3',async()=>{
+ const h=harness();await h.listeners.pointerdown();await h.alerts.sound('message');
+ await h.alerts.toggleSound();assert.equal(h.sources[0].stopped,true);
+ assert.equal(await h.alerts.sound('message'),false);assert.equal(h.alerts.sound('order'),false);assert.equal(h.alerts.sound('complete'),false);assert.equal(h.sources.length,1);
+ await h.alerts.toggleSound();assert.equal(await h.alerts.sound('message'),true);assert.equal(h.sources.length,2);
+});
