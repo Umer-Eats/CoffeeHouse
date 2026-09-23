@@ -1,24 +1,37 @@
-/* Shared café sounds and on-screen notifications. No microphone or audio downloads. */
+/* Shared café sounds and on-screen notifications. Uses a bundled message MP3; no microphone access. */
 (function(){
 'use strict';
+let messageBufferPromise,messageSource;
 let context,userKey='',muted={},busy=false,cursor=null,feedFailed=false;
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}};
 const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));}catch{}};
 function unlock(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return Promise.resolve(false);context ||= new Audio();return (context.state==='running'?Promise.resolve():context.resume()).then(()=>context.state==='running').catch(()=>false);}catch{return Promise.resolve(false);}}
 document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('keydown',unlock);
+async function playMessage(){
+ if(!context||context.state!=='running')return false;
+ try{
+  messageBufferPromise ||= (async()=>{
+   const response=await fetch('/sounds/message-notification.mp3?v=1',{signal:AbortSignal.timeout(10000)});
+   if(!response.ok)throw Error('Could not load notification sound.');
+   return context.decodeAudioData(await response.arrayBuffer());
+  })().catch(err=>{messageBufferPromise=null;throw err;});
+  const buffer=await messageBufferPromise;
+  if(context.state!=='running')return false;
+  // Restart instead of layering multiple messages into a loud burst.
+  if(messageSource){messageSource.stop();messageSource.disconnect();}
+  const source=context.createBufferSource();source.buffer=buffer;source.connect(context.destination);messageSource=source;
+  source.onended=()=>{source.disconnect();if(messageSource===source)messageSource=null;};source.start();return true;
+ }catch(err){status('Notification sound could not play. Use Test notification & sound in Settings to retry.');return false;}
+}
 function sound(kind){
+ if(kind==='message')return playMessage();
  if(!context||context.state!=='running')return false;
  try{
  const t=context.currentTime;
  function tone(freq,start,length,volume,type='sine'){
  const o=context.createOscillator(),g=context.createGain();o.type=type;o.frequency.setValueAtTime(freq,t+start);g.gain.setValueAtTime(0,t+start);g.gain.linearRampToValueAtTime(volume,t+start+.015);g.gain.exponentialRampToValueAtTime(.0001,t+start+length);o.connect(g);g.connect(context.destination);o.start(t+start);o.stop(t+start+length+.03);o.onended=()=>{o.disconnect();g.disconnect();};
  }
- if(kind==='message'){
- // Keep only the soft opening pour; fade both ends to avoid clicks.
- const buffer=context.createBuffer(1,context.sampleRate*.4,context.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const phase=i/(data.length-1);const envelope=Math.sin(Math.PI*phase)**2;data[i]=(Math.random()*2-1)*envelope;}data[0]=0;data[data.length-1]=0;
- const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=700;gain.gain.value=.02;source.connect(filter);filter.connect(gain);gain.connect(context.destination);source.start(t);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
- [220,310].forEach((f,i)=>tone(f,i*.1,.16,.025));
- }else if(kind==='order'){tone(660,0,.18,.07);tone(880,.12,.3,.07);}
+ if(kind==='order'){tone(660,0,.18,.07);tone(880,.12,.3,.07);}
  else { [523,659,784,1047].forEach((f,i)=>tone(f,i*.16,.48,.07)); }
  return true;
  }catch{return false;/* Audio support must never interrupt an order or message. */}
@@ -59,12 +72,12 @@ async function enableDesktop(){
   // Call the permission API during the click, before awaiting anything.
   requested=permission()==='default'?window.Notification.requestPermission():Promise.resolve(permission());
   await requested;await audioReady;desktopError='';updatePermissionStatus();
-  const played=sound('message');
+  const played=await sound('message');
   if(permission()==='granted'){const shown=await desktop('CoffeeHouse notifications enabled','New messages will appear here while CoffeeHouse is open.',null,'coffeehouse-enabled',played);if(shown)status(played?'Notifications enabled. Coffee sound played.':'Notifications enabled. Sound is blocked; allow Sound in Chrome site settings.');}
  }catch(err){status('Could not enable notifications: '+err.message);}
 }
 async function testAlerts(){
- const audioReady=await unlock(),played=sound('message');popup('Notification test','This is how a new message will appear.');
+ const audioReady=await unlock(),played=await sound('message');popup('Notification test','This is how a new message will appear.');
  const shown=await desktop('CoffeeHouse notification test','Your desktop message notifications are working.',null,'coffeehouse-test',played);
  if(shown)status(played?'Test notification sent and coffee sound played. If you heard nothing, check device volume and Chrome site Sound settings.':'Test notification sent. Sound is blocked; check Chrome site Sound settings.');
  else if(!desktopError)status(permission()==='denied'?'Desktop notifications are blocked. Allow Notifications in Chrome site settings.':permission()==='default'?'Click Enable desktop notifications & sound, then choose Allow in Chrome.':audioReady?'Coffee sound played. Desktop notifications are unavailable in this browser.':'Sound is unavailable or blocked on this device.');
@@ -108,7 +121,7 @@ async function poll(){
   const data=await api('/api/message-notifications'+(after!==null?'?after='+after:''));cursor=data.cursor;if(feedFailed){feedFailed=false;updatePermissionStatus();}
   write(userKey+'-cursor',{cursor:data.cursor,time:Date.now()});muted=read(userKey+'-muted',{});
   const messages=data.messages.filter(m=>!isMuted(m.channel));
-  const played=messages.length?sound('message'):false;
+  const played=messages.length?await sound('message'):false;
   for(const m of messages.slice(-4)){popup(m.title,m.author+': '+m.text,()=>openConversation(m.channel));await desktop('CoffeeHouse · '+m.title,m.author+': '+m.text,m.channel,'coffeehouse-message-'+m.id,played);}
  };
  try{if(navigator.locks)await navigator.locks.request(userKey+'-poll',{ifAvailable:true},lock=>lock?run():undefined);else await run();}catch{feedFailed=true;status('Message alerts could not connect. Retrying automatically…');}finally{busy=false;}
