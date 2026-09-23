@@ -14,10 +14,10 @@ function sound(kind){
  const o=context.createOscillator(),g=context.createGain();o.type=type;o.frequency.setValueAtTime(freq,t+start);g.gain.setValueAtTime(0,t+start);g.gain.linearRampToValueAtTime(volume,t+start+.015);g.gain.exponentialRampToValueAtTime(.0001,t+start+length);o.connect(g);g.connect(context.destination);o.start(t+start);o.stop(t+start+length+.03);o.onended=()=>{o.disconnect();g.disconnect();};
  }
  if(kind==='message'){
- // Filtered steam followed by a few low bubbling notes and a cup clink.
+ // Soft steam and low bubbling, without an ending clink.
  const buffer=context.createBuffer(1,context.sampleRate*.65,context.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
  const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=1100;gain.gain.value=.035;source.connect(filter);filter.connect(gain);gain.connect(context.destination);source.start(t);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
- [220,310,260,390].forEach((f,i)=>tone(f,i*.12,.12,.045));tone(1320,.6,.3,.035);
+ [220,310,260,390].forEach((f,i)=>tone(f,i*.12,.12,.045));
  }else if(kind==='order'){tone(660,0,.18,.07);tone(880,.12,.3,.07);}
  else { [523,659,784,1047].forEach((f,i)=>tone(f,i*.16,.48,.07)); }
  return true;
@@ -36,7 +36,7 @@ function status(text){if(controls)controls.querySelector('[role=status]').textCo
 function permission(){return window.Notification?.permission||'unsupported';}
 function updatePermissionStatus(){
  const p=permission();
- status(desktopError||(p==='granted'?'Desktop notifications are allowed. Test the sound on this device.':p==='denied'?'Notifications are blocked. In Chrome site settings, allow Notifications, then test again.':p==='unsupported'?'This browser does not support desktop notifications here. In-page alerts and sound are still available.':'Enable notifications to receive Chrome alerts and a coffee-brewing sound.'));
+ status(desktopError||(p==='granted'?'Desktop notifications are allowed. Test the sound on this device.':p==='denied'?'Notifications are blocked. In Chrome site settings, allow Notifications, then test again.':p==='unsupported'?'This browser does not support desktop notifications here. In-page alerts and sound are still available.':'Message alerts are on by default. Allow Chrome notifications once to receive desktop alerts.'));
  if(controls)controls.querySelector('[data-enable-alerts]').textContent=p==='granted'?'Enable sound':'Enable desktop notifications & sound';
 }
 async function desktop(title,body,channel,tag,audible=false){
@@ -70,10 +70,10 @@ async function testAlerts(){
  else if(!desktopError)status(permission()==='denied'?'Desktop notifications are blocked. Allow Notifications in Chrome site settings.':permission()==='default'?'Click Enable desktop notifications & sound, then choose Allow in Chrome.':audioReady?'Coffee sound played. Desktop notifications are unavailable in this browser.':'Sound is unavailable or blocked on this device.');
 }
 function mountControls(){
- if(controls)return;
+ const mount=document.getElementById('notificationSettings');if(controls||!mount)return;
  controls=document.createElement('section');controls.className='coffee-alert-settings';controls.setAttribute('aria-label','Message notifications');
  controls.innerHTML='<strong>Message notifications</strong><div><button type="button" class="btn" data-enable-alerts>Enable desktop notifications & sound</button><button type="button" class="btn" data-test-alerts>Test notification & sound</button></div><p role="status"></p><small>Keep CoffeeHouse open to receive alerts. Right-click a conversation to mute it.</small>';
- const header=document.querySelector('body > header');if(header)header.after(controls);else document.body.prepend(controls);
+ mount.append(controls);
  controls.querySelector('[data-enable-alerts]').onclick=enableDesktop;controls.querySelector('[data-test-alerts]').onclick=testAlerts;updatePermissionStatus();
 }
 if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type==='coffeehouse-open-conversation'&&typeof e.data.channel==='string')openConversation(e.data.channel);});

@@ -17,5 +17,5 @@ test('cafe sounds wait for interaction and use distinct order, completion and br
  window.CoffeeAlerts.sound('order');assert.equal(tones.length,0);
  listeners.pointerdown();window.CoffeeAlerts.sound('order');assert.equal(tones.length,2);
  window.CoffeeAlerts.sound('complete');assert.equal(tones.length,6);
- window.CoffeeAlerts.sound('message');assert.equal(tones.length,11);assert.equal(sources.length,1);
+ window.CoffeeAlerts.sound('message');assert.equal(tones.length,10);assert.equal(sources.length,1);
 });

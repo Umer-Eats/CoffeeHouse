@@ -2,3 +2,4 @@
 
 .notification-muted{display:inline-flex;flex:none;align-items:center;justify-content:center;width:22px;height:22px;margin-right:5px;color:#583821;background:#f1dfc6;border-radius:4px}.notification-muted[hidden]{display:none}.notification-muted svg{width:16px;height:16px}body[data-theme=dark] .notification-muted{color:#39234e;background:#c5b5da}
 .coffee-alert-settings{margin:12px 20px;padding:12px 16px;border:1px solid var(--border,#8c735a);background:var(--panel,#fff6e5);color:var(--ink,#3c291c);font:18px 'VT323',monospace}.coffee-alert-settings>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.coffee-alert-settings p{margin:8px 0 4px}.coffee-alert-settings small{font:inherit;opacity:.8}
+#notificationSettings .coffee-alert-settings{margin:24px 0 0}
