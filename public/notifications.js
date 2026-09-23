@@ -14,10 +14,10 @@ function sound(kind){
  const o=context.createOscillator(),g=context.createGain();o.type=type;o.frequency.setValueAtTime(freq,t+start);g.gain.setValueAtTime(0,t+start);g.gain.linearRampToValueAtTime(volume,t+start+.015);g.gain.exponentialRampToValueAtTime(.0001,t+start+length);o.connect(g);g.connect(context.destination);o.start(t+start);o.stop(t+start+length+.03);o.onended=()=>{o.disconnect();g.disconnect();};
  }
  if(kind==='message'){
- // Soft steam and low bubbling, without an ending clink.
- const buffer=context.createBuffer(1,context.sampleRate*.65,context.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
- const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=1100;gain.gain.value=.035;source.connect(filter);filter.connect(gain);gain.connect(context.destination);source.start(t);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
- [220,310,260,390].forEach((f,i)=>tone(f,i*.12,.12,.045));
+ // Keep only the soft opening pour; fade both ends to avoid clicks.
+ const buffer=context.createBuffer(1,context.sampleRate*.4,context.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const phase=i/(data.length-1);const envelope=Math.sin(Math.PI*phase)**2;data[i]=(Math.random()*2-1)*envelope;}data[0]=0;data[data.length-1]=0;
+ const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=700;gain.gain.value=.02;source.connect(filter);filter.connect(gain);gain.connect(context.destination);source.start(t);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
+ [220,310].forEach((f,i)=>tone(f,i*.1,.16,.025));
  }else if(kind==='order'){tone(660,0,.18,.07);tone(880,.12,.3,.07);}
  else { [523,659,784,1047].forEach((f,i)=>tone(f,i*.16,.48,.07)); }
  return true;
@@ -41,7 +41,7 @@ function updatePermissionStatus(){
 }
 async function desktop(title,body,channel,tag,audible=false){
  if(permission()!=='granted')return false;
- const options={body,icon:'/favicon.svg',tag:tag||'coffeehouse-test',silent:audible,data:{channel:channel||null}};
+ const options={body,icon:'/favicon.svg',tag:tag||'coffeehouse-test',silent:true,data:{channel:channel||null}};
  try{
   // Persistent notifications support both desktop and mobile Chrome.
   if(navigator.serviceWorker){
