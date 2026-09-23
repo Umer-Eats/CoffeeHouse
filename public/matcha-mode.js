@@ -40,7 +40,7 @@ function renderDetail(){
  pane.innerHTML=`<p class="mm-eyebrow">${html(d.category)} / YOUR SELECTION</p>${art(d)}<h2>${html(d.name)}</h2><p>${html(d.description)}</p><p class="mm-detail-price">${state.minutes[d.id]} <span>minutes of focus</span></p>
  ${unlocked?`<form class="mm-order-form"><fieldset><legend>Make it yours <small>Choose an addition or leave a note.</small></legend>${menu.toppings.map(t=>`<label><input type="checkbox" name="topping" value="${html(t)}"> ${html(t)}</label>`).join('')}</fieldset><label class="mm-note-label" for="mm-note">SPECIAL INSTRUCTIONS</label><textarea id="mm-note" maxlength="200" rows="3" placeholder="Less ice, extra care. Or: finish my biology notes."></textarea><p class="mm-form-error" role="alert"></p><button class="mm-primary" type="submit">Order drink <span>↗</span></button></form>`:`<div class="mm-locked-note">◇ This cup is waiting for you.<br>Complete five orders of <strong>${html(previous.name)}</strong>, then redeem its coupon.</div>`}
  ${coupon(d)}`;
- if(unlocked)pane.querySelector('form').onsubmit=e=>{e.preventDefault();const additions=[...pane.querySelectorAll('input:checked')].map(c=>c.value);const note=pane.querySelector('textarea').value.trim();try{core.order(menu,state,d.id,[...additions,note].filter(Boolean).join(' · '));save();notice='';render();content.querySelector('.mm-tear').focus();}catch(err){pane.querySelector('.mm-form-error').textContent=err.message;}};
+ if(unlocked)pane.querySelector('form').onsubmit=e=>{e.preventDefault();const additions=[...pane.querySelectorAll('input:checked')].map(c=>c.value);const note=pane.querySelector('textarea').value.trim();try{core.order(menu,state,d.id,[...additions,note].filter(Boolean).join(' · '));save();notice='';window.CoffeeAlerts?.sound('order');render();content.querySelector('.mm-tear').focus();}catch(err){pane.querySelector('.mm-form-error').textContent=err.message;}};
  wireCoupon();
 }
 function coupon(d){
@@ -69,7 +69,7 @@ function renderTimer(){
 function tick(){
  if(!state?.active)return;
  if(state.active?.giftId&&state.active.phase==='running'&&Date.now()>=state.active.endAt){finishGift();return;}
- if(!state.active?.giftId&&core.finish(state)){save();notice='Timer complete. Your coupon has a new stamp.';render();return;}
+ if(!state.active?.giftId&&core.finish(state)){window.CoffeeAlerts?.sound('complete');window.CoffeeAlerts?.popup('Your drink is ready!','Focus session complete. Your coupon has a new stamp.');save();notice='Timer complete. Your coupon has a new stamp.';render();return;}
  const clock=content?.querySelector('.mm-clock');if(clock){const seconds=Math.max(0,Math.ceil((state.active.endAt-Date.now())/1000));clock.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
 }
 async function open(giftId){
@@ -80,7 +80,7 @@ async function open(giftId){
   key='coffeehouse-matcha-v1:'+me.user.id;load();notice='';await syncRewards();
   if(giftId){if(state.active&&state.active.giftId!==giftId&&state.active.phase!=='complete')throw Error('Finish or cancel your current order before opening a gift.');const g=await api('/api/matcha/gifts/'+giftId);if(g.completed)throw Error('This gift is already complete. Your coupon has been credited.');state.active={giftId:g.id,drinkId:g.drink_id,instructions:g.instructions,phase:g.started_at?'running':'receipt',startedAt:g.started_at||0,endAt:g.started_at?g.started_at+g.minutes*60000:0};save();}
   if(!dialog){dialog=document.createElement('dialog');dialog.className='matcha-mode';dialog.setAttribute('closedby','none');dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();}},true);dialog.setAttribute('aria-labelledby','mm-title');dialog.innerHTML='<div class="mm-top"><span class="mm-wordmark">✿ MATCHA MODE <small>by CoffeeHouse</small></span><div class="mm-actions"><button class="mm-send mm-cancel" type="button" hidden>Send to Friend</button><button class="mm-cancel mm-exit" type="button">Cancel order ×</button></div></div><p class="mm-status" role="status"></p><main class="mm-content"></main>';document.body.appendChild(dialog);content=dialog.querySelector('main');dialog.addEventListener('cancel',e=>e.preventDefault());dialog.querySelector('.mm-send').onclick=sendToFriend;dialog.querySelector('.mm-exit').onclick=async()=>{if(state.active?.giftId){try{await api('/api/matcha/gifts/'+state.active.giftId+'/cancel',{method:'POST'});}catch(err){dialog.querySelector('.mm-status').textContent=err.message;return;}}state.active=null;save();clearInterval(interval);dialog.close();document.body.classList.remove('matcha-open');button.focus();};}
-  if(!state.active?.giftId)core.finish(state);save();render();dialog.showModal();document.body.classList.add('matcha-open');interval=setInterval(tick,500);
+  const completedOnOpen=!state.active?.giftId&&core.finish(state);save();render();dialog.showModal();if(completedOnOpen){window.CoffeeAlerts?.sound('complete');window.CoffeeAlerts?.popup('Your drink is ready!','Your focus session is complete.');}document.body.classList.add('matcha-open');interval=setInterval(tick,500);
  }catch(err){button.textContent='Matcha unavailable — retry';button.title=err.message;window.alert(err.message);}finally{opening=false;button.disabled=false;}
 }
 button.addEventListener('click',()=>open());
@@ -95,7 +95,7 @@ async function syncRewards(){
 }
 async function finishGift(){
  if(rewardBusy)return;rewardBusy=true;const a=state.active;
- try{await api('/api/matcha/gifts/'+a.giftId+'/finish',{method:'POST'});if(state.active!==a)return;await syncRewards();a.phase='complete';save();notice='Gift complete! You and your friend each earned a full drink coupon.';render();}
+ try{await api('/api/matcha/gifts/'+a.giftId+'/finish',{method:'POST'});if(state.active!==a)return;await syncRewards();a.phase='complete';window.CoffeeAlerts?.sound('complete');window.CoffeeAlerts?.popup('Your gifted drink is ready!','You and your friend each earned a coupon.');save();notice='Gift complete! You and your friend each earned a full drink coupon.';render();}
  catch(err){dialog.querySelector('.mm-status').textContent=err.message+' Completion will retry automatically.';}
  finally{setTimeout(()=>{rewardBusy=false;},5000);}
 }

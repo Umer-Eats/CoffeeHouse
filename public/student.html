@@ -22,6 +22,8 @@
 <script defer src="/matcha-menu.js?v=1"></script>
 <script defer src="/matcha-core.js?v=2"></script>
 <script defer src="/matcha-mode.js?v=2"></script>
+<link rel="stylesheet" href="/notifications.css?v=1">
+<script defer src="/notifications.js?v=1"></script>
 </head>
 <body class="hall-page">
 
@@ -221,6 +223,12 @@
 
       await Promise.all([loadChannels(), loadStudents(), loadDMs(), loadGroups()]);
       if (CLASSES[0]?.channels[0]) openChannel(CLASSES[0], CLASSES[0].channels[0]);
+      window.CoffeeOpenConversation=async key=>{
+        const dm=key.startsWith('dm:');document.querySelectorAll('.side-left .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===(dm?'dms':'classes')));
+        if(dm){await loadDMs();const partner=DMS.find(d=>d.channel===key)?.partner;if(partner)await openDM(partner);}
+        else{const group=GROUPS.find(g=>g.channel===key);if(group)openGroup(group);else for(const c of CLASSES){const ch=c.channels.find(x=>x.key===key);if(ch){openChannel(c,ch);break;}}}renderLeft();
+      };
+      const requestedConversation=new URLSearchParams(location.search).get('conversation');if(requestedConversation)await window.CoffeeOpenConversation(requestedConversation);
       wire();
       startPolling();
     }
@@ -401,7 +409,7 @@
             const ch = el('.chan' + (current.kind === 'channel' && current.key === chan.key ? ' active' : ''), {}, esc(chan.title));
             ch.addEventListener('click', () => openChannel(c, chan));
             ch.insertAdjacentHTML('beforeend', countBadge(chan.key));
-            chanList.appendChild(ch);
+            const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(ch);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(chan.key,chan.title));chanList.appendChild(wrap);
           });
           item.appendChild(btn); item.appendChild(roomSection(btn,chanList,'school:'+c.code));
           box.appendChild(item);
@@ -413,7 +421,7 @@
           section.appendChild(heading);
           GROUPS.forEach(group=>{
             const button=document.createElement('button');button.type='button';button.className='chan'+(current.key===group.channel?' active':'');
-            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);list.appendChild(button);
+            button.textContent=group.name;button.insertAdjacentHTML('beforeend',countBadge(group.channel));button.onclick=()=>openGroup(group);const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(button);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(group.channel,group.name));list.appendChild(wrap);
           });section.appendChild(roomSection(heading,list,'personal'));box.appendChild(section);
         }
       } else {
@@ -426,10 +434,12 @@
           `;
           row.addEventListener('click', () => openDM(d.partner));
           row.insertAdjacentHTML('beforeend', countBadge(d.channel));
-          box.appendChild(row);
+          const wrap=document.createElement('div');wrap.className='notification-row';wrap.append(row);if(window.CoffeeAlerts)wrap.append(CoffeeAlerts.muteButton(d.channel,d.partner.name));box.appendChild(wrap);
         });
       }
     }
+
+    document.addEventListener('coffee-alerts-ready',()=>{if(ME&&SCHOOL)renderLeft();});
 
     /* ---------- right rail ---------- */
     function renderStudents(filter) {

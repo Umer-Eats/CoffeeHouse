@@ -319,6 +319,13 @@ app.get('/api/channels', requireAuth, requireSchool, async (req, res) => {
 });
 
 /* ---------------- messages ---------------- */
+app.get('/api/message-notifications',requireAuth,requireSchool,async(req,res)=>{
+ try{
+  const channels=CLASSES.flatMap(c=>c.channels.map(ch=>({key:channelKey(c.code,ch.slug),title:ch.title})));
+  res.set('Cache-Control','no-store');
+  res.json(await require('./message-notifications').messageNotifications(db,req.user.id,req.school.id,channels,req.query.after));
+ }catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not load notifications.'});}
+});
 app.get('/api/message-counts', requireAuth, requireSchool, async (req, res) => {
   try {
     const rows = await db.unreadCounts(req.user.id, req.school.id);
