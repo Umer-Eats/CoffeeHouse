@@ -1,4 +1,40 @@
+# CoffeeHouse robots.txt
+# Allows all major search engines and AI crawlers
+
 User-agent: *
 Allow: /
 
+# Sitemap location
 Sitemap: https://www.coffee-house.app/sitemap.xml
+
+# Allow AI crawlers for AI Overviews and AI Mode
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Disallow private/auth pages
+Disallow: /settings.html
+Disallow: /student.html
+Disallow: /ai-assistant.html
+Disallow: /api/
+Disallow: /previews/
+
+# Crawl-delay for polite crawling (optional)
+Crawl-delay: 10
