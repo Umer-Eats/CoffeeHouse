@@ -5,7 +5,9 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 const root = path.join(__dirname, '..');
 const svg = fs.readFileSync(path.join(root, 'public/images/coffeehouse-logo.svg'), 'utf8').replaceAll('currentColor', '#fff0cd');
-for (const file of ['favicon.svg', 'public/favicon.svg']) fs.writeFileSync(path.join(root, file), svg);
+// Cream art vanishes on white tabs, Google results, and dashboards, so icons sit on the header brown.
+const tile = svg.replace(/viewBox="[^"]+"([^>]*)>/, 'viewBox="-4 -4 48 48"$1>\n  <rect x="-4" y="-4" width="48" height="48" rx="9" fill="#3d261a"/>');
+for (const file of ['favicon.svg', 'public/favicon.svg']) fs.writeFileSync(path.join(root, file), tile);
 
 // The source art uses only straight horizontal/vertical pixel edges.
 function polygons(d) {
@@ -55,12 +57,15 @@ function chunk(type, data) {
   size.writeUInt32BE(data.length); crc.writeUInt32BE(crc32(body));
   return Buffer.concat([size, body, crc]);
 }
-function png(size, background = false) {
+// Renders the cup on a 48-unit brown tile; `rounded` matches the SVG favicon, square suits iOS masks.
+function png(size, rounded = true) {
   const pixels = Buffer.alloc(size * (1 + size * 4));
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const offset = y * (1 + size * 4) + 1 + x * 4;
-    let color = background ? [61, 38, 26, 255] : [0, 0, 0, 0];
-    for (const layer of layers) if (inside(layer.shapes, (x + 0.5) * 40 / size, (y + 0.5) * 40 / size)) color = [...layer.rgb, 255];
+    const u = (x + 0.5) * 48 / size - 4, v = (y + 0.5) * 48 / size - 4;
+    const cx = Math.max(0, Math.abs(u - 20) - 15), cy = Math.max(0, Math.abs(v - 20) - 15);
+    let color = rounded && cx * cx + cy * cy > 81 ? [0, 0, 0, 0] : [61, 38, 26, 255];
+    for (const layer of layers) if (inside(layer.shapes, u, v)) color = [...layer.rgb, 255];
     pixels.set(color, offset);
   }
   const header = Buffer.alloc(13);
@@ -79,5 +84,8 @@ images.forEach((image, i) => {
   offset += image.length;
 });
 fs.writeFileSync(path.join(root, 'public/favicon.ico'), Buffer.concat([directory, ...images]));
-fs.writeFileSync(path.join(root, 'public/apple-touch-icon.png'), png(180, true));
-console.log('Built matching SVG, ICO, and Apple touch icons.');
+fs.writeFileSync(path.join(root, 'public/apple-touch-icon.png'), png(180, false));
+// Google search favicons want a crawlable multiple of 48px; the manifest and logo schema want large PNGs.
+for (const size of [48, 96, 192]) fs.writeFileSync(path.join(root, `public/favicon-${size}x${size}.png`), png(size));
+fs.writeFileSync(path.join(root, 'public/icon-512.png'), png(512, false));
+console.log('Built matching SVG, ICO, PNG, and Apple touch icons.');

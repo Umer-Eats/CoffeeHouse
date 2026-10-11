@@ -14,7 +14,11 @@
           "public/images/coffeehouse-logo.svg",
           "public/favicon.svg",
           "public/favicon.ico",
-          "public/apple-touch-icon.png"
+          "public/apple-touch-icon.png",
+          "public/favicon-*.png",
+          "public/icon-512.png",
+          "public/site.webmanifest",
+          "public/og-image*.jpg"
         ],
         "maxDuration": 120
       }

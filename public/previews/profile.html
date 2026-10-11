@@ -6,9 +6,13 @@
 <meta name="description" content="Customize your CoffeeHouse experience. Manage your account, theme, and notification preferences.">
 <meta name="robots" content="noindex, nofollow">
 <title>CoffeeHouse - Settings</title>
-<link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v=2">
-<link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg?v=2">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+<link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v=3">
+<link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg?v=3">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=3">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=3">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png?v=3">
+<link rel="manifest" href="/site.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/notepad.css">
@@ -21,6 +25,7 @@
 
 
 <link rel="stylesheet" href="/notifications.css?v=2">
+<link rel="stylesheet" href="/settings-community.css?v=1">
 
 <link rel="stylesheet" href="/product-preview.css?v=1">
 </head>
@@ -86,6 +91,12 @@
       </div>
       <div class="note">You belong to one school community at a time. Joining another school moves you instantly — your chats are per-school.</div>
       <div class="note" id="schoolStatus"></div>
+      <section id="communityOwnerActions" class="community-owner-actions" hidden aria-labelledby="deleteCommunityHeading">
+        <h3 id="deleteCommunityHeading">Delete this community</h3>
+        <p class="note">You own <strong id="ownedCommunityName"></strong>. Deleting it removes its data and memberships for everyone. Members keep their CoffeeHouse accounts.</p>
+        <button class="btn danger" id="deleteCommunityButton" type="button" aria-haspopup="dialog">DELETE COMMUNITY</button>
+        <p class="note" id="communityDeleteStatus" role="status"></p>
+      </section>
     </div>
 
     <div class="card pixel-border">
@@ -98,6 +109,22 @@
 
   </div>
 
+  <dialog id="deleteCommunityDialog" class="community-delete-dialog" aria-labelledby="deleteCommunityTitle" aria-describedby="deleteCommunityDescription">
+    <form id="deleteCommunityForm">
+      <p class="eyebrow">COMMUNITY OWNER</p>
+      <h2 id="deleteCommunityTitle">Delete your community?</h2>
+      <p id="deleteCommunityDescription" class="note">This removes all chats, shared files, groups, notes, saved study materials, and Matcha progress in this community. Everyone will need to choose another community. You cannot undo this in CoffeeHouse.</p>
+      <label for="deleteCommunityName">Type <strong id="deleteCommunityExpectedName"></strong> to confirm</label>
+      <input id="deleteCommunityName" name="confirmName" type="text" autocomplete="off" spellcheck="false" required aria-describedby="deleteCommunityError">
+      <p class="note err" id="deleteCommunityError" role="alert"></p>
+      <div class="community-delete-actions">
+        <button class="btn" id="cancelDeleteCommunity" type="button">CANCEL</button>
+        <button class="btn danger" id="confirmDeleteCommunity" type="submit" disabled>DELETE COMMUNITY</button>
+      </div>
+    </form>
+  </dialog>
+
+  
   
   
   
