@@ -6,11 +6,9 @@ const path=require('node:path');
 const {quickNotes}=require('../quick-notes');
 
 test('private notes persist edits, reject stale writes, and isolate users',async()=>{
-  const context=vm.createContext({require,process:{env:{TURSO_DATABASE_URL:'file::memory:'}},__dirname,module:{exports:{}}});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'../db.js'),'utf8'),context);
-  const db=context.module.exports;
-  try{
-    await db.init();
+ const {db,close}=await require('./database-fixture.cjs').databaseFixture();
+ try{
+    await db.withSchool(1,async()=>{
     const a=await db.upsertUser({sub:'notes-a',email:'a@example.test',name:'A'});
     const b=await db.upsertUser({sub:'notes-b',email:'b@example.test',name:'B'});
     const notes=quickNotes(db),note=await notes.create(a.id);
@@ -29,5 +27,6 @@ test('private notes persist edits, reject stale writes, and isolate users',async
     await notes.remove(a.id,note.id);
     assert.equal((await notes.list(a.id)).length,0);
     await assert.rejects(notes.save(a.id,note.id,{...draft,revision:1}),{status:404});
-  }finally{db.client.close();}
+    });
+  }finally{await close();}
 });

@@ -30,6 +30,11 @@ const SETTINGS_HTML = fs.readFileSync(path.join(__dirname, 'public', 'settings.h
 const AI_ASSISTANT_HTML = fs.readFileSync(path.join(__dirname, 'public', 'ai-assistant.html'), 'utf8');
 
 const app = express();
+// Express 4 needs rejected async handlers forwarded to its error middleware.
+for(const method of ['get','post','put','delete']) {
+  const register=app[method].bind(app);
+  app[method]=(...args)=>register(...args.map(handler=>typeof handler==='function'?(req,res,next)=>Promise.resolve(handler(req,res,next)).catch(next):handler));
+}
 
 // Two prepared images plus a small PDF fit below Vercel's 4.5 MB request limit.
 app.use('/api/ai', express.json({ limit: '4mb' }));
@@ -160,7 +165,8 @@ async function requireSchool(req, res, next) {
   const school = await db.getUserSchool(req.user.id);
   if (!school) return res.status(403).json({ error: 'no_school' });
   req.school = school;
-  next();
+  req.schoolClient = await db.getSchoolClient(school.id);
+  await db.withSchool(school.id, next);
 }
 
 function setSessionCookie(res, token) {
@@ -270,14 +276,13 @@ app.get('/api/schools', requireAuth, async (req, res) => {
   res.json(schools.map(s => ({ id: s.id, name: s.name })));
 });
 
-app.post('/api/school/join', requireAuth, async (req, res) => {
-  const { schoolId, password } = req.body || {};
-  const id = Number(schoolId);
-  const school = await db.get('SELECT * FROM schools WHERE id = ?', id);
-  if (!school) return res.status(400).json({ error: 'Unknown school.' });
-  if (password !== 'iluvmatcha') return res.status(403).json({ error: 'Incorrect community password.' });
-  await db.setUserSchool(req.user.id, school.id);
-  res.json({ school: { id: school.id, name: school.name } });
+app.post('/api/school/create', requireAuth, async (req,res) => {
+  try {res.status(201).json({school:await db.createCommunity(req.user.id,req.body?.name,req.body?.password)});}
+  catch(error){res.status(error.status||503).json({error:error.status?error.message:'Could not create your community. Please contact support if this continues.'});}
+});
+app.post('/api/school/join', requireAuth, async (req,res) => {
+  try {res.json({school:await db.joinCommunity(req.user.id,req.body||{})});}
+  catch(error){res.status(error.status||503).json({error:error.status?error.message:'Could not join your community. Please retry.'});}
 });
 
 /* ---------------- students (real accounts, sorted by school) ---------------- */
@@ -287,7 +292,7 @@ app.post('/api/matcha/gifts',requireAuth,requireSchool,giftRoute(async r=>{
  await moderateMessage('dm:'+r.body.recipientId,String(r.body.instructions||''));
  return matchaGifts.send(r.user.id,r.school.id,r.body);
 }));
-app.get('/api/matcha/rewards',requireAuth,giftRoute(r=>matchaGifts.rewards(r.user.id)));
+app.get('/api/matcha/rewards',requireAuth,requireSchool,giftRoute(r=>matchaGifts.rewards(r.user.id)));
 app.get('/api/matcha/gifts/:id',requireAuth,requireSchool,giftRoute(r=>matchaGifts.read(r.params.id,r.user.id,r.school.id)));
 app.post('/api/matcha/gifts/:id/start',requireAuth,requireSchool,giftRoute(r=>matchaGifts.start(r.params.id,r.user.id,r.school.id)));
 app.post('/api/matcha/gifts/:id/finish',requireAuth,requireSchool,giftRoute(r=>matchaGifts.finish(r.params.id,r.user.id,r.school.id)));
@@ -297,7 +302,7 @@ app.get('/api/students', requireAuth, requireSchool, async (req, res) => {
   res.json(await db.schoolStudents(req.school.id, req.user.id));
 });
 
-app.post('/api/heartbeat', requireAuth, async (req, res) => {
+app.post('/api/heartbeat', requireAuth, requireSchool, async (req, res) => {
   await db.heartbeat(req.user.id);
   res.json({ ok: true });
 });
@@ -358,7 +363,7 @@ async function checkMessageChannel(req, res, next) {
     try {
       const group=await db.personalGroup(channel,req.user.id);
       if(!group)return res.status(404).json({error:'Conversation not found.'});
-      req.school={...req.school,id:group.school_id};
+      if (group.school_id !== req.school.id) return res.status(404).json({error:'Conversation not found.'});
     }catch{return res.status(500).json({error:'Could not open group.'});}
   } else if(channel.startsWith('channel:') && !CLASSES.some(c=>c.channels.some(ch=>channelKey(c.code,ch.slug)===channel))) {
     return res.status(404).json({error:'Conversation not found.'});
@@ -508,7 +513,7 @@ app.get('/api/groups', requireAuth, requireSchool, async (req, res) => {
 app.get('/api/groups/students',requireAuth,requireSchool,async(req,res)=>{
   const query=typeof req.query.q==='string'?req.query.q.slice(0,100):'';
   const after=Math.max(0,Number(req.query.after)||0);
-  const students=await db.all('SELECT id,name FROM users WHERE is_bot=0 AND id!=? AND id>? AND instr(lower(name),lower(?))>0 ORDER BY id LIMIT 101',req.user.id,after,query);
+  const students=await db.all('SELECT u.id,u.name FROM users u JOIN memberships mb ON mb.user_id=u.id WHERE mb.school_id=? AND u.is_bot=0 AND u.id!=? AND u.id>? AND instr(lower(u.name),lower(?))>0 ORDER BY u.id LIMIT 101',req.school.id,req.user.id,after,query);
   res.json({students:students.slice(0,100),more:students.length>100});
 });
 app.post('/api/groups',requireAuth,requireSchool,async(req,res)=>{
@@ -521,7 +526,7 @@ app.get('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
   try{
     const group=await db.personalGroup('channel:personal:'+req.params.id,req.user.id);
     if(!group)return res.status(404).json({error:'Group not found.'});
-    res.json(await db.all('SELECT u.id,u.name FROM users u JOIN personal_group_members m ON m.user_id=u.id WHERE m.group_id=? ORDER BY u.name',group.id));
+    res.json(await db.groupMembers(group.id));
   }catch{res.status(500).json({error:'Could not load members.'});}
 });
 app.put('/api/groups/:id/members',requireAuth,requireSchool,async(req,res)=>{
@@ -552,7 +557,7 @@ app.post('/api/ai/baristi', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
+app.post('/api/ai/baristi/cheats', requireAuth, requireSchool, async (req, res) => {
   const { topic, content } = req.body || {};
   if (!topic) return res.status(400).json({ error: 'topic is required.' });
   try {
@@ -567,11 +572,11 @@ app.post('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/ai/baristi/cheats', requireAuth, async (req, res) => {
+app.get('/api/ai/baristi/cheats', requireAuth, requireSchool, async (req, res) => {
   res.json((await db.listCheatSheets(req.user.id)).map(sheet => ({...sheet,topic:noteTitle(sheet.content,sheet.topic)})));
 });
 
-app.post('/api/ai/brewer', requireAuth, async (req, res) => {
+app.post('/api/ai/brewer', requireAuth, requireSchool, async (req, res) => {
   try {
     const source = inputText(req.body?.source, 200, 'Source name');
     const text = inputText(req.body?.text, 60000, 'Source text');
@@ -586,28 +591,40 @@ app.post('/api/ai/brewer', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/brewer/docs', requireAuth, async (req, res) => {
+app.get('/api/brewer/docs', requireAuth, requireSchool, async (req, res) => {
   res.json((await db.listBrewDocs(req.user.id)).map(doc => ({...doc,title:noteTitle(doc.body,doc.title)})));
 });
 
+app.get('/api/matcha/progress',requireAuth,requireSchool,async(req,res)=>{
+  const row=await db.get('SELECT state FROM matcha_progress WHERE user_id=?',req.user.id);
+  res.json({state:row?JSON.parse(row.state):null});
+});
+app.put('/api/matcha/progress',requireAuth,requireSchool,async(req,res)=>{
+  if(Number(req.body?.schoolId)!==req.school.id)return res.status(409).json({error:'Your active community has changed. Reopen Matcha Mode.'});
+  const state=req.body?.state;
+  if(!state||typeof state!=='object'||Array.isArray(state)||JSON.stringify(state).length>50000)return res.status(400).json({error:'Invalid focus progress.'});
+  await db.run("INSERT INTO matcha_progress(user_id,state) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET state=excluded.state,updated_at=datetime('now')",req.user.id,JSON.stringify(state));
+  res.json({ok:true});
+});
+
 /* ---------------- pages ---------------- */
-app.get('/api/notes',requireAuth,async(req,res)=>{
+app.get('/api/notes',requireAuth,requireSchool,async(req,res)=>{
   try{res.json(await notes.list(req.user.id));}catch{res.status(500).json({error:'Could not load your notes. Please retry.'});}
 });
-app.post('/api/notes',requireAuth,async(req,res)=>{
+app.post('/api/notes',requireAuth,requireSchool,async(req,res)=>{
   try{res.status(201).json(await notes.create(req.user.id));}catch{res.status(500).json({error:'Could not create a note. Please retry.'});}
 });
-app.put('/api/notes/:id',requireAuth,async(req,res)=>{
+app.put('/api/notes/:id',requireAuth,requireSchool,async(req,res)=>{
   try{res.json(await notes.save(req.user.id,req.params.id,req.body));}catch(err){res.status(err.status||500).json({error:err.status?err.message:'Could not save your note. Please retry.'});}
 });
-app.delete('/api/notes/:id',requireAuth,async(req,res)=>{
+app.delete('/api/notes/:id',requireAuth,requireSchool,async(req,res)=>{
   try{await notes.remove(req.user.id,req.params.id);res.json({ok:true});}catch{res.status(500).json({error:'Could not delete your note. Please retry.'});}
 });
 for (const [route, remove] of [
   ['/api/brewer/docs/:id', db.deleteBrewDoc],
   ['/api/ai/baristi/cheats/:id', db.deleteCheatSheet]
 ]) {
-  app.delete(route, requireAuth, async (req, res) => {
+  app.delete(route, requireAuth, requireSchool, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({error:'Invalid saved item.'});
     try {
@@ -631,6 +648,7 @@ app.get('/', async (req, res) => {
   const html = INDEX_HTML.replace('__DEV_LOGIN__', DEV_LOGIN ? 'block' : 'none');
   res.type('html').send(html);
 });
+app.get('/create-community.html', (req,res)=>guardPage(req,res,fs.readFileSync(path.join(__dirname,'public','create-community.html'),'utf8')));
 app.get('/student.html', (req, res) => guardPage(req, res, STUDENT_HTML));
 app.get('/settings.html', (req, res) => guardPage(req, res, SETTINGS_HTML));
 app.get('/ai-assistant.html', (req, res) => guardPage(req, res, AI_ASSISTANT_HTML));
@@ -639,6 +657,11 @@ app.get('/art.js', (req, res) => res.type('application/javascript').send(ART_JS)
 app.get('/app.js', (req, res) => res.type('application/javascript').send(APP_JS));
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use((error,req,res,next)=>{
+  console.error('Request failed:',error.message);
+  if(res.headersSent)return next(error);
+  res.status(error.status||500).json({error:'The request could not be completed. Please retry.'});
+});
 // Serve pinned local rendering libraries and KaTeX fonts; no CDN dependency.
 app.use('/vendor/katex', express.static(path.join(__dirname, 'node_modules/katex/dist')));
 app.use('/vendor/markdown-it', express.static(path.join(__dirname, 'node_modules/markdown-it/dist')));
@@ -651,8 +674,8 @@ if (process.env.VERCEL) {
 } else {
   // Local / other hosts: start the server
   ensureDb().then(() => {
-    app.listen(PORT, () => {
-      console.log(`\u2615 CoffeeHouse server running at http://localhost:${PORT}`);
+    const server = app.listen(PORT, () => {
+      console.log(`\u2615 CoffeeHouse server running at http://localhost:${server.address().port}`);
       console.log('  Firebase login:', firebaseAuth ? 'configured' : 'NOT configured (see notes-docs.md)');
       console.log('  Baristi (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BARISTA_API_KEY to .env)');
       console.log('  Brewer (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BREWER_API_KEY to .env)');

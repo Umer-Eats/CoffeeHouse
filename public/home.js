@@ -169,6 +169,7 @@
 
   async function openSchoolPicker(user) {
     schoolForm.hidden = false;
+    const createLink=$('#createCommunityLink');if(createLink)createLink.hidden=false;
     googleLogin.hidden = true;
     devForm.hidden = true;
     loginStatus.textContent = '';
@@ -180,7 +181,7 @@
       $('#schoolSelect').innerHTML = schools
         .map((s) => '<option value="' + s.id + '">' + esc(s.name) + '</option>')
         .join('');
-      if (!schools.length) loginStatus.textContent = 'No schools have been configured yet. Please contact the site owner.';
+      if (!schools.length) loginStatus.textContent = 'No communities yet. Create one to get started.';
     } catch (e) {
       loginStatus.textContent = 'Could not load schools: ' + e.message;
     }
@@ -190,7 +191,7 @@
     e.preventDefault();
     const button = schoolForm.querySelector('button');
     if (button.disabled) return;
-    const password = $('#schoolPassword').value.trim();
+    const password = $('#schoolPassword').value;
     if (!password) { loginStatus.textContent = 'Please enter the community password.'; return; }
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');

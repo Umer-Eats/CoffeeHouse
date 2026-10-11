@@ -5,16 +5,14 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 test('both participants see legacy and new DMs without seeing other conversations', async () => {
-  const context = vm.createContext({require, process:{env:{TURSO_DATABASE_URL:'file::memory:'}}, __dirname, module:{exports:{}}});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'../db.js'),'utf8'),context);
-  const db=context.module.exports;
-  try {
-    await db.init();
-    await db.run('INSERT INTO schools (id,name) VALUES (1,?), (2,?)','Test school','Other school');
+ const {db,close}=await require('./database-fixture.cjs').databaseFixture();
+ try {
+    await db.withSchool(1,async()=>{
     const users=[];
     for(const name of ['A','B','C']) users.push(await db.upsertUser({sub:name,email:name+'@example.test',name}));
     const [a,b,c]=users;
     const outsider=await db.upsertUser({sub:'outsider',email:'outsider@example.test',name:'Outsider'});
+    for(const user of [...users,outsider])await db.setUserSchool(user.id,1);
     await assert.rejects(db.createPersonalGroup(a.id,1,'Too small',[b.id]));
     await assert.rejects(db.createPersonalGroup(a.id,1,'Invalid student',[b.id,999999]));
     const group=await db.createPersonalGroup(a.id,1,'Biology team',[b.id,c.id]);
@@ -35,7 +33,7 @@ test('both participants see legacy and new DMs without seeing other conversation
     await db.insertMessage(1,'dm:'+b.id,a.id,'A to B');
     await db.insertMessage(1,'dm:'+a.id,b.id,'B replies');
     await db.insertMessage(1,'dm:'+b.id,c.id,'C private');
-    await db.insertMessage(2,'dm:'+b.id,a.id,'Other school');
+    await db.withSchool(2,()=>db.insertMessage(2,'dm:'+b.id,a.id,'Other school'));
     for(const [viewer,partner] of [[a,b],[b,a]]) {
       const messages=await db.directMessages(1,viewer.id,partner.id);
       assert.deepEqual(Array.from(messages,m=>m.text),['A to B','B replies']);
@@ -83,5 +81,6 @@ test('both participants see legacy and new DMs without seeing other conversation
     assert.equal((await db.listPersonalGroups(b.id)).length,0);
     assert.equal((await db.channelMessages(1,group.channel)).length,0);
     assert.equal(await db.get('SELECT * FROM message_attachments WHERE message_id=?',attachmentMessage.id),null);
-  } finally { db.client.close(); }
+    });
+  } finally { await close(); }
 });

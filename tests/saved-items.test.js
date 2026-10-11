@@ -6,15 +6,17 @@ const vm=require('node:vm');
 const path=require('node:path');
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 test('deleting either saved type is constrained by owner and item ID',async()=>{
-  const calls=[];
-  const context=vm.createContext({require:name=>name==='@libsql/client'?{createClient:()=>({execute:async query=>{calls.push(query);return {rowsAffected:1,lastInsertRowid:0};}})}:require(name),process:{env:{TURSO_DATABASE_URL:'file::memory:'}},__dirname:__dirname,module:{exports:{}}});
-  vm.runInContext(read('db.js'),context);
-  await context.module.exports.deleteBrewDoc(12,34);
-  await context.module.exports.deleteCheatSheet(12,56);
-  assert.match(calls[0].sql,/DELETE FROM brewed_docs WHERE id = \? AND user_id = \?/);
-  assert.match(calls[1].sql,/DELETE FROM cheat_sheets WHERE id = \? AND user_id = \?/);
-  assert.deepEqual(Array.from(calls[0].args),[34,12]);
-  assert.deepEqual(Array.from(calls[1].args),[56,12]);
+  const {db,close}=await require('./database-fixture.cjs').databaseFixture();
+  try{await db.withSchool(1,async()=>{
+    const a=await db.addBrewDoc(12,'A','Body','Source');
+    const b=await db.addCheatSheet(12,'B','Content');
+    await db.deleteBrewDoc(99,a.id);await db.deleteCheatSheet(99,b.id);
+    assert.equal((await db.listBrewDocs(12)).length,1);
+    assert.equal((await db.listCheatSheets(12)).length,1);
+    await db.deleteBrewDoc(12,a.id);await db.deleteCheatSheet(12,b.id);
+    assert.equal((await db.listBrewDocs(12)).length,0);
+    assert.equal((await db.listCheatSheets(12)).length,0);
+  });}finally{await close();}
 });
 test('delete confirmation cancels safely, reports failure, and refreshes after success',async()=>{
   const element=()=>({children:[],addEventListener(event,fn){this[event]=fn;},setAttribute(){},appendChild(child){this.children.push(child);}});

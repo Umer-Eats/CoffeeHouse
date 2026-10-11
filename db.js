@@ -4,13 +4,46 @@
 const { createClient } = require('@libsql/client');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const {fileURLToPath} = require('node:url');
+const {AsyncLocalStorage} = require('node:async_hooks');
+const scope = new AsyncLocalStorage();
 
 /* ---------------- client ---------------- */
 
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:' + path.join(__dirname, 'data', 'coffeehouse.db'),
+const mainUrl=process.env.TURSO_DATABASE_URL || 'file:' + path.join(__dirname,'data','coffeehouse.db');
+if(mainUrl.startsWith('file:') && !mainUrl.includes(':memory:')) {
+  const filename=mainUrl.startsWith('file://')?fileURLToPath(mainUrl):mainUrl.slice(5);
+  fs.mkdirSync(path.dirname(path.resolve(filename)),{recursive:true});
+}
+const mainClient = createClient({
+  url: mainUrl,
   authToken: process.env.TURSO_AUTH_TOKEN || undefined,
 });
+
+const COMMUNITY_TABLES = ['channels','messages','matcha_gifts','matcha_progress','personal_groups','personal_group_members','message_attachments','message_reads','ai_pending','quick_notes','brewed_docs','cheat_sheets','online'];
+function schoolContext() {
+  const context=scope.getStore();
+  if(!context) throw new Error('Community database context is required.');
+  return context;
+}
+function queryClient(statement) {
+  const sql=typeof statement==='string'?statement:statement.sql;
+  return COMMUNITY_TABLES.some(table=>new RegExp('\\b'+table+'\\b','i').test(sql))?schoolContext().client:mainClient;
+}
+const client = {
+  execute: statement=>queryClient(statement).execute(statement),
+  batch: (statements,mode)=>{
+    const target=queryClient(statements[0]);
+    if(statements.some(statement=>queryClient(statement)!==target))throw new Error('Cannot batch across databases.');
+    return target.batch(statements,mode);
+  },
+  close: ()=>mainClient.close()
+};
+async function withSchool(schoolId,fn) {
+  return scope.run({schoolId:Number(schoolId),client:await communities.getSchoolClient(schoolId)},fn);
+}
+async function ensureSchoolSchema(client){await client.executeMultiple(schoolSchema);}
 
 /* ---------------- schema ---------------- */
 
@@ -138,29 +171,31 @@ const BOTS = [
 
 /* ---------------- init (call once per cold start) ---------------- */
 
-let initialized = false;
-
-async function init() {
-  if (initialized) return;
-  const stmts = SCHEMA.split(';').map(s => s.trim()).filter(Boolean);
-  for (const sql of stmts) {
-    await client.execute(sql);
+const statements=SCHEMA.split(';').map(s=>s.trim()).filter(Boolean);
+const mainTables=['users','user_display_names','schools','memberships','sessions'];
+const isMain=sql=>mainTables.some(table=>sql.startsWith('CREATE TABLE IF NOT EXISTS '+table+' ('));
+const mainSchema=statements.filter(isMain).join(';')+';';
+// Retain legacy school_id metadata for compatibility; isolation is physical.
+const schoolSchema=statements.filter(sql=>!isMain(sql)).map(sql=>sql.replace(/ REFERENCES (users|schools)\(id\)( ON DELETE CASCADE)?/g,'')).join(';')+`;
+CREATE TABLE IF NOT EXISTS channels(name TEXT PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS matcha_progress(user_id INTEGER PRIMARY KEY,state TEXT NOT NULL,updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+`;
+const communities=require('./community-index')({mainClient,get,run,all,setUserSchool},schoolSchema,COMMUNITY_TABLES);
+let initialization;
+async function init(){
+  if(!initialization)initialization=initialize().catch(error=>{initialization=null;throw error;});
+  return initialization;
+}
+async function initialize(){
+  await mainClient.executeMultiple(mainSchema);
+  const columns=(await mainClient.execute('PRAGMA table_info(schools)')).rows.map(c=>c.name);
+  for(const [name,type] of Object.entries({db_url:'TEXT',db_auth_token:'TEXT',created_by:'INTEGER REFERENCES users(id)',join_password_hash:'TEXT',created_at:'TEXT',status:"TEXT NOT NULL DEFAULT 'legacy'",migration_owner:'TEXT',migration_started_at:'TEXT'})){
+    if(!columns.includes(name))try{await mainClient.execute(`ALTER TABLE schools ADD COLUMN ${name} ${type}`);}catch(error){if(!error.message.includes('duplicate column'))throw error;}
   }
-  for (const name of SCHOOLS) {
-    await client.execute({ sql: 'INSERT OR IGNORE INTO schools (name) VALUES (?)', args: [name] });
-  }
-  // Remove schools not in the configured list
-  if (SCHOOLS.length) {
-    const placeholders = SCHOOLS.map(() => '?').join(',');
-    await client.execute({ sql: `DELETE FROM schools WHERE name NOT IN (${placeholders})`, args: SCHOOLS });
-  }
-  for (const b of BOTS) {
-    await client.execute({
-      sql: 'INSERT OR IGNORE INTO users (firebase_uid, email, name, is_bot) VALUES (?, ?, ?, 1)',
-      args: [b.sub, b.email, b.name]
-    });
-  }
-  initialized = true;
+  await mainClient.execute("UPDATE schools SET created_at=datetime('now') WHERE created_at IS NULL");
+  for(const name of SCHOOLS)await mainClient.execute({sql:'INSERT OR IGNORE INTO schools(name) VALUES(?)',args:[name.trim()]});
+  for(const b of BOTS)await mainClient.execute({sql:'INSERT OR IGNORE INTO users(firebase_uid,email,name,is_bot) VALUES(?,?,?,1)',args:[b.sub,b.email,b.name]});
+  await communities.migrateLegacySchools();
 }
 
 /* ---------------- low-level helpers ---------------- */
@@ -183,7 +218,7 @@ async function run(sql, ...params) {
 /* ---------------- queries ---------------- */
 
 async function listSchools() {
-  return all('SELECT * FROM schools ORDER BY name');
+  return all("SELECT id,name FROM schools WHERE status='ready' ORDER BY name");
 }
 
 async function upsertUser(profile) {
@@ -227,15 +262,10 @@ async function getUserSchool(userId) {
 }
 
 async function setUserSchool(userId, schoolId) {
-  await client.execute('BEGIN');
-  try {
-    await run('DELETE FROM memberships WHERE user_id = ?', userId);
-    await run('INSERT INTO memberships (user_id, school_id) VALUES (?, ?)', userId, schoolId);
-    await client.execute('COMMIT');
-  } catch (err) {
-    await client.execute('ROLLBACK');
-    throw err;
-  }
+  await mainClient.batch([
+    {sql:'DELETE FROM memberships WHERE user_id=?',args:[userId]},
+    {sql:'INSERT INTO memberships(user_id,school_id) VALUES(?,?)',args:[userId,schoolId]}
+  ],'write');
   return getUserSchool(userId);
 }
 
@@ -289,13 +319,13 @@ async function heartbeat(userId) {
 async function channelMessages(schoolId, channel, limit = 200) {
   const rows = await all(
     `SELECT m.id, m.channel, m.text, m.created_at,
-            u.id AS user_id, u.name AS author, u.picture, u.is_bot
-     FROM messages m JOIN users u ON u.id = m.user_id
+            m.user_id
+     FROM messages m
      WHERE m.school_id = ? AND m.channel = ?
      ORDER BY m.id DESC LIMIT ?`,
     schoolId, channel, limit
   );
-  return rows.reverse();
+  return hydrateMessages(rows.reverse());
 }
 
 async function insertMessage(schoolId, channel, userId, text) {
@@ -303,12 +333,12 @@ async function insertMessage(schoolId, channel, userId, text) {
     'INSERT INTO messages (school_id, channel, user_id, text) VALUES (?, ?, ?, ?)',
     schoolId, channel, userId, text
   );
-  return get(
+  return hydrateMessage(await get(
     `SELECT m.id, m.channel, m.text, m.created_at,
-            u.id AS user_id, u.name AS author, u.picture, u.is_bot
-     FROM messages m JOIN users u ON u.id = m.user_id
+            m.user_id
+     FROM messages m
      WHERE m.id = ?`, info.lastInsertRowid
-  );
+  ));
 }
 
 async function dmThreads(userId, schoolId) {
@@ -316,9 +346,7 @@ async function dmThreads(userId, schoolId) {
     `SELECT CASE WHEN m.user_id = ? THEN CAST(substr(m.channel,4) AS INTEGER) ELSE m.user_id END AS partner_id,
             MAX(m.id) AS last_id, COUNT(*) AS n
      FROM messages m
-     JOIN users u ON u.id = m.user_id
      WHERE m.school_id = ? AND m.channel LIKE 'dm:%'
-       AND u.is_bot = 0
        AND (m.user_id = ? OR m.channel = ?)
      GROUP BY partner_id ORDER BY last_id DESC`,
     userId, schoolId, userId, 'dm:' + userId
@@ -336,7 +364,7 @@ async function personalGroup(channel,userId) {
 async function createPersonalGroup(userId,schoolId,name,memberIds) {
   const ids=[...new Set(memberIds)];
   if(!name || name.length>80 || ids.length<2 || ids.includes(userId) || ids.some(id=>!Number.isSafeInteger(id)||id<1)) throw Object.assign(Error('Choose at least two other students and a name of 1–80 characters.'),{status:400});
-  const users=await all('SELECT id FROM users WHERE is_bot=0 AND id IN ('+ids.map(()=>'?').join(',')+')',...ids);
+  const users=await groupStudents(ids);
   if(users.length!==ids.length)throw Object.assign(Error('One or more students are unavailable.'),{status:400});
   const id=crypto.randomUUID();
   await client.batch([
@@ -350,7 +378,7 @@ async function updateGroupMembers(userId,groupId,memberIds) {
   if(!group)throw Object.assign(Error('Only the group creator can edit members.'),{status:403});
   const ids=[...new Set(memberIds)];
   if(ids.some(id=>!Number.isSafeInteger(id)||id<1||id===userId))throw Object.assign(Error('Invalid member selection.'),{status:400});
-  const users=ids.length?await all('SELECT id FROM users WHERE is_bot=0 AND id IN ('+ids.map(()=>'?').join(',')+')',...ids):[];
+  const users=ids.length?await groupStudents(ids):[];
   if(users.length!==ids.length)throw Object.assign(Error('One or more students are unavailable.'),{status:400});
   await client.batch([
     {sql:'DELETE FROM personal_group_members WHERE group_id=? AND user_id!=?',args:[groupId,userId]},
@@ -397,14 +425,14 @@ async function markMessagesRead(userId, schoolId, channel, lastId) {
 async function directMessages(schoolId, userId, partnerId, limit = 200) {
   const rows = await all(
     `SELECT m.id, m.channel, m.text, m.created_at,
-            u.id AS user_id, u.name AS author, u.picture, u.is_bot
-     FROM messages m JOIN users u ON u.id = m.user_id
+            m.user_id
+     FROM messages m
      WHERE m.school_id = ? AND
        ((m.user_id = ? AND m.channel = ?) OR (m.user_id = ? AND m.channel = ?))
      ORDER BY m.id DESC LIMIT ?`,
     schoolId, userId, 'dm:' + partnerId, partnerId, 'dm:' + userId, limit
   );
-  return rows.reverse();
+  return hydrateMessages(rows.reverse());
 }
 
 async function addBrewDoc(userId, title, body, src) {
@@ -439,8 +467,28 @@ async function listCheatSheets(userId) {
   return all('SELECT * FROM cheat_sheets WHERE user_id = ? ORDER BY id DESC', userId);
 }
 
+async function hydrateMessage(message){
+  if(!message)return null;
+  const user=await getUser(message.user_id);
+  return {...message,author:user?.name||'Former member',picture:user?.picture||null,is_bot:user?.is_bot||0};
+}
+async function hydrateMessages(messages){return Promise.all(messages.map(hydrateMessage));}
+async function groupStudents(ids){return all('SELECT u.id FROM users u JOIN memberships mb ON mb.user_id=u.id WHERE mb.school_id=? AND u.is_bot=0 AND u.id IN ('+ids.map(()=>'?').join(',')+')',schoolContext().schoolId,...ids);}
+async function groupMembers(groupId){
+  const ids=await all('SELECT user_id FROM personal_group_members WHERE group_id=?',groupId);
+  const users=await Promise.all(ids.map(row=>getUser(row.user_id)));
+  return users.filter(Boolean).map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name));
+}
+
 module.exports = {
   client,
+  mainClient,
+  ensureSchoolSchema,
+  withSchool,
+  schoolContext,
+  hydrateMessages,
+  groupMembers,
+  ...communities,
   init,
   get,
   run,

@@ -85,3 +85,51 @@ npm run dev
 ```
 
 Run the test suite with `npm test`.
+
+## Custom communities and isolated databases
+
+Authenticated users can create a community at `/create-community.html`, available
+from the landing-page community picker, Settings, and Profile. Names accept 1–80
+characters, and passwords accept 8–64 characters (up to 72 UTF-8 bytes, the bcrypt
+limit). Passwords are hashed at cost 12. Creation is limited in the main database
+to one successful or pending community per account per rolling 24 hours. Failed
+provisioning can be retried with the same name by its creator.
+
+The main database stores accounts, sessions, display names, the community index,
+and active memberships. Every community has a separate database for messages,
+attachments, groups, read receipts, AI activity, presence, saved study materials,
+notes, gifts, and Matcha progress. Middleware establishes a request-local database
+context; community queries without that context fail. Account details are read
+from the main database when rendering messages. Legacy `school_id` fields remain
+as compatibility metadata; physical isolation comes from separate database URLs.
+
+For development, set `TURSO_MULTI_DB_MODE=local`. Files are created under `data/`
+(or `COFFEEHOUSE_DATA_DIR`). For production, set `TURSO_MULTI_DB_MODE=platform`,
+`TURSO_API_TOKEN`, `TURSO_ORG_NAME`, and optionally `TURSO_DB_GROUP`. The application
+uses the [Turso Platform REST API](https://docs.turso.tech/api-reference/databases/create)
+to provision `coffeehouse-school-{id}` and mint a database-specific token. Platform
+credentials stay on the server. Vercel requires platform mode; local files need
+persistent disk storage. Use a separate Turso organization for unrelated app
+installations so community database names cannot collide.
+
+Before upgrading an existing installation, back up its main database and pause
+writes. Set `COFFEEHOUSE_LEGACY_JOIN_PASSWORD` to an initial password for existing
+communities, then run `npm run migrate:communities` with the target environment.
+Initialization also runs this migration for any legacy community. The migration
+copies school-scoped records, attachments and group members while preserving IDs.
+Private saved items follow their owner's active membership. It marks the community
+ready only after copying succeeds; reruns resume safely. Original tables remain
+in the main database as a migration backup and are never used by live community
+requests. Users without memberships retain their legacy private records there;
+these need an explicit community assignment before migration. Keep the legacy
+password configured if you continue seeding new names via `COFFEEHOUSE_SCHOOLS`.
+
+`POST /api/school/create` accepts `{ "name": "Study group", "password": "a long phrase" }`
+and returns `{ "school": { "id": 1, "name": "Study group", "dbUrl": "..." } }`.
+`POST /api/school/join` accepts a community `name` (or the existing `schoolId`) and
+`password`. Both activate the membership using the existing global session.
+The catalog and account endpoints never return database credentials or hashes.
+
+Matcha progress syncs to the active community database; the browser cache is
+namespaced by account and community. Previous global browser-only progress is
+left intact locally because it has no reliable community attribution.

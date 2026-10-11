@@ -74,7 +74,7 @@
     </div>
 
     <div class="card pixel-border">
-      <h2>Your school community</h2>
+      <h2>Your school community</h2><p><a class="btn matcha" href="/create-community.html">CREATE COMMUNITY</a></p>
       <div class="cur-school">Current: <b id="curSchool">loading...</b></div>
       <div class="row">
         <select id="schoolSelect" aria-label="School community"></select>
@@ -140,7 +140,7 @@
       const st = $('schoolStatus');
       st.className = 'note';
       st.textContent = '';
-      const password = $('schoolPassword').value.trim();
+      const password = $('schoolPassword').value;
       if (!password) { st.className = 'note err'; st.textContent = 'Please enter the community password.'; $('changeSchool').disabled = false; return; }
       try {
         const res = await api('/api/school/join', { method: 'POST', body: { schoolId: Number($('schoolSelect').value), password } });
