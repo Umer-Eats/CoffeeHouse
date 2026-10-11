@@ -81,7 +81,8 @@ module.exports = function communityIndex(db, schema, tables) {
   }
   async function joinCommunity(userId,{name,schoolId,password}) {
     if(typeof password!=='string'||password.length>64||Buffer.byteLength(password)>72)fail('Incorrect community password.',403);
-    const school=typeof name==='string'?await db.get("SELECT * FROM schools WHERE name=? AND status='ready'",name.trim()):await db.get("SELECT * FROM schools WHERE id=? AND status='ready'",Number(schoolId)||0);
+    const school=typeof name==='string'?await db.get("SELECT * FROM schools WHERE name=? AND status!='failed'",name.trim()):await db.get("SELECT * FROM schools WHERE id=? AND status!='failed'",Number(schoolId)||0);
+    if(school && school.status!=='ready')fail('This community is still being set up. Please try again later.',503);
     if(!school||!await bcrypt.compare(password,school.join_password_hash))fail('Unknown community or incorrect password.',403);
     await getSchoolClient(school.id);await db.setUserSchool(userId,school.id);
     return {id:school.id,name:school.name};

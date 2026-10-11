@@ -1,23 +1,66 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex,nofollow"><title>Create a community — CoffeeHouse</title>
-  <link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/home.css">
-  <style>h1{font-size:clamp(32px,6vw,48px);text-shadow:none;letter-spacing:-1px}main{max-width:560px;margin:5vh auto;padding:24px}form{display:grid;gap:20px}label{display:grid;gap:8px}input{width:100%;padding:12px;font:inherit;box-sizing:border-box}meter{width:100%}.community-card{background:var(--panel,#fff4dd);padding:28px;border:2px solid var(--ink,#502d16);border-radius:12px}#status{min-height:2em}button:disabled{opacity:.6}</style>
-  <script src="/app.js" defer></script><script src="/create-community.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#3d261a">
+  <title>Create a community — CoffeeHouse</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/home.css">
+  <link rel="stylesheet" href="/motion.css">
+  <link rel="stylesheet" href="/create-community.css">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
+  <script src="/app.js" defer></script>
+  <script src="/create-community.js" defer></script>
 </head>
-<body><main>
-  <a href="/">← CoffeeHouse</a>
-  <div class="community-card"><p class="eyebrow">A PLACE TO BELONG</p><h1>Create your community</h1>
-  <p>Give your study group a name and a private space. Share the password with the people you want to invite.</p>
-  <form id="createCommunityForm">
-    <label>Community name<input name="name" maxlength="80" autocomplete="organization" required></label>
-    <label>Join password<input name="password" type="password" minlength="8" maxlength="64" autocomplete="new-password" aria-describedby="passwordHelp" required></label>
-    <meter id="strength" min="0" max="4" value="0" aria-label="Password strength"></meter>
-    <small id="passwordHelp">Use 8–64 characters. A long, unique phrase works well.</small>
-    <label>Confirm password<input name="confirmPassword" type="password" minlength="8" maxlength="64" autocomplete="new-password" required></label>
-    <button class="primary-button" type="submit">Create Community</button>
-  </form><p id="status" role="status" aria-live="polite"></p>
-  <p>Creating a community makes it your active community. You can create one every 24 hours.</p></div>
-</main></body></html>
+<body class="community-create">
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="cup" viewBox="0 0 40 40">
+      <g class="steam" fill="currentColor"><path d="M17 1h2v4h-2V3h-2V0h2zm8 2h2v3h-2v3h-2V5h2z"/></g>
+      <path fill="currentColor" d="M5 13h27v3h5v3h2v7h-2v3h-7v3h-4v3H11v-3H7v-5H5zm27 6v7h3v-7zM8 36h22v2H8zm-5-3h5v3H3zm27 0h5v3h-5z"/>
+      <path fill="var(--coffee,#502d16)" d="M8 15h21v4H8z"/><path fill="var(--cup-shade,#e4bb7c)" d="M25 21h4v8h-3v3h-8v-2h6z"/>
+    </symbol>
+    <symbol id="sun" viewBox="0 0 24 24"><path fill="currentColor" d="M11 0h2v4h-2zm0 20h2v4h-2zM0 11h4v2H0zm20 0h4v2h-4zM3 3h3v3H3zm15 0h3v3h-3zM3 18h3v3H3zm15 0h3v3h-3zM8 6h8v2h2v8h-2v2H8v-2H6V8h2z"/></symbol>
+    <symbol id="moon" viewBox="0 0 24 24"><path fill="currentColor" d="M10 1h5v2h-3v3h-2v7h2v3h3v2h7v2h-3v2H8v-2H4v-3H2V7h2V4h3V2h3z"/></symbol>
+  </defs></svg>
+  <a href="#main" class="skip-link">Skip to form</a>
+  <div class="community-backdrop" aria-hidden="true"><div class="scenery scenery-day"></div><div class="scenery scenery-night"></div></div>
+  <header class="community-header">
+    <a class="brand" href="/" aria-label="CoffeeHouse home"><svg aria-hidden="true"><use href="#cup"/></svg><span>CoffeeHouse</span></a>
+    <div class="theme-toggle" role="group" aria-label="Color theme">
+      <button type="button" data-theme-choice="light" aria-pressed="true"><svg aria-hidden="true"><use href="#sun"/></svg>Day</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#moon"/></svg>Night</button>
+    </div>
+  </header>
+  <main id="main" class="community-main">
+    <section class="community-card" aria-labelledby="communityTitle">
+      <p class="community-eyebrow">A NEW TABLE AT COFFEEHOUSE</p>
+      <h1 id="communityTitle">Create your community</h1>
+      <p class="community-intro">A cozy space for your people. Pick a name and share the password with the friends you invite.</p>
+      <form id="createCommunityForm">
+        <label for="communityName">Community name
+          <input id="communityName" name="name" maxlength="80" autocomplete="organization" placeholder="e.g. The Study Table" required>
+        </label>
+        <div class="community-password">
+          <label for="communityPassword">Join password
+            <input id="communityPassword" name="password" type="password" minlength="8" maxlength="64" autocomplete="new-password" aria-describedby="passwordHelp" placeholder="Make it a secret worth sharing" required>
+          </label>
+          <div id="strength" class="community-strength" role="meter" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-label="Password strength"><span></span><span></span><span></span><span></span></div>
+          <p id="passwordHelp" class="community-help">Use 8–64 characters. A long, unique phrase works well.</p>
+        </div>
+        <label for="confirmPassword">Confirm password
+          <input id="confirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="Enter your password again" required>
+        </label>
+        <button class="primary-button" type="submit">Create Community <span aria-hidden="true">→</span></button>
+      </form>
+      <p id="status" class="community-status" role="status" aria-live="polite"></p>
+      <p class="community-footer">This becomes your active community.<br>You can create one community every 24 hours.</p>
+      <a class="community-back" href="/?login=1">← Back to communities</a>
+    </section>
+  </main>
+</body>
+</html>

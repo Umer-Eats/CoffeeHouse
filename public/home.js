@@ -27,6 +27,32 @@
   const loginBtn = $('#loginBtn');
   const googleLogin = $('#googleLogin');
   const loginStatus = $('#loginStatus');
+  let signedIn = false;
+
+  async function loadCommunities() {
+    const select = $('#schoolSelect');
+    const joinButton = schoolForm.querySelector('button');
+    joinButton.disabled = true;
+    select.innerHTML = '<option value="" disabled selected>Loading communities…</option>';
+    try {
+      const schools = await api('/api/schools');
+      select.innerHTML = '<option value="" disabled selected>Choose a community</option>' + schools
+        .map(s => '<option value="' + s.id + '" ' + (s.available ? '' : 'disabled') + '>' + esc(s.name) + (s.available ? '' : ' — setup pending') + '</option>').join('');
+      if (!schools.length) {
+        select.innerHTML = '<option value="" disabled selected>No communities yet</option>';
+        loginStatus.textContent = signedIn ? 'Create a community to get started.' : 'Sign in to create the first community.';
+      } else if (!schools.some(s => s.available)) {
+        loginStatus.textContent = 'These communities are being set up. ' + (signedIn ? 'You can also create your own.' : 'Sign in to create your own.');
+      }
+    } catch (error) {
+      select.innerHTML = '<option value="" disabled selected>Communities unavailable</option>';
+      loginStatus.textContent = 'Could not load communities: ' + error.message;
+    }
+  }
+
+  $('#schoolSelect').addEventListener('change', () => {
+    schoolForm.querySelector('button').disabled = !signedIn || !$('#schoolSelect').value;
+  });
 
   function openDialog(d) {
     if (d && typeof d.showModal === 'function') d.showModal();
@@ -72,10 +98,17 @@
     try {
       const me = await api('/api/me');
       showLoggedIn(me);
+      if (new URLSearchParams(location.search).has('login')) await openSchoolPicker(me.user);
       return;
     } catch (e) {
       /* not logged in */
     }
+
+    // Visitors can browse the same catalog before signing in.
+    schoolForm.hidden = false;
+    $('#schoolPassword').closest('label').hidden = true;
+    schoolForm.querySelector('button').hidden = true;
+    loadCommunities();
 
     /* Set up Firebase */
     if (CFG.firebaseConfigured && window.firebase) {
@@ -99,6 +132,7 @@
   $$('[data-login]').forEach(b => b.addEventListener('click', () => loginBtn.click()));
 
   function showLoggedIn(me) {
+    signedIn = true;
     loginBtn.innerHTML = '<svg aria-hidden="true"><use href="#user"/></svg><span>' + esc(me.user.name) + '</span>';
     loginBtn.addEventListener('click', () => {
       if (me.school) {
@@ -118,16 +152,6 @@
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await firebase.auth().signInWithPopup(provider);
-      const email = result.user.email || '';
-      const allowed = email.endsWith('@pinescharter.net') || email === 'umerqure475@gmail.com';
-      if (!allowed) {
-        firebase.auth().signOut();
-        loginStatus.textContent = 'Only Pines Charter accounts can sign in.';
-        googleLogin.disabled = false;
-        googleLogin.removeAttribute('aria-busy');
-        googleLogin.textContent = 'Continue with Google';
-        return;
-      }
       const idToken = await result.user.getIdToken();
       const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
       afterLogin(data);
@@ -168,7 +192,10 @@
   }
 
   async function openSchoolPicker(user) {
+    signedIn = true;
     schoolForm.hidden = false;
+    $('#schoolPassword').closest('label').hidden = false;
+    schoolForm.querySelector('button').hidden = false;
     const createLink=$('#createCommunityLink');if(createLink)createLink.hidden=false;
     googleLogin.hidden = true;
     devForm.hidden = true;
@@ -176,15 +203,7 @@
     openDialog(accountDialog);
     $('#accountHint').textContent =
       'Welcome, ' + (user.name || 'student') + '! Pick your community and enter the password.';
-    try {
-      const schools = await api('/api/schools');
-      $('#schoolSelect').innerHTML = schools
-        .map((s) => '<option value="' + s.id + '">' + esc(s.name) + '</option>')
-        .join('');
-      if (!schools.length) loginStatus.textContent = 'No communities yet. Create one to get started.';
-    } catch (e) {
-      loginStatus.textContent = 'Could not load schools: ' + e.message;
-    }
+    await loadCommunities();
   }
 
   schoolForm.addEventListener('submit', async (e) => {

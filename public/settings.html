@@ -118,7 +118,7 @@
 
       SCHOOLS = await api('/api/schools');
       $('schoolSelect').innerHTML = SCHOOLS.map(s =>
-        `<option value="${s.id}" ${s.id === me.school.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+        `<option value="${s.id}" ${s.id === me.school.id ? 'selected' : ''} ${s.available ? '' : 'disabled'}>${esc(s.name)}${s.available ? '' : ' — setup pending'}</option>`).join('');
     }
 
     $('displayNameForm').addEventListener('submit', async event => {

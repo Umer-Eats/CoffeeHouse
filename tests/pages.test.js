@@ -7,7 +7,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-for (const file of ['public/index.html', 'public/student.html', 'public/settings.html', 'public/ai-assistant.html']) {
+for (const file of ['public/index.html', 'public/student.html', 'public/settings.html', 'public/ai-assistant.html', 'public/create-community.html']) {
   test(file + ' has valid scripts and no duplicate IDs', () => {
     const html = read(file);
     for (const match of html.matchAll(/<script(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g)) {

@@ -1,0 +1,51 @@
+.community-create{min-height:100svh;font-family:"VT323",monospace;font-size:22px;line-height:1.2;isolation:isolate}
+.community-backdrop{position:fixed;inset:0;z-index:-1;background:var(--header);pointer-events:none}
+.community-backdrop::after{content:"";position:absolute;inset:0;background:#24170e66}
+:root[data-theme=dark] .community-backdrop::after{background:#0a091d88}
+.community-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;padding:10px clamp(16px,4vw,48px);border-bottom:2px solid var(--border);background:var(--header)}
+.community-header .brand{gap:10px;font-size:30px}
+.community-header .brand svg{width:34px;height:34px}
+.community-header .theme-toggle{margin:0;flex-shrink:0}
+.community-header .theme-toggle button{padding:7px 12px;font-size:21px;gap:7px}
+.community-header .theme-toggle svg{width:20px;height:20px}
+.community-main{width:min(100%,600px);margin:0 auto;padding:28px 20px 36px}
+.community-card{padding:28px 32px 24px;border:2px solid var(--border);border-radius:12px;background:var(--panel);box-shadow:6px 6px 0 #160e1370}
+.community-eyebrow{margin:0 0 8px;font-size:17px;letter-spacing:1.1px;color:var(--gold)}
+.community-create .community-card h1{margin:0;font-family:"Pixelify Sans",monospace;font-size:34px;font-weight:600;line-height:1.12;letter-spacing:-.6px;color:var(--cream);text-shadow:none}
+.community-intro{margin:10px 0 22px;font-size:22px;line-height:1.2}
+.community-card form{display:grid;gap:16px}
+.community-card form label{display:grid;gap:6px;margin:0;font-size:22px;line-height:1.1}
+.community-card input{display:block;min-width:0;min-height:46px;padding:10px 12px;font:22px/1 "VT323",monospace;border:2px solid var(--border);border-radius:5px}
+.community-card input::placeholder{color:var(--cream);opacity:.52}
+.community-strength{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}
+.community-strength span{height:6px;background:var(--header);border:1px solid var(--border)}
+.community-strength .is-filled{background:var(--gold)}
+.community-help{margin:6px 0 0;font-size:17px;line-height:1.15;color:var(--cream);opacity:.8}
+.community-card .primary-button{min-height:48px;margin-top:2px;padding:10px 16px;font-size:23px;line-height:1.1;box-shadow:3px 3px 0 #160e1350}
+.community-card .primary-button:hover{filter:brightness(1.06)}
+.community-card .primary-button:disabled{opacity:.65;cursor:wait}
+.community-status{margin:14px 0 0;font-size:20px;overflow-wrap:anywhere}
+.community-status:empty{display:none}
+.community-footer{margin:18px 0 12px;text-align:center;font-size:18px;line-height:1.2;opacity:.8}
+.community-back{display:block;width:fit-content;margin:0 auto;font-size:19px;text-underline-offset:4px}
+.community-back:hover{text-decoration:underline}
+@media(max-width:540px){
+ .community-header{gap:8px;padding:10px 14px;min-height:62px}
+ .community-header .brand{font-size:23px;gap:6px}
+ .community-header .brand svg{width:27px;height:27px}
+ .community-header .theme-toggle button{font-size:18px;padding:6px 8px;gap:4px}
+ .community-header .theme-toggle svg{width:16px;height:16px}
+ .community-main{padding:20px 14px 28px}
+ .community-card{padding:24px 20px 20px;box-shadow:4px 4px 0 #160e1370}
+ .community-create .community-card h1{font-size:30px;letter-spacing:-.5px}
+ .community-intro{font-size:21px;margin-bottom:20px}
+ .community-eyebrow{font-size:15px;letter-spacing:.7px}
+}
+@media(max-width:360px){
+ .community-header .brand{font-size:19px;gap:4px}
+ .community-header .brand svg{width:21px;height:21px}
+ .community-header .theme-toggle button{padding:6px 5px;font-size:16px;gap:3px}
+ .community-header .theme-toggle svg{width:13px;height:13px}
+ .community-card{padding-inline:16px}
+ .community-create .community-card h1{font-size:27px}
+}

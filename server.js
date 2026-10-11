@@ -208,8 +208,6 @@ app.post('/api/auth/firebase', async (req, res) => {
   try {
     const decoded = await firebaseAuth.verifyIdToken(idToken);
     if (!decoded.email) return res.status(403).json({ error: 'This account has no email address.' });
-    const allowed = decoded.email.endsWith('@pinescharter.net') || decoded.email === 'umerqure475@gmail.com';
-    if (!allowed) return res.status(403).json({ error: 'Only Pines Charter accounts can sign in.' });
     const user = await db.upsertUser({
       sub: decoded.uid,
       email: decoded.email,
@@ -270,9 +268,10 @@ app.get('/api/me', requireAuth, async (req, res) => {
 
 /* ---------------- schools / communities ---------------- */
 
-app.get('/api/schools', requireAuth, async (req, res) => {
+app.get('/api/schools', async (req, res) => {
+  await ensureDb();
   const schools = await db.listSchools();
-  res.json(schools.map(s => ({ id: s.id, name: s.name })));
+  res.json(schools.map(s => ({ id: s.id, name: s.name, available: s.status === 'ready' })));
 });
 
 app.post('/api/school/create', requireAuth, async (req,res) => {

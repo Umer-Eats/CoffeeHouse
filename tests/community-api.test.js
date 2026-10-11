@@ -22,6 +22,9 @@ test('legacy communities without migration settings do not block pages, sign-in 
   };
   const home=await fetch(base+'/');assert.equal(home.status,200);assert.match(home.headers.get('content-type'),/text\/html/);assert.match(await home.text(),/<!doctype html>/i);
   assert.equal((await request('/api/config')).status,200);
+  const publicCatalog=await request('/api/schools');
+  assert.equal(publicCatalog.status,200);
+  assert.deepEqual(publicCatalog.body,[{id:1,name:'Legacy community',available:false}]);
   assert.equal((await request('/api/school/create',null,{name:'Private',password:'password123'})).status,401);
   const a=await request('/api/auth/dev',null,{email:'a@example.test',name:'A'});
   assert.equal(a.status,200);
@@ -43,7 +46,10 @@ test('legacy communities without migration settings do not block pages, sign-in 
   assert.equal((await request('/api/notes',b.cookie)).body.length,0); // user privacy within a community
   assert.equal((await request('/api/matcha/progress',b.cookie,{schoolId:second.body.school.id,state:progress},'PUT')).status,409);
   assert.deepEqual((await request('/api/matcha/progress',a.cookie)).body.state,progress);
-  const schools=await request('/api/schools',a.cookie);assert.deepEqual(Object.keys(schools.body[0]).sort(),['id','name']);
+  const schools=await request('/api/schools');assert.deepEqual(Object.keys(schools.body[0]).sort(),['available','id','name']);
+  assert.deepEqual(schools.body.map(s=>s.name),['API First','API Second','Legacy community']);
+  assert.equal(schools.body.filter(s=>s.available).length,2);
+  assert.equal((await request('/api/school/join',b.cookie,{schoolId:1,password:'any password'})).status,503);
  }finally{
   if(child.exitCode===null){child.kill();await new Promise(resolve=>child.once('close',resolve));}
   for(const file of fs.readdirSync(directory))fs.unlinkSync(path.join(directory,file));fs.rmdirSync(directory);

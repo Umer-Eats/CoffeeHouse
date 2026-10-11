@@ -131,6 +131,11 @@ and returns `{ "school": { "id": 1, "name": "Study group", "dbUrl": "..." } }`.
 `POST /api/school/join` accepts a community `name` (or the existing `schoolId`) and
 `password`. Both activate the membership using the existing global session.
 The catalog and account endpoints never return database credentials or hashes.
+Google sign-in accepts accounts from any email domain; Firebase still verifies
+every ID token. The community catalog is public and includes existing communities
+that are awaiting setup. Those entries are labeled as pending and cannot be
+joined until their database migration succeeds. Community content still requires
+sign-in and membership with the correct community password.
 
 Matcha progress syncs to the active community database; the browser cache is
 namespaced by account and community. Previous global browser-only progress is

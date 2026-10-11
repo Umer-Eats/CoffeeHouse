@@ -219,7 +219,7 @@ async function run(sql, ...params) {
 /* ---------------- queries ---------------- */
 
 async function listSchools() {
-  return all("SELECT id,name FROM schools WHERE status='ready' ORDER BY name");
+  return all("SELECT id,name,status FROM schools WHERE status!='failed' ORDER BY name COLLATE NOCASE");
 }
 
 async function upsertUser(profile) {

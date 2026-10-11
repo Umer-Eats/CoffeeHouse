@@ -2,10 +2,20 @@
 const form=document.getElementById('createCommunityForm');
 const status=document.getElementById('status');
 const password=form.elements.password;
+function applyTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  try{localStorage.setItem('ch-theme',theme);}catch{}
+  document.querySelectorAll('[data-theme-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeChoice===theme)));
+}
+applyTheme(document.documentElement.dataset.theme||'light');
+document.querySelectorAll('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeChoice)));
 password.addEventListener('input',()=>{
   const value=password.value;
   const score=Number(value.length>=8)+Number(value.length>=14)+Number(/[a-z]/.test(value)&&/[A-Z]/.test(value))+Number(/\d/.test(value)&&/[^\w\s]/.test(value));
-  document.getElementById('strength').value=score;
+  const strength=document.getElementById('strength');
+  strength.setAttribute('aria-valuenow',String(score));
+  strength.setAttribute('aria-valuetext',['Not entered','Weak','Fair','Good','Strong'][score]);
+  [...strength.children].forEach((segment,index)=>segment.classList.toggle('is-filled',index<score));
   form.elements.confirmPassword.setCustomValidity('');
 });
 form.elements.confirmPassword.addEventListener('input',()=>form.elements.confirmPassword.setCustomValidity(''));
