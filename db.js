@@ -175,7 +175,7 @@ const statements=SCHEMA.split(';').map(s=>s.trim()).filter(Boolean);
 const mainTables=['users','user_display_names','schools','memberships','sessions'];
 const isMain=sql=>mainTables.some(table=>sql.startsWith('CREATE TABLE IF NOT EXISTS '+table+' ('));
 const mainSchema=statements.filter(isMain).join(';')+';';
-// Retain legacy school_id metadata for compatibility; isolation is physical.
+// A request-local table namespace isolates community data in one database.
 const schoolSchema=statements.filter(sql=>!isMain(sql)).map(sql=>sql.replace(/ REFERENCES (users|schools)\(id\)( ON DELETE CASCADE)?/g,'')).join(';')+`;
 CREATE TABLE IF NOT EXISTS channels(name TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS matcha_progress(user_id INTEGER PRIMARY KEY,state TEXT NOT NULL,updated_at TEXT NOT NULL DEFAULT (datetime('now')));
@@ -189,7 +189,7 @@ async function init(){
 async function initialize(){
   await mainClient.executeMultiple(mainSchema);
   const columns=(await mainClient.execute('PRAGMA table_info(schools)')).rows.map(c=>c.name);
-  for(const [name,type] of Object.entries({db_url:'TEXT',db_auth_token:'TEXT',created_by:'INTEGER REFERENCES users(id)',join_password_hash:'TEXT',created_at:'TEXT',status:"TEXT NOT NULL DEFAULT 'legacy'",migration_owner:'TEXT',migration_started_at:'TEXT'})){
+  for(const [name,type] of Object.entries({storage_mode:"TEXT NOT NULL DEFAULT 'separate'",db_url:'TEXT',db_auth_token:'TEXT',created_by:'INTEGER REFERENCES users(id)',join_password_hash:'TEXT',created_at:'TEXT',status:"TEXT NOT NULL DEFAULT 'legacy'",migration_owner:'TEXT',migration_started_at:'TEXT'})){
     if(!columns.includes(name))try{await mainClient.execute(`ALTER TABLE schools ADD COLUMN ${name} ${type}`);}catch(error){if(!error.message.includes('duplicate column'))throw error;}
   }
   await mainClient.execute("UPDATE schools SET created_at=datetime('now') WHERE created_at IS NULL");

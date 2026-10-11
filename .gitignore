@@ -6,3 +6,5 @@ server.pid
 server.out.txt
 server.err.txt
 .vercel/
+.env*
+!.env.example

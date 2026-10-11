@@ -75,26 +75,19 @@ test('provider failures return safe actionable errors and interrupted provisioni
   });
 });
 
-test('missing configuration reserves nothing; failed provisioning preserves membership and retries the same name', async () => {
+test('new communities use the shared database without contacting the provisioning service', async () => {
   const {db, close} = await databaseFixture();
   try {
-    const user = await db.upsertUser({sub: 'retry-owner', email: 'retry@example.test', name: 'Retry'});
-    await db.setUserSchool(user.id, 1);
-    await withEnvironment({...platform, TURSO_API_TOKEN: ''}, async () => {
-      await assert.rejects(db.createCommunity(user.id, 'Retry group', 'long password'), {code: 'COMMUNITY_CONFIG_MISSING'});
-      assert.equal(await db.get('SELECT id FROM schools WHERE name=?', 'Retry group'), null);
-      process.env.TURSO_API_TOKEN = platform.TURSO_API_TOKEN;
-      global.fetch = async () => response(401, {});
-      await assert.rejects(db.createCommunity(user.id, 'Retry group', 'long password'), {code: 'COMMUNITY_PROVIDER_AUTH'});
-      const failed = await db.get('SELECT id,status FROM schools WHERE name=?', 'Retry group');
-      assert.equal(failed.status, 'failed');
-      assert.equal((await db.getUserSchool(user.id)).id, 1);
-      await withEnvironment({TURSO_MULTI_DB_MODE: 'local', VERCEL: '', COFFEEHOUSE_DATA_DIR: path.dirname((await db.get('SELECT db_url FROM schools WHERE id=1')).db_url.slice(5))}, async () => {
-        const result = await db.createCommunity(user.id, 'Retry group', 'long password');
-        assert.equal(result.id, failed.id);
-        assert.equal((await db.getUserSchool(user.id)).id, result.id);
-        assert.equal((await db.get('SELECT status FROM schools WHERE id=?', result.id)).status, 'ready');
-      });
+    const user = await db.upsertUser({sub:'shared-owner',email:'shared@example.test',name:'Shared'});
+    await withEnvironment({...platform,TURSO_API_TOKEN:''},async()=>{
+      global.fetch=async()=>{throw Error('Provisioning must not be called');};
+      const result=await db.createCommunity(user.id,'Shared group','long password');
+      const school=await db.get('SELECT * FROM schools WHERE id=?',result.id);
+      assert.equal(school.storage_mode,'shared');assert.equal(school.db_url,null);
+      assert.equal(school.db_auth_token,null);assert.equal(school.status,'ready');
+      assert.equal((await db.getUserSchool(user.id)).id,result.id);
+      await db.withSchool(result.id,()=>db.insertMessage(result.id,'general',user.id,'messages is literal text'));
+      await db.withSchool(result.id,async()=>assert.equal((await db.all('SELECT * FROM messages'))[0].text,'messages is literal text'));
     });
-  } finally { await close(); }
+  }finally{await close();}
 });

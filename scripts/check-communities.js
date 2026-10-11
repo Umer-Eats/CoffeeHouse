@@ -1,9 +1,8 @@
 'use strict';
 require('dotenv').config();
-const {checkCommunityConfiguration} = require('../community-databases');
-checkCommunityConfiguration().then(({mode}) => {
-  console.log(`Community provisioning configuration verified (${mode}). No database was created.`);
-}).catch(error => {
-  console.error(`Community provisioning check failed [${error.code || 'UNKNOWN'}]: ${error.message}`);
-  process.exitCode = 1;
-});
+const db=require('../db');
+(async()=>{
+ try{await db.mainClient.execute('SELECT 1');console.log('Shared community database connection verified.');}
+ catch{console.error('Shared database connection failed. Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.');process.exitCode=1;}
+ finally{db.mainClient.close();}
+})();

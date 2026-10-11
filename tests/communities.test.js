@@ -5,7 +5,7 @@ const {databaseFixture}=require('./database-fixture.cjs');
 const {quickNotes}=require('../quick-notes');
 const bcrypt=require('bcrypt');
 
-test('creation, bcrypt join, rate limits and physical isolation across concurrent requests',async()=>{
+test('creation, bcrypt join, rate limits and shared-database isolation across concurrent requests',async()=>{
  const {db,close}=await databaseFixture();
  const original=process.env.COFFEEHOUSE_DATA_DIR;
  process.env.COFFEEHOUSE_DATA_DIR=path.dirname((await db.get('SELECT db_url FROM schools WHERE id=1')).db_url.slice(5));
@@ -17,7 +17,8 @@ test('creation, bcrypt join, rate limits and physical isolation across concurren
   await assert.rejects(db.createCommunity(creator.id,'Invalid','short'),{status:400});
   const first=await db.createCommunity(creator.id,'First study group',' my secret phrase ');
   const second=await db.createCommunity(other.id,'Second study group','other secret phrase');
-  assert.notEqual(first.dbUrl,second.dbUrl);
+  assert.equal(first.dbUrl,undefined);assert.equal(second.dbUrl,undefined);
+  assert.equal((await db.get('SELECT storage_mode FROM schools WHERE id=?',first.id)).storage_mode,'shared');
   const stored=await db.get('SELECT * FROM schools WHERE id=?',first.id);
   assert.equal(stored.created_by,creator.id);assert.equal(bcrypt.getRounds(stored.join_password_hash),12);
   assert.ok(await bcrypt.compare(' my secret phrase ',stored.join_password_hash));
@@ -40,7 +41,7 @@ test('creation, bcrypt join, rate limits and physical isolation across concurren
     await db.heartbeat(creator.id);
     return {msg,note};
   })));
-  // Identical message IDs in separate files must resolve only inside their file.
+  // Identical message IDs must resolve only inside their community namespace.
   assert.equal(written[0].msg.id,written[1].msg.id);
   for(const [index,school] of [first,second].entries())await db.withSchool(school.id,async()=>{
     assert.deepEqual(Array.from(await db.channelMessages(school.id,'channel:HALL:general'),m=>m.text),[school.name]);
