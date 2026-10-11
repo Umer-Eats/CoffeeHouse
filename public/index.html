@@ -36,7 +36,7 @@
   <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/home.css">
+  <link rel="stylesheet" href="/home.css?v=account-switch">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('ch-theme')==='dark'?'dark':'light'}catch(e){}</script>
   <link rel="stylesheet" href="/motion.css">
   <script src="/scenery.js" defer></script>
@@ -81,6 +81,7 @@
     <button class="primary-button" id="googleLogin">Continue with Google</button>
     <form id="devForm" hidden><label>Email<input id="devEmail" type="email" autocomplete="email" required></label><label>Name<input id="devName" autocomplete="name" required></label><button class="primary-button">Sign in locally</button></form>
     <a id="createCommunityLink" class="primary-button" href="/create-community.html" hidden>Create Community</a><form id="schoolForm" hidden><label>Your community<select id="schoolSelect" required></select></label><label>Community password<input id="schoolPassword" type="password" placeholder="Enter community password" required></label><button class="primary-button">Join your community</button></form>
+    <button id="accountLogout" class="account-logout" type="button" hidden>Log out / switch account</button>
     <p id="loginStatus" role="status" aria-live="polite"></p>
   </dialog>
 

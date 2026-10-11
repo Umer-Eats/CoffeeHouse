@@ -27,7 +27,36 @@
   const loginBtn = $('#loginBtn');
   const googleLogin = $('#googleLogin');
   const loginStatus = $('#loginStatus');
+  const accountLogout = $('#accountLogout');
   let signedIn = false;
+
+  accountLogout.addEventListener('click', async () => {
+    if (accountLogout.disabled) return;
+    accountLogout.disabled = true;
+    accountLogout.setAttribute('aria-busy', 'true');
+    loginStatus.textContent = 'Logging out…';
+    try {
+      await api('/api/logout', { method: 'POST' });
+    } catch (error) {
+      loginStatus.textContent = 'Could not log out: ' + error.message;
+      accountLogout.disabled = false;
+      accountLogout.removeAttribute('aria-busy');
+      return;
+    }
+    // A restored server session can exist before Firebase is initialized here.
+    try {
+      if (CFG?.firebaseConfigured && window.firebase) {
+        if (!firebase.apps.length) firebase.initializeApp(CFG.firebase);
+        await firebase.auth().signOut();
+      }
+    } catch (error) {
+      // The server session is already cleared. Google sign-in always offers
+      // account selection, even if the Firebase SDK could not clear its cache.
+    }
+    signedIn = false;
+    $('#schoolPassword').value = '';
+    location.assign('/?login=1');
+  });
 
   async function loadCommunities() {
     const select = $('#schoolSelect');
@@ -151,6 +180,7 @@
     loginStatus.textContent = '';
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       const result = await firebase.auth().signInWithPopup(provider);
       const idToken = await result.user.getIdToken();
       const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
@@ -193,6 +223,7 @@
 
   async function openSchoolPicker(user) {
     signedIn = true;
+    accountLogout.hidden = false;
     schoolForm.hidden = false;
     $('#schoolPassword').closest('label').hidden = false;
     schoolForm.querySelector('button').hidden = false;

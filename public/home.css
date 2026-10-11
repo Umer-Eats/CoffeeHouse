@@ -85,4 +85,5 @@ h1{font-size:clamp(44px,5vw,84px);margin:0 0 3px}
   .site-header .navigation{grid-column:1 / -1;grid-row:3;justify-content:space-between;gap:10px;width:100%;font-size:20px}
   .login-button{grid-column:1 / -1;grid-row:2;justify-self:end;max-width:100%}
 }
+.account-logout{display:block;width:100%;min-height:44px;margin-top:16px;padding:8px 12px;border:2px solid var(--border);border-radius:7px;background:transparent;color:var(--cream);font:inherit}.account-logout:hover{background:var(--header)}.account-logout:focus-visible{outline:2px solid var(--gold);outline-offset:3px}.account-logout:disabled{opacity:.6;cursor:wait}#accountDialog{max-height:calc(100dvh - 32px);overflow-y:auto}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation:none!important;transition:none!important}}
