@@ -8,7 +8,11 @@
         "includeFiles": [
           "node_modules/katex/dist/**",
           "node_modules/markdown-it/dist/**",
-          "public/vendor/blob-client.js"
+          "public/vendor/blob-client.js",
+          "public/images/coffeehouse-logo.svg",
+          "public/favicon.svg",
+          "public/favicon.ico",
+          "public/apple-touch-icon.png"
         ],
         "maxDuration": 120
       }
