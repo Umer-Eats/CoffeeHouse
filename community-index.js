@@ -1,7 +1,7 @@
 'use strict';
 const bcrypt = require('bcrypt');
 const {randomUUID}=require('node:crypto');
-const {createSchoolDatabase,openSchoolDatabase} = require('./community-databases');
+const {createSchoolDatabase,openSchoolDatabase,provisioningConfig} = require('./community-databases');
 
 module.exports = function communityIndex(db, schema, tables) {
   const clients = new Map();
@@ -24,6 +24,7 @@ module.exports = function communityIndex(db, schema, tables) {
     if(!schools.length)return;
     const password=process.env.COFFEEHOUSE_LEGACY_JOIN_PASSWORD;
     validate('Legacy community',password);
+    provisioningConfig();
     const hash=await bcrypt.hash(password,12);
     for(const school of schools) {
       const owner=randomUUID();let target;
@@ -54,6 +55,8 @@ module.exports = function communityIndex(db, schema, tables) {
   }
   async function createCommunity(userId,name,password) {
     name=validate(name,password);
+    // Fail before reserving a name or creation slot when deployment setup is missing.
+    provisioningConfig();
     const hash=await bcrypt.hash(password,12),tx=await db.mainClient.transaction('write');let id;
     try {
       const recent=(await tx.execute({sql:"SELECT id FROM schools WHERE created_by=? AND status!='failed' AND created_at>datetime('now','-24 hours')",args:[userId]})).rows[0];

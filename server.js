@@ -276,7 +276,16 @@ app.get('/api/schools', async (req, res) => {
 
 app.post('/api/school/create', requireAuth, async (req,res) => {
   try {res.status(201).json({school:await db.createCommunity(req.user.id,req.body?.name,req.body?.password)});}
-  catch(error){res.status(error.status||503).json({error:error.status?error.message:'Could not create your community. Please contact support if this continues.'});}
+  catch(error){
+    if (!error.status || error.status >= 500) {
+      // Never log the request/password, credentials, or raw provider response bodies.
+      console.error('[community:create]', error.code || 'COMMUNITY_CREATE_FAILED', error.publicMessage ? error.message : 'Database setup failed. Check main database connectivity and community schema.', error.providerStatus || '');
+    }
+    res.status(error.status||503).json({
+      error:error.publicMessage || (error.status ? error.message : 'Could not create your community. Please try again later.'),
+      ...(error.code?.startsWith('COMMUNITY_') ? {code:error.code} : {})
+    });
+  }
 });
 app.post('/api/school/join', requireAuth, async (req,res) => {
   try {res.json({school:await db.joinCommunity(req.user.id,req.body||{})});}

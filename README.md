@@ -112,6 +112,24 @@ credentials stay on the server. Vercel requires platform mode; local files need
 persistent disk storage. Use a separate Turso organization for unrelated app
 installations so community database names cannot collide.
 
+If creation reports that setup is incomplete, add these variables in Vercel's
+project settings for the **Production** environment, then redeploy:
+
+- `TURSO_MULTI_DB_MODE=platform`
+- `TURSO_API_TOKEN`: a **Platform API token**, generated with
+  [`turso auth api-tokens mint coffeehouse-provisioning`](https://docs.turso.tech/cli/auth/api-tokens/mint).
+  `TURSO_AUTH_TOKEN` is a database token and cannot provision new databases.
+- `TURSO_ORG_NAME`: the organization slug from `turso org list`.
+- `TURSO_DB_GROUP`: an existing group from `turso group list` in that organization
+  (`default` only if that group exists).
+
+With the same environment loaded locally, run `npm run check:communities` to
+check required settings, Platform API access, and group existence without
+creating anything. This does not test database quotas or write permissions.
+Creation failures now log a safe diagnostic under `[community:create]` in Vercel
+function logs. Fix the configuration and retry the same name with the same
+account; failed attempts do not consume the daily creation allowance.
+
 Before upgrading an existing installation, back up its main database and pause
 writes. Set `COFFEEHOUSE_LEGACY_JOIN_PASSWORD` to an initial password for existing
 communities, then run `npm run migrate:communities` with the target environment.
