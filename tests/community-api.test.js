@@ -2,10 +2,11 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const fs=require('node:fs'),path=require('node:path');
-test('authenticated community APIs isolate notes and saved focus progress',async()=>{
+test('legacy communities without migration settings do not block pages, sign-in or new communities',async()=>{
  const directory=fs.mkdtempSync(path.resolve(__dirname,'../data/api-test-'));
  const child=spawn(process.execPath,['server.js'],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,
-  PORT:'0',DEV_LOGIN:'true',COOKIE_SECURE:'false',VERCEL:'',COFFEEHOUSE_SCHOOLS:'[]',
+  PORT:'0',DEV_LOGIN:'true',COOKIE_SECURE:'false',VERCEL:'',COFFEEHOUSE_SCHOOLS:'["Legacy community"]',
+  COFFEEHOUSE_LEGACY_JOIN_PASSWORD:'',TURSO_API_TOKEN:'',TURSO_ORG_NAME:'',
   TURSO_DATABASE_URL:'file:'+path.join(directory,'main.db'),TURSO_AUTH_TOKEN:'',TURSO_MULTI_DB_MODE:'local',COFFEEHOUSE_DATA_DIR:directory,
   FIREBASE_WEB_CONFIG:'',FIREBASE_SERVICE_ACCOUNT:'',FIREBASE_SERVICE_ACCOUNT_PATH:'',FIREBASE_SERVICE_ACCOUNT_B64:'',GOOGLE_APPLICATION_CREDENTIALS:''
  },stdio:['ignore','pipe','pipe']});
@@ -19,8 +20,13 @@ test('authenticated community APIs isolate notes and saved focus progress',async
     const response=await fetch(base+route,{method:method||(body?'POST':'GET'),headers:{...(cookie?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
     return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
   };
+  const home=await fetch(base+'/');assert.equal(home.status,200);assert.match(home.headers.get('content-type'),/text\/html/);assert.match(await home.text(),/<!doctype html>/i);
+  assert.equal((await request('/api/config')).status,200);
   assert.equal((await request('/api/school/create',null,{name:'Private',password:'password123'})).status,401);
   const a=await request('/api/auth/dev',null,{email:'a@example.test',name:'A'});
+  assert.equal(a.status,200);
+  const settings=await fetch(base+'/settings.html',{headers:{Cookie:a.cookie}});assert.equal(settings.status,200);assert.match(settings.headers.get('content-type'),/text\/html/);
+  const creationPage=await fetch(base+'/create-community.html',{headers:{Cookie:a.cookie}});assert.equal(creationPage.status,200);
   assert.equal((await request('/api/notes',a.cookie)).status,403);
   const first=await request('/api/school/create',a.cookie,{name:'API First',password:'password123'});assert.equal(first.status,201);
   assert.equal((await request('/api/school/create',a.cookie,{name:'Too soon',password:'password123'})).status,429);

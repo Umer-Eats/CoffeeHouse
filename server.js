@@ -71,7 +71,7 @@ const DEV_LOGIN = String(process.env.DEV_LOGIN || '').toLowerCase() === 'true';
 
 let dbReady = null;
 function ensureDb() {
-  if (!dbReady) dbReady = db.init();
+  if (!dbReady) dbReady = db.init().catch(error => {dbReady = null; throw error;});
   return dbReady;
 }
 
@@ -181,7 +181,6 @@ function setSessionCookie(res, token) {
 /* ---------------- config ---------------- */
 
 app.get('/api/config', async (req, res) => {
-  await ensureDb();
   const hasWebConfig = !!(firebaseWebConfig && firebaseWebConfig.apiKey);
   const hasAuth = !!firebaseAuth;
   const fb = hasWebConfig && hasAuth;
@@ -644,7 +643,6 @@ async function guardPage(req, res, page) {
 }
 
 app.get('/', async (req, res) => {
-  await ensureDb();
   const html = INDEX_HTML.replace('__DEV_LOGIN__', DEV_LOGIN ? 'block' : 'none');
   res.type('html').send(html);
 });
@@ -673,15 +671,12 @@ if (process.env.VERCEL) {
   module.exports = app;
 } else {
   // Local / other hosts: start the server
-  ensureDb().then(() => {
-    const server = app.listen(PORT, () => {
+  // Initialize lazily for account/API requests. Public pages remain available
+  // while the database is unavailable or community migration is pending.
+  const server = app.listen(PORT, () => {
       console.log(`\u2615 CoffeeHouse server running at http://localhost:${server.address().port}`);
       console.log('  Firebase login:', firebaseAuth ? 'configured' : 'NOT configured (see notes-docs.md)');
       console.log('  Baristi (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BARISTA_API_KEY to .env)');
       console.log('  Brewer (Gemini):', ai.isConfigured() ? 'configured' : 'NOT configured (add BREWER_API_KEY to .env)');
-    });
-  }).catch(err => {
-    console.error('Failed to initialize database:', err);
-    process.exit(1);
   });
 }

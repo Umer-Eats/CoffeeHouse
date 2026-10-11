@@ -195,7 +195,8 @@ async function initialize(){
   await mainClient.execute("UPDATE schools SET created_at=datetime('now') WHERE created_at IS NULL");
   for(const name of SCHOOLS)await mainClient.execute({sql:'INSERT OR IGNORE INTO schools(name) VALUES(?)',args:[name.trim()]});
   for(const b of BOTS)await mainClient.execute({sql:'INSERT OR IGNORE INTO users(firebase_uid,email,name,is_bot) VALUES(?,?,?,1)',args:[b.sub,b.email,b.name]});
-  await communities.migrateLegacySchools();
+  // Provisioning and legacy data copies are an explicit deployment step. Missing
+  // platform credentials must not prevent account initialization or page loads.
 }
 
 /* ---------------- low-level helpers ---------------- */

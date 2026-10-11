@@ -115,7 +115,9 @@ installations so community database names cannot collide.
 Before upgrading an existing installation, back up its main database and pause
 writes. Set `COFFEEHOUSE_LEGACY_JOIN_PASSWORD` to an initial password for existing
 communities, then run `npm run migrate:communities` with the target environment.
-Initialization also runs this migration for any legacy community. The migration
+Migration runs explicitly through that command, separately from web requests.
+Public pages and sign-in remain available before migration is configured. Legacy
+communities remain unavailable until their migration succeeds. The migration
 copies school-scoped records, attachments and group members while preserving IDs.
 Private saved items follow their owner's active membership. It marks the community
 ready only after copying succeeds; reruns resume safely. Original tables remain
