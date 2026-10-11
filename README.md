@@ -155,6 +155,23 @@ that are awaiting setup. Those entries are labeled as pending and cannot be
 joined until their database migration succeeds. Community content still requires
 sign-in and membership with the correct community password.
 
+Community owners see **Delete community** in Settings for their active community.
+They must type its exact name before `DELETE /api/school/:id` with
+`{ "confirmName": "Study group" }` can remove it. The server checks `created_by`,
+independently of membership and the browser controls. Deletion blocks further
+access and joins, removes the separate community database and all memberships,
+and clears its credentials/password hash. Accounts and sessions are preserved.
+A minimal deleted index entry prevents configured names from being reseeded and
+keeps the owner's daily creation limit. A failed deletion remains unavailable
+and the owner can retry it from Settings. Provider backups follow Turso's retention
+policy; old main-database migration backups remain administrator-managed.
+On Windows, libSQL can retain a closed file handle; local deletion empties and
+vacuums the database before removal, so an empty file can remain until restart.
+
+The production Platform API token now also needs **`db:delete`**, alongside
+`read`, `db:create`, and `db:mint-token`, limited to the configured database group.
+This feature never deletes the main database or a different community's database.
+
 Matcha progress syncs to the active community database; the browser cache is
 namespaced by account and community. Previous global browser-only progress is
 left intact locally because it has no reliable community attribution.

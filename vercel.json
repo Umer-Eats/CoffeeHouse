@@ -9,6 +9,8 @@
           "node_modules/katex/dist/**",
           "node_modules/markdown-it/dist/**",
           "public/vendor/blob-client.js",
+          "public/settings-community.js",
+          "public/settings-community.css",
           "public/images/coffeehouse-logo.svg",
           "public/favicon.svg",
           "public/favicon.ico",

@@ -1,0 +1,11 @@
+.community-owner-actions{margin-top:24px;padding-top:24px;border-top:2px solid var(--border)}
+.community-owner-actions .btn{margin-top:16px}
+.community-owner-actions strong,.community-delete-dialog strong{overflow-wrap:anywhere}
+.community-delete-dialog{width:calc(100% - 32px);max-width:520px;max-height:90svh;margin:auto;padding:28px;border:2px solid var(--border);box-shadow:6px 6px 0 var(--shad);background:var(--panel);color:var(--ink);font:inherit;overflow:auto}
+.community-delete-dialog::backdrop{background:#080610cc}
+.community-delete-dialog h2{font-size:28px;color:var(--gold);line-height:1.2}
+.community-delete-dialog label{display:block;margin:20px 0 8px}
+.community-delete-dialog input{width:100%;min-width:0;min-height:44px}
+.community-delete-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.community-delete-actions .btn{flex:1 1 160px}
+@media(max-width:480px){.community-delete-dialog{padding:20px}.community-delete-dialog h2{font-size:25px}}

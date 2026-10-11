@@ -1,18 +1,20 @@
 'use strict';
 const bcrypt = require('bcrypt');
 const {randomUUID}=require('node:crypto');
-const {createSchoolDatabase,openSchoolDatabase,provisioningConfig} = require('./community-databases');
+const {createSchoolDatabase,openSchoolDatabase,provisioningConfig,deleteSchoolDatabase} = require('./community-databases');
 
 module.exports = function communityIndex(db, schema, tables) {
   const clients = new Map();
+  const deletions = new Map();
   const fail = (message,status) => {throw Object.assign(Error(message),{status});};
   async function getSchoolClient(id) {
     id=Number(id);
     if(!Number.isSafeInteger(id)||id<1) fail('Community not found.',404);
+    // Recheck durable state even when this server instance has a cached client.
+    const school=await db.get('SELECT * FROM schools WHERE id=?',id);
+    if(!school?.db_url || school.status!=='ready') fail('Community is unavailable.',503);
     if(!clients.has(id)) {
       const pending=(async()=>{
-        const school=await db.get('SELECT * FROM schools WHERE id=?',id);
-        if(!school?.db_url || school.status!=='ready') fail('Community is unavailable.',503);
         return openSchoolDatabase({url:school.db_url,authToken:school.db_auth_token||undefined},schema);
       })();
       clients.set(id,pending);pending.catch(()=>clients.delete(id));
@@ -84,12 +86,42 @@ module.exports = function communityIndex(db, schema, tables) {
   }
   async function joinCommunity(userId,{name,schoolId,password}) {
     if(typeof password!=='string'||password.length>64||Buffer.byteLength(password)>72)fail('Incorrect community password.',403);
-    const school=typeof name==='string'?await db.get("SELECT * FROM schools WHERE name=? AND status!='failed'",name.trim()):await db.get("SELECT * FROM schools WHERE id=? AND status!='failed'",Number(schoolId)||0);
+    const school=typeof name==='string'?await db.get("SELECT * FROM schools WHERE name=? AND status NOT IN ('failed','deleted')",name.trim()):await db.get("SELECT * FROM schools WHERE id=? AND status NOT IN ('failed','deleted')",Number(schoolId)||0);
     if(school && school.status!=='ready')fail('This community is still being set up. Please try again later.',503);
     if(!school||!await bcrypt.compare(password,school.join_password_hash))fail('Unknown community or incorrect password.',403);
     await getSchoolClient(school.id);await db.setUserSchool(userId,school.id);
     return {id:school.id,name:school.name};
   }
+  async function deleteCommunity(userId,schoolId,confirmName) {
+    const id=Number(schoolId);
+    if(!Number.isSafeInteger(id)||id<1)fail('Community not found.',404);
+    const school=await db.get('SELECT * FROM schools WHERE id=?',id);
+    if(!school)fail('Community not found.',404);
+    if(school.created_by!==userId)fail('Only the community owner can delete it.',403);
+    if(typeof confirmName!=='string'||confirmName!==school.name)fail('Type the community name exactly to confirm deletion.',400);
+    if(school.status==='deleted')return {ok:true};
+    if(school.db_url===db.mainUrl)fail('The account database cannot be deleted as a community.',409);
+    if(!['ready','deleting'].includes(school.status))fail('This community cannot be deleted while it is being set up.',409);
+    if(!deletions.has(id)) {
+      const pending=(async()=>{
+        // Keep a durable tombstone on failure so other instances cannot reopen
+        // or join the database while deletion is incomplete. The owner can retry.
+        await db.run("UPDATE schools SET status='deleting' WHERE id=? AND status='ready'",id);
+        const cached=clients.get(id);clients.delete(id);
+        if(cached)try{(await cached).close();}catch{}
+        await deleteSchoolDatabase(school,tables);
+        await db.mainClient.batch([
+          {sql:'DELETE FROM memberships WHERE school_id=?',args:[id]},
+          {sql:"UPDATE schools SET status='deleted',db_url=NULL,db_auth_token=NULL,join_password_hash=NULL WHERE id=?",args:[id]}
+        ],'write');
+        // Retain only index metadata to prevent seeded names reappearing and
+        // preserve the daily creation limit after an owner deletes a community.
+        return {ok:true};
+      })();
+      deletions.set(id,pending);
+    }
+    try{return await deletions.get(id);}finally{deletions.delete(id);}
+  }
   async function closeSchoolClients(){for(const promise of clients.values())try{(await promise).close();}catch{} clients.clear();}
-  return {getSchoolClient,createCommunity,joinCommunity,migrateLegacySchools,closeSchoolClients};
+  return {getSchoolClient,createCommunity,joinCommunity,deleteCommunity,migrateLegacySchools,closeSchoolClients};
 };

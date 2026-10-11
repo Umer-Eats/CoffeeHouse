@@ -2,6 +2,7 @@
 const {createClient} = require('@libsql/client');
 const fs = require('node:fs');
 const path = require('node:path');
+const {fileURLToPath} = require('node:url');
 
 const setupMessage = 'Community creation is not configured yet. Please ask the site owner to finish setup.';
 function provisioningError(code, message, publicMessage = setupMessage, providerStatus) {
@@ -87,6 +88,51 @@ async function checkCommunityConfiguration() {
   return {mode: config.mode};
 }
 
+async function deleteSchoolDatabase(school, tables) {
+  if (school.db_url.startsWith('file:')) {
+    const filename = path.resolve(school.db_url.startsWith('file://') ? fileURLToPath(school.db_url) : school.db_url.slice(5));
+    const directory = path.resolve(process.env.COFFEEHOUSE_DATA_DIR || path.join(__dirname, 'data'));
+    const expected = path.join(directory, `school-${school.id}.db`);
+    // Only remove the exact per-community file, never a directory or main DB.
+    if (filename !== expected || school.db_url === process.env.TURSO_DATABASE_URL) {
+      throw provisioningError('COMMUNITY_DELETE_TARGET', 'Community file does not match its expected database path.', 'The community database could not be verified for deletion. Please contact the site owner.');
+    }
+    if (fs.existsSync(filename)) {
+      const client = createClient({url: school.db_url});
+      try {
+        await client.execute('PRAGMA foreign_keys=OFF');
+        await client.execute('PRAGMA secure_delete=ON');
+        for (const table of tables) await client.execute(`DROP TABLE IF EXISTS ${table}`);
+        await client.execute('VACUUM');
+        await client.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+      } finally { client.close(); }
+    }
+    for (const suffix of ['', '-wal', '-shm']) {
+      try { fs.unlinkSync(filename + suffix); }
+      catch (error) {
+        // libSQL on Windows can hold closed handles until process exit. The DB
+        // above has already been emptied and vacuumed; an empty file may remain.
+        if (error.code !== 'ENOENT' && !(process.platform === 'win32' && error.code === 'EBUSY')) throw error;
+      }
+    }
+    return;
+  }
+  const config = provisioningConfig();
+  if (config.mode !== 'platform') throw provisioningError('COMMUNITY_CONFIG_INVALID', 'Remote database deletion requires TURSO_MULTI_DB_MODE=platform.');
+  const name = `coffeehouse-school-${school.id}`;
+  try {
+    const {database} = await platformRequest(config, `databases/${name}`);
+    const hostname = database?.Hostname || database?.hostname;
+    if (!hostname || new URL(school.db_url).hostname !== hostname) {
+      throw provisioningError('COMMUNITY_DELETE_TARGET', 'Turso database hostname does not match the community index.', 'The community database could not be verified for deletion. Please contact the site owner.');
+    }
+    await platformRequest(config, `databases/${name}`, 'DELETE');
+  } catch (error) {
+    // A previous request may have deleted the DB before finishing index cleanup.
+    if (error.providerStatus !== 404) throw error;
+  }
+}
+
 async function openSchoolDatabase(credentials, schema) {
   const client = createClient(credentials);
   try {
@@ -102,4 +148,4 @@ async function openSchoolDatabase(credentials, schema) {
     return client;
   } catch (error) { client.close(); throw error; }
 }
-module.exports = {createSchoolDatabase, openSchoolDatabase, provisioningConfig, checkCommunityConfiguration};
+module.exports = {createSchoolDatabase, openSchoolDatabase, provisioningConfig, checkCommunityConfiguration, deleteSchoolDatabase};

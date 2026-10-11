@@ -50,6 +50,21 @@ test('legacy communities without migration settings do not block pages, sign-in 
   assert.deepEqual(schools.body.map(s=>s.name),['API First','API Second','Legacy community']);
   assert.equal(schools.body.filter(s=>s.available).length,2);
   assert.equal((await request('/api/school/join',b.cookie,{schoolId:1,password:'any password'})).status,503);
+  const route='/api/school/'+first.body.school.id;
+  assert.equal((await request('/api/me',a.cookie)).body.school.isOwner,true);
+  assert.equal((await request('/api/me',b.cookie)).body.school.isOwner,false);
+  assert.equal((await request(route,null,{confirmName:'API First'},'DELETE')).status,401);
+  assert.equal((await request(route,b.cookie,{confirmName:'API First'},'DELETE')).status,403);
+  assert.equal((await request(route,a.cookie,{confirmName:'wrong name'},'DELETE')).status,400);
+  assert.equal((await request(route,a.cookie,{confirmName:'API First'},'DELETE')).status,200);
+  for(const cookie of [a.cookie,b.cookie]){
+    const me=await request('/api/me',cookie);assert.equal(me.status,200);assert.ok(me.body.user.id);assert.equal(me.body.school,null);
+    assert.equal((await request('/api/notes',cookie)).status,403);
+  }
+  assert.deepEqual((await request('/api/schools')).body.map(s=>s.name),['API Second','Legacy community']);
+  assert.equal((await request('/api/school/join',b.cookie,{name:'API First',password:'password123'})).status,403);
+  assert.equal((await request(route,a.cookie,{confirmName:'API First'},'DELETE')).status,200);
+  assert.equal((await request('/api/school/create',a.cookie,{name:'Bypass daily limit',password:'password123'})).status,429);
  }finally{
   if(child.exitCode===null){child.kill();await new Promise(resolve=>child.once('close',resolve));}
   for(const file of fs.readdirSync(directory))fs.unlinkSync(path.join(directory,file));fs.rmdirSync(directory);

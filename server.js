@@ -138,6 +138,9 @@ const channelKey = (code, slug) => `channel:${code}:${slug}`;
 function publicUser(u) {
   return { id: u.id, name: u.name, email: u.email, picture: u.picture };
 }
+function publicSchool(school, userId) {
+  return school ? {id:school.id,name:school.name,isOwner:school.created_by===userId,status:school.status} : null;
+}
 
 function publicMessage(m, meId) {
   return {
@@ -164,6 +167,7 @@ async function requireAuth(req, res, next) {
 async function requireSchool(req, res, next) {
   const school = await db.getUserSchool(req.user.id);
   if (!school) return res.status(403).json({ error: 'no_school' });
+  if (school.status !== 'ready') return res.status(503).json({error:'This community is unavailable or being deleted.'});
   req.school = school;
   req.schoolClient = await db.getSchoolClient(school.id);
   await db.withSchool(school.id, next);
@@ -263,7 +267,7 @@ app.put('/api/me/display-name', requireAuth, async (req, res) => {
 });
 app.get('/api/me', requireAuth, async (req, res) => {
   const school = await db.getUserSchool(req.user.id);
-  res.json({ user: publicUser(req.user), school: school ? { id: school.id, name: school.name } : null });
+  res.json({ user: publicUser(req.user), school: publicSchool(school,req.user.id) });
 });
 
 /* ---------------- schools / communities ---------------- */
@@ -290,6 +294,13 @@ app.post('/api/school/create', requireAuth, async (req,res) => {
 app.post('/api/school/join', requireAuth, async (req,res) => {
   try {res.json({school:await db.joinCommunity(req.user.id,req.body||{})});}
   catch(error){res.status(error.status||503).json({error:error.status?error.message:'Could not join your community. Please retry.'});}
+});
+app.delete('/api/school/:id', requireAuth, async (req,res) => {
+  try {res.json(await db.deleteCommunity(req.user.id,req.params.id,req.body?.confirmName));}
+  catch(error){
+    if(!error.status||error.status>=500)console.error('[community:delete]',error.code||'COMMUNITY_DELETE_FAILED',error.publicMessage?error.message:'Community database deletion or index cleanup failed.');
+    res.status(error.status||503).json({error:error.publicMessage?'Community deletion could not finish. Please ask the site owner to check database deletion access, then retry.':error.status?error.message:'Could not finish deleting your community. Please retry.'});
+  }
 });
 
 /* ---------------- students (real accounts, sorted by school) ---------------- */

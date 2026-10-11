@@ -180,7 +180,7 @@ const schoolSchema=statements.filter(sql=>!isMain(sql)).map(sql=>sql.replace(/ R
 CREATE TABLE IF NOT EXISTS channels(name TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS matcha_progress(user_id INTEGER PRIMARY KEY,state TEXT NOT NULL,updated_at TEXT NOT NULL DEFAULT (datetime('now')));
 `;
-const communities=require('./community-index')({mainClient,get,run,all,setUserSchool},schoolSchema,COMMUNITY_TABLES);
+const communities=require('./community-index')({mainClient,mainUrl,get,run,all,setUserSchool},schoolSchema,COMMUNITY_TABLES);
 let initialization;
 async function init(){
   if(!initialization)initialization=initialize().catch(error=>{initialization=null;throw error;});
@@ -219,7 +219,7 @@ async function run(sql, ...params) {
 /* ---------------- queries ---------------- */
 
 async function listSchools() {
-  return all("SELECT id,name,status FROM schools WHERE status!='failed' ORDER BY name COLLATE NOCASE");
+  return all("SELECT id,name,status FROM schools WHERE status NOT IN ('failed','deleting','deleted') ORDER BY name COLLATE NOCASE");
 }
 
 async function upsertUser(profile) {
@@ -263,10 +263,14 @@ async function getUserSchool(userId) {
 }
 
 async function setUserSchool(userId, schoolId) {
-  await mainClient.batch([
-    {sql:'DELETE FROM memberships WHERE user_id=?',args:[userId]},
-    {sql:'INSERT INTO memberships(user_id,school_id) VALUES(?,?)',args:[userId,schoolId]}
-  ],'write');
+  const tx=await mainClient.transaction('write');
+  try {
+    const school=(await tx.execute({sql:"SELECT id FROM schools WHERE id=? AND status='ready'",args:[schoolId]})).rows[0];
+    if(!school)throw Object.assign(new Error('Community is unavailable.'),{status:503});
+    await tx.execute({sql:'DELETE FROM memberships WHERE user_id=?',args:[userId]});
+    await tx.execute({sql:'INSERT INTO memberships(user_id,school_id) VALUES(?,?)',args:[userId,schoolId]});
+    await tx.commit();
+  }catch(error){await tx.rollback();throw error;}finally{tx.close();}
   return getUserSchool(userId);
 }
 
